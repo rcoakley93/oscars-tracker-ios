@@ -369,7 +369,7 @@
         "Scroll position shows current user if off-screen"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

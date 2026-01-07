@@ -59,6 +59,12 @@ final class LeaderboardViewModel: ObservableObject {
         }
     }
 
+    /// Get the current user's entry (for scrolling)
+    var currentUserEntry: LeaderboardEntry? {
+        guard let currentUserId = currentUserId else { return nil }
+        return entries.first { $0.userId == currentUserId }
+    }
+
     /// Clear error message
     func clearError() {
         errorMessage = nil

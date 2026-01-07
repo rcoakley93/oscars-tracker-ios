@@ -675,3 +675,27 @@
   - Opacity pattern: `.opacity(isLocked ? (isWinner ? 1.0 : 0.6) : 1.0)` keeps winners visible
   - Accessibility labels should include selection state, winner status, and prediction result
 ---
+
+## 2026-01-07 - US-025
+- What was implemented:
+  - ScrollViewReader wrapping ScrollView for programmatic scroll control
+  - scrollToCurrentUser function with animated scroll to current user entry
+  - .id(entry.id) modifier on LeaderboardRowView for scroll targeting
+  - .onChange(of: viewModel.entries) trigger to scroll after data loads
+  - currentUserEntry computed property in LeaderboardViewModel
+  - DispatchQueue.main.asyncAfter delay for proper view rendering before scroll
+  - withAnimation(.easeInOut(duration: 0.5)) for smooth scroll animation
+  - anchor: .center to position current user in center of viewport
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Leaderboard/LeaderboardView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/LeaderboardViewModel.swift
+  - tests/us-025-leaderboard-current-user-highlight.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - ScrollViewReader { proxy in } provides scroll control over child ScrollView
+  - proxy.scrollTo(id, anchor:) scrolls to element with matching .id()
+  - .onChange(of:) is better than .onAppear for scroll-after-data scenarios
+  - Async delay needed before scroll to ensure view hierarchy is ready
+  - anchor: .center places scrolled item in center of visible area
+  - Combine id modifier on rows with computed property in ViewModel for target
+---

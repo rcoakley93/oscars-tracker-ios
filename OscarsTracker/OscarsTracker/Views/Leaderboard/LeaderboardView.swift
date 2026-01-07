@@ -6,26 +6,43 @@ struct LeaderboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    if viewModel.isLoading && viewModel.entries.isEmpty {
-                        loadingView
-                    } else if viewModel.entries.isEmpty {
-                        emptyStateView
-                    } else {
-                        leaderboardList
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 16) {
+                        if viewModel.isLoading && viewModel.entries.isEmpty {
+                            loadingView
+                        } else if viewModel.entries.isEmpty {
+                            emptyStateView
+                        } else {
+                            leaderboardList
+                        }
                     }
+                    .padding()
                 }
-                .padding()
-            }
-            .background(Color.appBackground)
-            .navigationTitle("Leaderboard")
-            .refreshable {
-                await viewModel.loadData()
+                .background(Color.appBackground)
+                .navigationTitle("Leaderboard")
+                .refreshable {
+                    await viewModel.loadData()
+                }
+                .onChange(of: viewModel.entries) { _, _ in
+                    scrollToCurrentUser(proxy: proxy)
+                }
             }
         }
         .task {
             await viewModel.loadData()
+        }
+    }
+
+    // MARK: - Scroll to Current User
+
+    private func scrollToCurrentUser(proxy: ScrollViewProxy) {
+        guard let currentUserEntry = viewModel.currentUserEntry else { return }
+        // Delay slightly to ensure view is rendered
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.5)) {
+                proxy.scrollTo(currentUserEntry.id, anchor: .center)
+            }
         }
     }
 
@@ -39,6 +56,7 @@ struct LeaderboardView: View {
                     isCurrentUser: viewModel.isCurrentUser(entry),
                     medalType: viewModel.medalType(for: entry.rank)
                 )
+                .id(entry.id)
             }
         }
     }
