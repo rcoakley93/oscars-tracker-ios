@@ -172,6 +172,37 @@ struct SignUpView: View {
                     .accessibilityLabel("Sign Up")
                     .accessibilityHint(isFormValid ? "Double tap to create account" : "Fill in all fields first")
 
+                    // Divider
+                    HStack {
+                        Rectangle()
+                            .fill(Color.borderColor)
+                            .frame(height: 1)
+                        Text("or")
+                            .font(.bodyMedium)
+                            .foregroundStyle(Color.textMuted)
+                            .padding(.horizontal, 16)
+                        Rectangle()
+                            .fill(Color.borderColor)
+                            .frame(height: 1)
+                    }
+                    .padding(.horizontal)
+
+                    // Continue with Google button
+                    Button {
+                        signInWithGoogle()
+                    } label: {
+                        HStack(spacing: 12) {
+                            GoogleLogoView()
+                                .frame(width: 20, height: 20)
+                            Text("Continue with Google")
+                        }
+                    }
+                    .buttonStyle(.googleAuth)
+                    .disabled(authViewModel.isLoading)
+                    .padding(.horizontal)
+                    .accessibilityLabel("Continue with Google")
+                    .accessibilityHint("Double tap to sign up with your Google account")
+
                     // Sign in link
                     HStack(spacing: 4) {
                         Text("Already have an account?")
@@ -217,6 +248,13 @@ struct SignUpView: View {
         focusedField = nil
         Task {
             await authViewModel.signUp(email: email, password: password, confirmPassword: confirmPassword)
+        }
+    }
+
+    private func signInWithGoogle() {
+        focusedField = nil
+        Task {
+            await authViewModel.signInWithGoogle()
         }
     }
 }

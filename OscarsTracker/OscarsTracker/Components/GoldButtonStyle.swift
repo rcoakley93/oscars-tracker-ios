@@ -98,6 +98,34 @@ extension ButtonStyle where Self == DestructiveButtonStyle {
     static var destructive: DestructiveButtonStyle { DestructiveButtonStyle() }
 }
 
+/// A button style for Google OAuth authentication
+struct GoogleAuthButtonStyle: ButtonStyle {
+    var isFullWidth: Bool = true
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headingMedium)
+            .foregroundStyle(Color.textPrimary)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
+            .frame(maxWidth: isFullWidth ? .infinity : nil)
+            .background(Color.secondaryBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.borderColor, lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == GoogleAuthButtonStyle {
+    /// Google OAuth button style with white background
+    static var googleAuth: GoogleAuthButtonStyle { GoogleAuthButtonStyle() }
+}
+
 #Preview {
     ZStack {
         Color.appBackground.ignoresSafeArea()

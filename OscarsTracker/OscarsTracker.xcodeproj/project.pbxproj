@@ -44,6 +44,7 @@
 		E81234560023 /* LeaderboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550230 /* LeaderboardViewModel.swift */; };
 		E81234560024 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550240 /* ProfileView.swift */; };
 		E81234560025 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550250 /* ProfileViewModel.swift */; };
+		E81234560026 /* GoogleLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550260 /* GoogleLogoView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -85,6 +86,7 @@
 		E81234550230 /* LeaderboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewModel.swift; sourceTree = "<group>"; };
 		E81234550240 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		E81234550250 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		E81234550260 /* GoogleLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleLogoView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -256,6 +258,7 @@
 				E81234550110 /* GlassCard.swift */,
 				E81234550120 /* GoldButtonStyle.swift */,
 				E81234550130 /* GoldGlowModifier.swift */,
+				E81234550260 /* GoogleLogoView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -391,6 +394,7 @@
 				E81234560023 /* LeaderboardViewModel.swift in Sources */,
 				E81234560024 /* ProfileView.swift in Sources */,
 				E81234560025 /* ProfileViewModel.swift in Sources */,
+				E81234560026 /* GoogleLogoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

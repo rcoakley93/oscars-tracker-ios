@@ -1,5 +1,7 @@
 import Foundation
 import Supabase
+import AuthenticationServices
+import UIKit
 
 /// Manages authentication state and operations for the app.
 @MainActor
@@ -15,6 +17,110 @@ final class AuthViewModel: ObservableObject {
     init() {
         Task {
             await checkSession()
+        }
+    }
+
+    /// Sign in with Google OAuth
+    func signInWithGoogle() async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // Get the OAuth URL from Supabase
+            let url = try await supabase.auth.getOAuthSignInURL(
+                provider: .google,
+                redirectTo: URL(string: "oscarstracker://auth/callback")
+            )
+
+            // Open the URL in ASWebAuthenticationSession
+            let callbackURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
+                let session = ASWebAuthenticationSession(
+                    url: url,
+                    callbackURLScheme: "oscarstracker"
+                ) { callbackURL, error in
+                    if let error = error {
+                        if (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin {
+                            continuation.resume(throwing: AuthError.sessionNotFound)
+                        } else {
+                            continuation.resume(throwing: error)
+                        }
+                        return
+                    }
+
+                    guard let callbackURL = callbackURL else {
+                        continuation.resume(throwing: AuthError.sessionNotFound)
+                        return
+                    }
+
+                    continuation.resume(returning: callbackURL)
+                }
+
+                session.presentationContextProvider = WebAuthPresentationContextProvider.shared
+                session.prefersEphemeralWebBrowserSession = false
+                session.start()
+            }
+
+            // Handle the callback URL
+            let session = try await supabase.auth.session(from: callbackURL)
+            currentUser = session.user
+
+            // Check if user has a profile (existing user) or needs onboarding (new user)
+            await checkIfNeedsOnboarding()
+
+            isAuthenticated = true
+        } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
+            // User cancelled, don't show error
+            errorMessage = nil
+        } catch let error as AuthError {
+            errorMessage = mapGoogleAuthError(error)
+        } catch {
+            errorMessage = "Failed to sign in with Google. Please try again."
+        }
+
+        isLoading = false
+    }
+
+    /// Check if a new OAuth user needs onboarding
+    private func checkIfNeedsOnboarding() async {
+        guard let userId = currentUser?.id else { return }
+
+        do {
+            let profiles: [Profile] = try await supabase
+                .from("profiles")
+                .select()
+                .eq("id", value: userId.uuidString)
+                .execute()
+                .value
+
+            // If no profile exists or username is empty, user needs onboarding
+            if profiles.isEmpty || profiles.first?.username?.isEmpty == true {
+                needsOnboarding = true
+            } else {
+                needsOnboarding = false
+            }
+        } catch {
+            // If we can't check, assume they need onboarding
+            needsOnboarding = true
+        }
+    }
+
+    /// Map Google OAuth errors to user-friendly messages
+    private func mapGoogleAuthError(_ error: AuthError) -> String {
+        switch error {
+        case .api(let apiError):
+            if let message = apiError.message?.lowercased() {
+                if message.contains("cancelled") || message.contains("canceled") {
+                    return "Sign in was cancelled."
+                }
+                if message.contains("network") {
+                    return "Network error. Please check your connection."
+                }
+            }
+            return "Failed to sign in with Google. Please try again."
+        case .sessionNotFound:
+            return "Sign in was cancelled."
+        default:
+            return "Failed to sign in with Google. Please try again."
         }
     }
 
@@ -262,5 +368,22 @@ enum PasswordStrength {
         case .strong:
             return "Strong"
         }
+    }
+}
+
+/// Provides the presentation context for ASWebAuthenticationSession
+final class WebAuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
+    static let shared = WebAuthPresentationContextProvider()
+
+    private override init() {
+        super.init()
+    }
+
+    func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else {
+            return ASPresentationAnchor()
+        }
+        return window
     }
 }

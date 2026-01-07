@@ -120,6 +120,37 @@ struct LoginView: View {
                     .accessibilityLabel("Sign In")
                     .accessibilityHint(isFormValid ? "Double tap to sign in" : "Enter email and password first")
 
+                    // Divider
+                    HStack {
+                        Rectangle()
+                            .fill(Color.borderColor)
+                            .frame(height: 1)
+                        Text("or")
+                            .font(.bodyMedium)
+                            .foregroundStyle(Color.textMuted)
+                            .padding(.horizontal, 16)
+                        Rectangle()
+                            .fill(Color.borderColor)
+                            .frame(height: 1)
+                    }
+                    .padding(.horizontal)
+
+                    // Continue with Google button
+                    Button {
+                        signInWithGoogle()
+                    } label: {
+                        HStack(spacing: 12) {
+                            GoogleLogoView()
+                                .frame(width: 20, height: 20)
+                            Text("Continue with Google")
+                        }
+                    }
+                    .buttonStyle(.googleAuth)
+                    .disabled(authViewModel.isLoading)
+                    .padding(.horizontal)
+                    .accessibilityLabel("Continue with Google")
+                    .accessibilityHint("Double tap to sign in with your Google account")
+
                     // Sign up link
                     HStack(spacing: 4) {
                         Text("Don't have an account?")
@@ -161,6 +192,13 @@ struct LoginView: View {
         focusedField = nil
         Task {
             await authViewModel.signIn(email: email, password: password)
+        }
+    }
+
+    private func signInWithGoogle() {
+        focusedField = nil
+        Task {
+            await authViewModel.signInWithGoogle()
         }
     }
 }
