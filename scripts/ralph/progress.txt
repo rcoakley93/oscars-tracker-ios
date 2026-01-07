@@ -829,3 +829,37 @@
   - validationRow helper pattern for consistent validation feedback UI
   - Use @FocusState with .focused() modifier for programmatic keyboard control
 ---
+
+## 2026-01-07 - US-031
+- What was implemented:
+  - Change Password button in Profile account section with key.fill icon
+  - ChangePasswordSheet component presented as sheet
+  - Current password field with SecureField and .textContentType(.password)
+  - New password field with strength indicator (ChangePasswordStrengthView)
+  - Confirm new password field with match indicator
+  - Password requirements checklist (ChangePasswordRequirementsView, ChangePasswordRequirementRow)
+  - Verification of current password by attempting signIn before allowing change
+  - Supabase auth.update(user: UserAttributes(password:)) for password change
+  - Success message display in account section after password change
+  - Error mapping for common password change failures
+  - HapticManager feedback: success on change, error on failure
+  - @FocusState for field focus management with .submitLabel/.onSubmit navigation
+  - interactiveDismissDisabled during password change to prevent accidental dismiss
+  - onChange handlers to clear error message on any field change
+  - Accessibility labels on all form controls
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/ProfileViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Profile/ProfileView.swift
+  - tests/us-031-profile-change-password.spec.ts (new)
+  - scripts/ralph/prd.json
+  - AGENTS.md
+- **Learnings:**
+  - Supabase password change requires UserAttributes struct: UserAttributes(password: newPassword)
+  - Verify current password by attempting signIn with email before allowing password change
+  - Reuse PasswordStrength enum from AuthViewModel for consistency
+  - Create separate components for ChangePassword UI to avoid conflicts with SignUp components
+  - Show password match indicator only when confirmNewPassword is not empty
+  - Use 3-second delay for success message auto-dismiss in profile (longer than 2-second for better visibility)
+  - interactiveDismissDisabled prevents accidental sheet dismiss during async operations
+  - Clear errors on field change with .onChange(of:) modifier pattern
+---

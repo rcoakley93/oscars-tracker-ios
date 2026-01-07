@@ -249,4 +249,168 @@ final class ProfileViewModel: ObservableObject {
             HapticManager.error()
         }
     }
+
+    // MARK: - Change Password
+
+    @Published var showChangePasswordSheet = false
+    @Published var currentPassword = ""
+    @Published var newPassword = ""
+    @Published var confirmNewPassword = ""
+    @Published var isChangingPassword = false
+    @Published var changePasswordSuccessMessage: String?
+
+    /// Check if new password length is valid (8+ characters)
+    var isNewPasswordLengthValid: Bool {
+        newPassword.count >= 8
+    }
+
+    /// Check if new password has uppercase letter
+    var newPasswordHasUppercase: Bool {
+        newPassword.range(of: "[A-Z]", options: .regularExpression) != nil
+    }
+
+    /// Check if new password has lowercase letter
+    var newPasswordHasLowercase: Bool {
+        newPassword.range(of: "[a-z]", options: .regularExpression) != nil
+    }
+
+    /// Check if new password has number
+    var newPasswordHasNumber: Bool {
+        newPassword.range(of: "[0-9]", options: .regularExpression) != nil
+    }
+
+    /// Check if passwords match
+    var passwordsMatch: Bool {
+        !newPassword.isEmpty && newPassword == confirmNewPassword
+    }
+
+    /// Check if all password requirements are met
+    var isNewPasswordValid: Bool {
+        isNewPasswordLengthValid && newPasswordHasUppercase && newPasswordHasLowercase && newPasswordHasNumber
+    }
+
+    /// Check if form is valid for submission
+    var isChangePasswordFormValid: Bool {
+        !currentPassword.isEmpty && isNewPasswordValid && passwordsMatch
+    }
+
+    /// Password strength level for UI indicator
+    var newPasswordStrength: PasswordStrength {
+        if newPassword.isEmpty {
+            return .none
+        }
+
+        var score = 0
+
+        if newPassword.count >= 8 { score += 1 }
+        if newPassword.count >= 12 { score += 1 }
+        if newPasswordHasUppercase { score += 1 }
+        if newPasswordHasLowercase { score += 1 }
+        if newPasswordHasNumber { score += 1 }
+        if newPassword.range(of: "[!@#$%^&*(),.?\":{}|<>]", options: .regularExpression) != nil { score += 1 }
+
+        switch score {
+        case 0...2:
+            return .weak
+        case 3...4:
+            return .medium
+        default:
+            return .strong
+        }
+    }
+
+    /// Open change password sheet
+    func openChangePasswordSheet() {
+        currentPassword = ""
+        newPassword = ""
+        confirmNewPassword = ""
+        errorMessage = nil
+        changePasswordSuccessMessage = nil
+        showChangePasswordSheet = true
+    }
+
+    /// Cancel change password
+    func cancelChangePassword() {
+        showChangePasswordSheet = false
+        currentPassword = ""
+        newPassword = ""
+        confirmNewPassword = ""
+        errorMessage = nil
+    }
+
+    /// Change password via Supabase auth
+    func changePassword() async {
+        guard isChangePasswordFormValid else {
+            errorMessage = "Please fill in all fields correctly."
+            HapticManager.error()
+            return
+        }
+
+        isChangingPassword = true
+        errorMessage = nil
+        changePasswordSuccessMessage = nil
+
+        do {
+            // Get current user email for re-authentication
+            guard let email = try? await supabase.auth.session.user.email else {
+                errorMessage = "Unable to verify your account. Please try again."
+                isChangingPassword = false
+                HapticManager.error()
+                return
+            }
+
+            // Verify current password by attempting to sign in
+            do {
+                _ = try await supabase.auth.signIn(
+                    email: email,
+                    password: currentPassword
+                )
+            } catch {
+                errorMessage = "Current password is incorrect."
+                isChangingPassword = false
+                HapticManager.error()
+                return
+            }
+
+            // Update password
+            try await supabase.auth.update(user: UserAttributes(password: newPassword))
+
+            isChangingPassword = false
+            showChangePasswordSheet = false
+            changePasswordSuccessMessage = "Password changed successfully!"
+            HapticManager.success()
+
+            // Clear form
+            currentPassword = ""
+            newPassword = ""
+            confirmNewPassword = ""
+
+            // Clear success message after delay
+            Task {
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                changePasswordSuccessMessage = nil
+            }
+        } catch {
+            isChangingPassword = false
+            errorMessage = mapChangePasswordError(error)
+            HapticManager.error()
+        }
+    }
+
+    /// Map password change errors to user-friendly messages
+    private func mapChangePasswordError(_ error: Error) -> String {
+        let errorMessage = error.localizedDescription.lowercased()
+
+        if errorMessage.contains("weak") || errorMessage.contains("password") {
+            return "New password is too weak. Please use a stronger password."
+        }
+        if errorMessage.contains("same") {
+            return "New password must be different from current password."
+        }
+        if errorMessage.contains("network") || errorMessage.contains("connection") {
+            return "Network error. Please check your connection."
+        }
+
+        return "Failed to change password. Please try again."
+    }
 }

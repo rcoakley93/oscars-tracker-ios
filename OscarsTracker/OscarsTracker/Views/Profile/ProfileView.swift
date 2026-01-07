@@ -37,6 +37,9 @@ struct ProfileView: View {
             } message: {
                 Text("Are you sure you want to sign out?")
             }
+            .sheet(isPresented: $viewModel.showChangePasswordSheet) {
+                ChangePasswordSheet(viewModel: viewModel)
+            }
         }
         .task {
             await viewModel.loadData()
@@ -256,6 +259,33 @@ struct ProfileView: View {
                 .foregroundStyle(Color.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            // Change Password success message
+            if let successMessage = viewModel.changePasswordSuccessMessage {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.success)
+                    Text(successMessage)
+                        .foregroundStyle(Color.success)
+                }
+                .font(.caption)
+                .transition(.opacity.combined(with: .scale))
+            }
+
+            // Change Password button
+            Button {
+                viewModel.openChangePasswordSheet()
+            } label: {
+                HStack {
+                    Image(systemName: "key.fill")
+                    Text("Change Password")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(GoldButtonStyle())
+            .accessibilityLabel("Change your password")
+            .accessibilityHint("Tap to change your account password")
+
+            // Sign Out button
             Button {
                 showSignOutConfirmation = true
             } label: {
@@ -270,6 +300,7 @@ struct ProfileView: View {
         }
         .padding()
         .glassCard()
+        .animation(.easeInOut(duration: 0.2), value: viewModel.changePasswordSuccessMessage)
     }
 
     // MARK: - Loading & Empty States
@@ -327,6 +358,289 @@ struct StatItemView: View {
                 .foregroundStyle(Color.textMuted)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+/// Sheet for changing user password
+struct ChangePasswordSheet: View {
+    @ObservedObject var viewModel: ProfileViewModel
+    @FocusState private var focusedField: PasswordField?
+
+    enum PasswordField {
+        case current
+        case new
+        case confirm
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 8) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(LinearGradient.gold)
+                            .goldGlow()
+
+                        Text("Change Password")
+                            .font(.displaySmall)
+                            .foregroundStyle(Color.textPrimary)
+
+                        Text("Enter your current password and choose a new one")
+                            .font(.bodyMedium)
+                            .foregroundStyle(Color.textMuted)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, 16)
+
+                    // Form
+                    VStack(spacing: 20) {
+                        // Current password field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Current Password")
+                                .font(.bodyMedium)
+                                .foregroundStyle(Color.textMuted)
+
+                            SecureField("", text: $viewModel.currentPassword)
+                                .textFieldStyle(OscarsTextFieldStyle())
+                                .textContentType(.password)
+                                .focused($focusedField, equals: .current)
+                                .submitLabel(.next)
+                                .onSubmit {
+                                    focusedField = .new
+                                }
+                                .accessibilityLabel("Current password")
+                                .accessibilityHint("Enter your current password")
+                        }
+
+                        // New password field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("New Password")
+                                .font(.bodyMedium)
+                                .foregroundStyle(Color.textMuted)
+
+                            SecureField("", text: $viewModel.newPassword)
+                                .textFieldStyle(OscarsTextFieldStyle())
+                                .textContentType(.newPassword)
+                                .focused($focusedField, equals: .new)
+                                .submitLabel(.next)
+                                .onSubmit {
+                                    focusedField = .confirm
+                                }
+                                .accessibilityLabel("New password")
+                                .accessibilityHint("Enter your new password")
+
+                            // Password strength indicator
+                            ChangePasswordStrengthView(strength: viewModel.newPasswordStrength)
+                        }
+
+                        // Confirm new password field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Confirm New Password")
+                                .font(.bodyMedium)
+                                .foregroundStyle(Color.textMuted)
+
+                            SecureField("", text: $viewModel.confirmNewPassword)
+                                .textFieldStyle(OscarsTextFieldStyle())
+                                .textContentType(.newPassword)
+                                .focused($focusedField, equals: .confirm)
+                                .submitLabel(.go)
+                                .onSubmit {
+                                    changePassword()
+                                }
+                                .accessibilityLabel("Confirm new password")
+                                .accessibilityHint("Re-enter your new password")
+
+                            // Password match indicator
+                            if !viewModel.confirmNewPassword.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: viewModel.passwordsMatch ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                        .foregroundStyle(viewModel.passwordsMatch ? Color.success : Color.destructive)
+                                    Text(viewModel.passwordsMatch ? "Passwords match" : "Passwords do not match")
+                                        .font(.caption)
+                                        .foregroundStyle(viewModel.passwordsMatch ? Color.success : Color.destructive)
+                                }
+                            }
+                        }
+
+                        // Password requirements
+                        ChangePasswordRequirementsView(viewModel: viewModel)
+
+                        // Error message
+                        if let errorMessage = viewModel.errorMessage {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(Color.destructive)
+                                Text(errorMessage)
+                                    .font(.bodyMedium)
+                                    .foregroundStyle(Color.destructive)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 4)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Error: \(errorMessage)")
+                        }
+                    }
+                    .glassCard()
+
+                    // Change Password button
+                    Button {
+                        changePassword()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if viewModel.isChangingPassword {
+                                ProgressView()
+                                    .tint(.black)
+                                Text("Changing Password...")
+                            } else {
+                                Text("Change Password")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(GoldButtonStyle())
+                    .disabled(!viewModel.isChangePasswordFormValid || viewModel.isChangingPassword)
+                    .opacity(viewModel.isChangePasswordFormValid ? 1 : 0.6)
+                    .accessibilityLabel("Change password")
+                    .accessibilityHint(viewModel.isChangePasswordFormValid ? "Tap to change your password" : "Fill in all fields correctly first")
+                }
+                .padding()
+            }
+            .background(Color.appBackground)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        viewModel.cancelChangePassword()
+                    }
+                    .foregroundStyle(Color.goldPrimary)
+                }
+            }
+            .interactiveDismissDisabled(viewModel.isChangingPassword)
+        }
+        .onAppear {
+            focusedField = .current
+        }
+        .onTapGesture {
+            focusedField = nil
+        }
+        .onChange(of: viewModel.currentPassword) { _, _ in
+            viewModel.errorMessage = nil
+        }
+        .onChange(of: viewModel.newPassword) { _, _ in
+            viewModel.errorMessage = nil
+        }
+        .onChange(of: viewModel.confirmNewPassword) { _, _ in
+            viewModel.errorMessage = nil
+        }
+    }
+
+    private func changePassword() {
+        focusedField = nil
+        Task {
+            await viewModel.changePassword()
+        }
+    }
+}
+
+/// Password strength indicator for change password sheet
+struct ChangePasswordStrengthView: View {
+    let strength: PasswordStrength
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Strength bars
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(barColor(for: index))
+                        .frame(height: 4)
+                }
+            }
+
+            // Strength label
+            if strength != .none {
+                Text(strength.label)
+                    .font(.caption)
+                    .foregroundStyle(strengthColor)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: strength)
+    }
+
+    private func barColor(for index: Int) -> Color {
+        switch strength {
+        case .none:
+            return Color.borderColor
+        case .weak:
+            return index == 0 ? Color.destructive : Color.borderColor
+        case .medium:
+            return index <= 1 ? Color.goldPrimary : Color.borderColor
+        case .strong:
+            return Color.success
+        }
+    }
+
+    private var strengthColor: Color {
+        switch strength {
+        case .none:
+            return Color.textMuted
+        case .weak:
+            return Color.destructive
+        case .medium:
+            return Color.goldPrimary
+        case .strong:
+            return Color.success
+        }
+    }
+}
+
+/// Password requirements checklist for change password
+struct ChangePasswordRequirementsView: View {
+    @ObservedObject var viewModel: ProfileViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Password requirements:")
+                .font(.caption)
+                .foregroundStyle(Color.textMuted)
+
+            ChangePasswordRequirementRow(
+                met: viewModel.isNewPasswordLengthValid,
+                text: "At least 8 characters"
+            )
+            ChangePasswordRequirementRow(
+                met: viewModel.newPasswordHasUppercase,
+                text: "One uppercase letter"
+            )
+            ChangePasswordRequirementRow(
+                met: viewModel.newPasswordHasLowercase,
+                text: "One lowercase letter"
+            )
+            ChangePasswordRequirementRow(
+                met: viewModel.newPasswordHasNumber,
+                text: "One number"
+            )
+        }
+        .padding(.top, 4)
+    }
+}
+
+/// Individual requirement row for change password
+struct ChangePasswordRequirementRow: View {
+    let met: Bool
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: met ? "checkmark.circle.fill" : "circle")
+                .font(.caption)
+                .foregroundStyle(met ? Color.success : Color.textMuted)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(met ? Color.textPrimary : Color.textMuted)
+        }
     }
 }
 

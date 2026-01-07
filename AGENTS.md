@@ -63,3 +63,16 @@
 - Use ZStack with `.bottomTrailing` alignment
 - Gold circular button with shadow: `.shadow(color: Color.goldPrimary.opacity(0.4), radius: 8)`
 - Add bottom padding to ScrollView content to avoid overlap
+
+### Supabase Auth Update Pattern
+- Verify current password by attempting `supabase.auth.signIn()` first
+- Update password with `supabase.auth.update(user: UserAttributes(password: newPassword))`
+- Requires existing session to be active
+- Use `try? await supabase.auth.session.user.email` to get current user email
+
+### Change Password Form Pattern
+- Create separate computed properties for each password requirement
+- Use `PasswordStrength` enum from AuthViewModel for strength indicator
+- Show password match indicator only when confirm field is not empty
+- Use `.interactiveDismissDisabled()` during async operations to prevent accidental dismiss
+- Clear error message on any field change with `.onChange(of:)` modifiers
