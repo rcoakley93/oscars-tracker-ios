@@ -49,6 +49,7 @@
 		E81234560028 /* GroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550280 /* GroupsView.swift */; };
 		E81234560029 /* GroupsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550290 /* GroupsViewModel.swift */; };
 		E8123456002A /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502A0 /* LoadingView.swift */; };
+		E8123456002B /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502B0 /* ErrorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -95,6 +96,7 @@
 		E81234550280 /* GroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsView.swift; sourceTree = "<group>"; };
 		E81234550290 /* GroupsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsViewModel.swift; sourceTree = "<group>"; };
 		E812345502A0 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		E812345502B0 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -279,6 +281,7 @@
 				E81234550130 /* GoldGlowModifier.swift */,
 				E81234550260 /* GoogleLogoView.swift */,
 				E812345502A0 /* LoadingView.swift */,
+				E812345502B0 /* ErrorView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -419,6 +422,7 @@
 				E81234560028 /* GroupsView.swift in Sources */,
 				E81234560029 /* GroupsViewModel.swift in Sources */,
 				E8123456002A /* LoadingView.swift in Sources */,
+				E8123456002B /* ErrorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

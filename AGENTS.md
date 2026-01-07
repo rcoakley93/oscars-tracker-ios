@@ -95,3 +95,13 @@
 - Skeleton animations: `Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)`
 - Hide skeleton views from accessibility tree with `.accessibilityHidden(true)`
 - Use `Color.borderColor` as fill color for skeleton views
+
+### Error Handling Pattern
+- Use `ErrorView` for full-screen error states with retry button
+- Use `NetworkErrorView` for network-specific errors (wifi.slash icon)
+- Use `ToastView` with `.toast()` modifier for transient error messages
+- Use `ErrorBanner` for inline form validation errors
+- Use `PartialErrorView` for graceful degradation on partial failures
+- ToastData: `.error()`, `.success()`, `.warning()`, `.info()` static constructors
+- Toast auto-dismisses after `duration` seconds when `autoDismiss: true`
+- ViewModels use `@Published var errorMessage: String?` with try/catch
