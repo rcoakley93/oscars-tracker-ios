@@ -138,3 +138,24 @@
   - UUID from Supabase user needs .uuidString for JSON serialization
   - Combine isUsernameValid with multiple validation checks
 ---
+
+## 2026-01-06 - US-007
+- What was implemented:
+  - TabView with 5 tabs: Dashboard, Watch Plan, Ballot, Leaderboard, More
+  - SF Symbol icons for each tab (film.fill, calendar, checkmark.seal.fill, trophy.fill, ellipsis)
+  - Gold tint via .tint(.goldPrimary)
+  - Tab enum for navigation state persistence
+  - MoreMenuView with NavigationLink to Groups and Profile
+  - iPad sidebar navigation via NavigationSplitView and horizontalSizeClass
+  - Placeholder views for each tab with NavigationStack
+  - Groups and Profile in iPad sidebar "More" section
+- Files changed:
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - tests/us-007-tab-navigation.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - horizontalSizeClass == .regular detects iPad/landscape
+  - NavigationSplitView with columnVisibility for iPad sidebar
+  - Tab enum with Hashable for state management
+  - NavigationLink(value:) works with List selection binding
+---

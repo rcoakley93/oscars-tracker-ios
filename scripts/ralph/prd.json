@@ -103,7 +103,7 @@
         "Navigation state persists across tab switches"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
