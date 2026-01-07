@@ -99,7 +99,7 @@ test.describe('US-008: Dashboard - Progress Hero', () => {
 
     // Check for published properties
     expect(content).toContain('@Published var movies');
-    expect(content).toContain('@Published var watchedMovieIds');
+    expect(content).toContain('@Published var watchedMovieIds: Set<Int>');
     expect(content).toContain('@Published var isLoading');
 
     // Check for computed properties

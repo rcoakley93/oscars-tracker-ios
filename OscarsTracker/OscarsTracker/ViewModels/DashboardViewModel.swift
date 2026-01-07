@@ -5,7 +5,7 @@ import Supabase
 @MainActor
 final class DashboardViewModel: ObservableObject {
     @Published var movies: [Movie] = []
-    @Published var watchedMovieIds: Set<UUID> = []
+    @Published var watchedMovieIds: Set<Int> = []
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -68,7 +68,7 @@ final class DashboardViewModel: ObservableObject {
     }
 
     /// Toggle watched status for a movie
-    func toggleWatched(movieId: UUID) async {
+    func toggleWatched(movieId: Int) async {
         guard let userId = supabase.auth.currentUser?.id else { return }
 
         // Optimistic update
@@ -86,7 +86,7 @@ final class DashboardViewModel: ObservableObject {
                     .from("user_watched")
                     .delete()
                     .eq("user_id", value: userId.uuidString)
-                    .eq("movie_id", value: movieId.uuidString)
+                    .eq("movie_id", value: movieId)
                     .execute()
             } else {
                 // Add to watched
@@ -94,7 +94,7 @@ final class DashboardViewModel: ObservableObject {
                     .from("user_watched")
                     .insert([
                         "user_id": userId.uuidString,
-                        "movie_id": movieId.uuidString
+                        "movie_id": String(movieId)
                     ])
                     .execute()
             }
@@ -110,7 +110,7 @@ final class DashboardViewModel: ObservableObject {
     }
 
     /// Check if a movie is watched
-    func isWatched(_ movieId: UUID) -> Bool {
+    func isWatched(_ movieId: Int) -> Bool {
         watchedMovieIds.contains(movieId)
     }
 

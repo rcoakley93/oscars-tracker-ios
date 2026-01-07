@@ -141,17 +141,42 @@ struct DashboardPlaceholderView: View {
                     )
                     .padding(.horizontal)
 
-                    // Placeholder for movie grid (US-009)
-                    VStack(spacing: 16) {
-                        Image(systemName: "film.fill")
-                            .font(.system(size: 48))
-                            .foregroundStyle(Color.goldPrimary)
-                        Text("Movie grid coming soon")
-                            .font(.headingMedium)
-                            .foregroundStyle(Color.textMuted)
+                    // Movie Grid
+                    if viewModel.isLoading && viewModel.movies.isEmpty {
+                        // Loading placeholder
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .tint(Color.goldPrimary)
+                            Text("Loading movies...")
+                                .font(.bodyMedium)
+                                .foregroundStyle(Color.textMuted)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 60)
+                    } else if viewModel.movies.isEmpty {
+                        // Empty state
+                        VStack(spacing: 16) {
+                            Image(systemName: "film.fill")
+                                .font(.system(size: 48))
+                                .foregroundStyle(Color.goldPrimary)
+                            Text("No movies found")
+                                .font(.headingMedium)
+                                .foregroundStyle(Color.textMuted)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 60)
+                    } else {
+                        // Movie grid
+                        MovieGridView(
+                            movies: viewModel.movies,
+                            watchedMovieIds: viewModel.watchedMovieIds,
+                            onToggleWatched: { movieId in
+                                Task {
+                                    await viewModel.toggleWatched(movieId: movieId)
+                                }
+                            }
+                        )
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 60)
                 }
                 .padding(.vertical)
             }

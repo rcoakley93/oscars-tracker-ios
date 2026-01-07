@@ -33,6 +33,7 @@
 		E81234560018 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550180 /* OnboardingViewModel.swift */; };
 		E81234560019 /* ProgressHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550190 /* ProgressHeroView.swift */; };
 		E8123456001A /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501A0 /* DashboardViewModel.swift */; };
+		E8123456001B /* MovieCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501B0 /* MovieCardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +64,7 @@
 		E81234550180 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		E81234550190 /* ProgressHeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressHeroView.swift; sourceTree = "<group>"; };
 		E812345501A0 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		E812345501B0 /* MovieCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieCardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,6 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				E81234550190 /* ProgressHeroView.swift */,
+				E812345501B0 /* MovieCardView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -315,6 +318,7 @@
 				E81234560018 /* OnboardingViewModel.swift in Sources */,
 				E81234560019 /* ProgressHeroView.swift in Sources */,
 				E8123456001A /* DashboardViewModel.swift in Sources */,
+				E8123456001B /* MovieCardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

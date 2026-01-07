@@ -185,7 +185,36 @@
   - DateComponents uses dot syntax for properties: components.year, components.month, components.day
   - GeometryReader for progress bar width calculation: geometry.size.width * progress
   - Computed properties in ViewModel for derived state (watchedCount, totalCount)
-  - Set<UUID> efficient for tracking watched movie IDs
+  - Set<Int> efficient for tracking watched movie IDs (matches DB model int type)
   - Optimistic updates: modify local state first, then sync with server, rollback on error
   - Views/Dashboard folder structure for dashboard-specific views
+---
+
+## 2026-01-06 - US-009
+- What was implemented:
+  - Created MovieCardView with poster image, title, runtime display
+  - KFImage (Kingfisher) for async poster loading with placeholder
+  - MovieGridView with LazyVGrid and responsive columns (2 on iPhone, 5 on iPad)
+  - Watched indicator (checkmark.circle.fill) overlay on poster
+  - Gold border highlight on watched movies
+  - isWatched state passed from parent, onTap callback for toggle
+  - Loading state with ProgressView while data loads
+  - Empty state when no movies found
+  - Integration in DashboardPlaceholderView with viewModel binding
+  - Accessibility labels and hints for VoiceOver
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/Views/Dashboard/MovieCardView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift (Int instead of UUID)
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - tests/us-008-progress-hero.spec.ts (updated for Set<Int>)
+  - tests/us-009-movie-grid.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Movie model uses Int for id, not UUID - must match DB schema
+  - KFImage with .placeholder { } for loading state
+  - LazyVGrid columns calculated from horizontalSizeClass
+  - Aspect ratio 2/3 for movie posters
+  - Button with .buttonStyle(.plain) for custom tap handling
+  - Accessibility: combine children and provide custom label/hint
 ---

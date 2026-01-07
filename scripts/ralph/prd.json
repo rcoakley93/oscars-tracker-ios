@@ -134,7 +134,7 @@
         "Pull to refresh reloads data"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
