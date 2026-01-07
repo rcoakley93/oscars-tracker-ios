@@ -35,6 +35,8 @@
 		E8123456001A /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501A0 /* DashboardViewModel.swift */; };
 		E8123456001B /* MovieCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501B0 /* MovieCardView.swift */; };
 		E8123456001C /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501C0 /* HapticManager.swift */; };
+		E8123456001D /* WatchPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501D0 /* WatchPlanView.swift */; };
+		E8123456001E /* WatchPlanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501E0 /* WatchPlanViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -67,6 +69,8 @@
 		E812345501A0 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		E812345501B0 /* MovieCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieCardView.swift; sourceTree = "<group>"; };
 		E812345501C0 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		E812345501D0 /* WatchPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanView.swift; sourceTree = "<group>"; };
+		E812345501E0 /* WatchPlanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -151,6 +155,7 @@
 				E81234550140 /* AuthViewModel.swift */,
 				E81234550180 /* OnboardingViewModel.swift */,
 				E812345501A0 /* DashboardViewModel.swift */,
+				E812345501E0 /* WatchPlanViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -161,8 +166,17 @@
 				E8123453000B /* Auth */,
 				E8123453000C /* Onboarding */,
 				E8123453000D /* Dashboard */,
+				E8123453000E /* WatchPlan */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E8123453000E /* WatchPlan */ = {
+			isa = PBXGroup;
+			children = (
+				E812345501D0 /* WatchPlanView.swift */,
+			);
+			path = WatchPlan;
 			sourceTree = "<group>";
 		};
 		E8123453000D /* Dashboard */ = {
@@ -323,6 +337,8 @@
 				E8123456001A /* DashboardViewModel.swift in Sources */,
 				E8123456001B /* MovieCardView.swift in Sources */,
 				E8123456001C /* HapticManager.swift in Sources */,
+				E8123456001D /* WatchPlanView.swift in Sources */,
+				E8123456001E /* WatchPlanViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

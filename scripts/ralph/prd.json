@@ -179,7 +179,7 @@
         "Stats shown: planned count, unplanned count, watched count"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

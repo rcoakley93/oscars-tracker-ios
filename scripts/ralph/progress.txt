@@ -239,3 +239,32 @@
   - Haptic feedback should be immediate, before async operations start
   - enum with static funcs pattern for haptic utility
 ---
+
+## 2026-01-06 - US-012
+- What was implemented:
+  - WatchPlanView with NavigationStack and date-grouped list
+  - WatchPlanViewModel with Supabase watch_plan table loading
+  - groupedItems computed property sorting by date with overdue at top
+  - TODAY/TOMORROW labels for relative dates, formatted date for others
+  - OVERDUE section with red Color.destructive styling
+  - WatchPlanRowView with poster placeholder, title, runtime, year
+  - MISSED badge for overdue movies using isMissed computed property
+  - Stats card showing planned/unplanned/watched counts
+  - LazyVStack with pinnedViews: [.sectionHeaders] for sticky headers
+  - Empty state and loading state views
+  - ContentView WatchPlanPlaceholderView now wraps WatchPlanView
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/WatchPlanViewModel.swift
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - tests/us-012-watch-plan-date-grouped.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - LazyVStack with pinnedViews: [.sectionHeaders] for sticky section headers
+  - Grouping by date: Dictionary grouping then sorting keys
+  - Date comparison: Calendar.current.startOfDay(for:) for day-level comparison
+  - Date formatting: DateFormatter with dateFormat for custom formats
+  - UPPERCASED() for date labels like "TODAY", "TOMORROW"
+  - ForEach with id: \.date for date-keyed sections
+---

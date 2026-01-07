@@ -194,23 +194,7 @@ struct DashboardPlaceholderView: View {
 
 struct WatchPlanPlaceholderView: View {
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 64))
-                        .foregroundStyle(Color.goldPrimary)
-                    Text("Watch Plan")
-                        .font(.displayMedium)
-                        .foregroundStyle(Color.textPrimary)
-                    Text("Plan when to watch each movie")
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textMuted)
-                }
-            }
-            .navigationTitle("Watch Plan")
-        }
+        WatchPlanView()
     }
 }
 
