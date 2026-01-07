@@ -15,6 +15,7 @@ struct BallotView: View {
                         emptyStateView
                     } else {
                         ballotProgressCard
+                        countdownTimer
                         categoryGrid
                     }
                 }
@@ -37,6 +38,18 @@ struct BallotView: View {
         BallotProgressCard(
             predictedCount: viewModel.predictedCategories,
             totalCategories: viewModel.totalCategories
+        )
+    }
+
+    // MARK: - Countdown Timer
+
+    private var countdownTimer: some View {
+        CountdownTimerView(
+            lockDate: viewModel.ballotLockDate,
+            isLocked: viewModel.isLocked,
+            onLock: {
+                viewModel.checkLockStatus()
+            }
         )
     }
 
@@ -162,6 +175,123 @@ struct BallotProgressBar: View {
     }
 }
 
+/// Countdown timer view showing time until ballot locks.
+struct CountdownTimerView: View {
+    let lockDate: Date
+    let isLocked: Bool
+    let onLock: () -> Void
+
+    @State private var timeRemaining: TimeInterval = 0
+    @State private var timer: Timer?
+
+    private var days: Int {
+        Int(timeRemaining) / 86400
+    }
+
+    private var hours: Int {
+        (Int(timeRemaining) % 86400) / 3600
+    }
+
+    private var minutes: Int {
+        (Int(timeRemaining) % 3600) / 60
+    }
+
+    private var seconds: Int {
+        Int(timeRemaining) % 60
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            // Header
+            HStack {
+                Image(systemName: isLocked ? "lock.fill" : "clock.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(isLocked ? Color.destructive : Color.goldPrimary)
+
+                Text(isLocked ? "Ballot Locked" : "Time Remaining")
+                    .font(.headingSmall)
+                    .foregroundStyle(Color.textPrimary)
+
+                Spacer()
+            }
+
+            if isLocked {
+                // Locked state
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(Color.destructive)
+
+                    Text("Predictions are now locked")
+                        .font(.bodyMedium)
+                        .foregroundStyle(Color.textMuted)
+                }
+            } else {
+                // Countdown display
+                HStack(spacing: 16) {
+                    TimeUnitView(value: days, unit: "DAYS")
+                    TimeUnitView(value: hours, unit: "HRS")
+                    TimeUnitView(value: minutes, unit: "MIN")
+                    TimeUnitView(value: seconds, unit: "SEC")
+                }
+            }
+        }
+        .padding()
+        .glassCard()
+        .onAppear {
+            startTimer()
+        }
+        .onDisappear {
+            stopTimer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isLocked ? "Ballot is locked, predictions cannot be changed" : "Time remaining: \(days) days, \(hours) hours, \(minutes) minutes, \(seconds) seconds")
+    }
+
+    private func startTimer() {
+        updateTimeRemaining()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            updateTimeRemaining()
+        }
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    private func updateTimeRemaining() {
+        let remaining = lockDate.timeIntervalSince(Date())
+        if remaining <= 0 {
+            timeRemaining = 0
+            onLock()
+            stopTimer()
+        } else {
+            timeRemaining = remaining
+        }
+    }
+}
+
+/// Individual time unit display.
+struct TimeUnitView: View {
+    let value: Int
+    let unit: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(String(format: "%02d", value))
+                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                .foregroundStyle(Color.goldPrimary)
+
+            Text(unit)
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.textMuted)
+        }
+        .frame(minWidth: 50)
+    }
+}
+
 /// Expandable card showing a category and its nominations.
 struct CategoryCard: View {
     let category: CategoryWithNominations
@@ -237,6 +367,7 @@ struct CategoryCard: View {
                         nomination: nomination,
                         movie: viewModel.movie(for: nomination),
                         isSelected: viewModel.isSelected(nomination: nomination),
+                        isLocked: viewModel.isLocked,
                         onSelect: {
                             Task {
                                 await viewModel.selectPrediction(nomination: nomination)
@@ -255,6 +386,7 @@ struct NominationRow: View {
     let nomination: Nomination
     let movie: Movie?
     let isSelected: Bool
+    let isLocked: Bool
     let onSelect: () -> Void
 
     var body: some View {
@@ -326,9 +458,11 @@ struct NominationRow: View {
             )
         }
         .buttonStyle(.plain)
+        .disabled(isLocked)
+        .opacity(isLocked ? 0.6 : 1.0)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")")
-        .accessibilityHint("Double tap to \(isSelected ? "deselect" : "select") this prediction")
+        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")\(isLocked ? ", ballot is locked" : "")")
+        .accessibilityHint(isLocked ? "Ballot is locked, selections cannot be changed" : "Double tap to \(isSelected ? "deselect" : "select") this prediction")
     }
 }
 

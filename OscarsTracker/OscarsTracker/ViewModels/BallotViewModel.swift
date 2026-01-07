@@ -10,8 +10,26 @@ final class BallotViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isSaving = false
     @Published var errorMessage: String?
+    @Published var isLocked = false
 
     private let supabase = SupabaseClientManager.shared.client
+
+    /// The date when the ballot locks (Oscars ceremony start - March 2, 2025 at 5:00 PM PT)
+    let ballotLockDate: Date = {
+        var components = DateComponents()
+        components.year = 2025
+        components.month = 3
+        components.day = 2
+        components.hour = 17
+        components.minute = 0
+        components.timeZone = TimeZone(identifier: "America/Los_Angeles")
+        return Calendar.current.date(from: components) ?? Date()
+    }()
+
+    /// Check if ballot is currently locked
+    func checkLockStatus() {
+        isLocked = Date() >= ballotLockDate
+    }
 
     /// Categories sorted by points value (highest first)
     var sortedCategories: [CategoryWithNominations] {
@@ -127,6 +145,12 @@ final class BallotViewModel: ObservableObject {
 
     /// Select a nomination as prediction for a category
     func selectPrediction(nomination: Nomination) async {
+        // Don't allow changes if ballot is locked
+        guard !isLocked else {
+            HapticManager.error()
+            return
+        }
+
         guard let categoryId = nomination.categoryId else { return }
 
         // Optimistic update
