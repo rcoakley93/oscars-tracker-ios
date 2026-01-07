@@ -21,6 +21,8 @@
 - Supabase Update: .update(["field": value]).eq("id", value: id) for updating specific fields
 - Supabase Delete: .delete().eq("id", value: id) for removing records
 - Alert with Data: .alert(presenting: $optionalItem) for alerts with associated value
+- iPad Grid: Use horizontalSizeClass == .regular with LazyVGrid for 2-col on iPad, 1-col on iPhone
+- Expandable Card: @State isExpanded with toggle, animate with .easeInOut, use chevron icon
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -348,4 +350,30 @@
   - Maintain both originalItems and originalWatchedIds for complete rollback
   - Multiple callback closures in row view: onReschedule, onMarkWatched, onRemove
   - Button role .destructive for remove confirmation
+---
+
+## 2026-01-07 - US-019
+- What was implemented:
+  - BallotView with category list sorted by points value
+  - CategoryCard with expand/collapse to show nominations
+  - NominationRow showing movie title and detail text
+  - BallotViewModel loading categories and nominations from Supabase
+  - 2-column LazyVGrid on iPad, 1-column on iPhone
+  - Pull to refresh functionality
+  - Winner badge (trophy icon) for winning nominations
+  - Haptic feedback on category expand/collapse
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker/Views/Ballot/BallotView.swift (new)
+  - OscarsTracker/OscarsTracker/ViewModels/BallotViewModel.swift (new)
+  - tests/us-019-ballot-category-list.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - horizontalSizeClass environment variable for iPad detection
+  - LazyVGrid with GridItem(.flexible()) for responsive columns
+  - Group nominations by categoryId using Dictionary
+  - CategoryWithNominations struct to combine category with nominations
+  - @State isExpanded for per-card expand state
+  - Chevron rotation based on isExpanded state
 ---

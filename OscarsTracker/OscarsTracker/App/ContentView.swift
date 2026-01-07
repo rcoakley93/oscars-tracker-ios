@@ -200,23 +200,7 @@ struct WatchPlanPlaceholderView: View {
 
 struct BallotPlaceholderView: View {
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 64))
-                        .foregroundStyle(Color.goldPrimary)
-                    Text("Ballot")
-                        .font(.displayMedium)
-                        .foregroundStyle(Color.textPrimary)
-                    Text("Make your predictions")
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textMuted)
-                }
-            }
-            .navigationTitle("Ballot")
-        }
+        BallotView()
     }
 }
 

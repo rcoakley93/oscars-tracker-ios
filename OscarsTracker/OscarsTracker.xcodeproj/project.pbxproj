@@ -38,6 +38,8 @@
 		E8123456001D /* WatchPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501D0 /* WatchPlanView.swift */; };
 		E8123456001E /* WatchPlanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501E0 /* WatchPlanViewModel.swift */; };
 		E8123456001F /* AddToPlanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501F0 /* AddToPlanSheet.swift */; };
+		E81234560020 /* BallotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550200 /* BallotView.swift */; };
+		E81234560021 /* BallotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550210 /* BallotViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -73,6 +75,8 @@
 		E812345501D0 /* WatchPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanView.swift; sourceTree = "<group>"; };
 		E812345501E0 /* WatchPlanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanViewModel.swift; sourceTree = "<group>"; };
 		E812345501F0 /* AddToPlanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlanSheet.swift; sourceTree = "<group>"; };
+		E81234550200 /* BallotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallotView.swift; sourceTree = "<group>"; };
+		E81234550210 /* BallotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallotViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,6 +162,7 @@
 				E81234550180 /* OnboardingViewModel.swift */,
 				E812345501A0 /* DashboardViewModel.swift */,
 				E812345501E0 /* WatchPlanViewModel.swift */,
+				E81234550210 /* BallotViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -169,8 +174,17 @@
 				E8123453000C /* Onboarding */,
 				E8123453000D /* Dashboard */,
 				E8123453000E /* WatchPlan */,
+				E8123453000F /* Ballot */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E8123453000F /* Ballot */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550200 /* BallotView.swift */,
+			);
+			path = Ballot;
 			sourceTree = "<group>";
 		};
 		E8123453000E /* WatchPlan */ = {
@@ -343,6 +357,8 @@
 				E8123456001D /* WatchPlanView.swift in Sources */,
 				E8123456001E /* WatchPlanViewModel.swift in Sources */,
 				E8123456001F /* AddToPlanSheet.swift in Sources */,
+				E81234560020 /* BallotView.swift in Sources */,
+				E81234560021 /* BallotViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

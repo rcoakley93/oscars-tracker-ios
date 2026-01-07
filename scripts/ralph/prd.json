@@ -285,7 +285,7 @@
         "Pull to refresh reloads categories"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
