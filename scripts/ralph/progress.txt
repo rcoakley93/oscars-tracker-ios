@@ -88,3 +88,29 @@
   - onChange(of:) with iOS 17+ uses new closure signature (oldValue, newValue)
   - project.pbxproj needs groups for nested folder structures (Views/Auth requires separate PBXGroup)
 ---
+
+## 2026-01-06 - US-004
+- What was implemented:
+  - Created SignUpView with email, password, and confirm password fields
+  - Password confirmation matching with visual feedback
+  - Password strength validation (8+ chars, uppercase, lowercase, number)
+  - PasswordStrength enum with weak/medium/strong levels and colors
+  - PasswordStrengthView with animated strength bars
+  - PasswordRequirementsView with checklist UI
+  - signUp function in AuthViewModel with Supabase auth.signUp
+  - mapSignUpError for handling existing email and other errors
+  - needsOnboarding flag for triggering onboarding after signup
+  - Navigation between LoginView and SignUpView via fullScreenCover
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/ViewModels/AuthViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Auth/SignUpView.swift
+  - OscarsTracker/OscarsTracker/Views/Auth/LoginView.swift
+  - tests/us-004-user-signup.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Password validation pattern: return nil for valid, error message for invalid
+  - Use ForEach with id: \.self for simple index-based loops
+  - Binding<Bool> allows child views to dismiss themselves
+  - fullScreenCover is better than sheet for auth flows (prevents dismissal by swipe)
+---

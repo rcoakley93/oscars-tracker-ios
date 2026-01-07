@@ -6,6 +6,7 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
+    @State private var showSignUp = false
     @FocusState private var focusedField: Field?
 
     enum Field {
@@ -126,7 +127,7 @@ struct LoginView: View {
                             .foregroundStyle(Color.textMuted)
 
                         Button("Sign Up") {
-                            // TODO: Navigate to sign up
+                            showSignUp = true
                         }
                         .font(.headingMedium)
                         .foregroundStyle(Color.goldPrimary)
@@ -137,6 +138,9 @@ struct LoginView: View {
                 }
                 .padding(.horizontal)
             }
+        }
+        .fullScreenCover(isPresented: $showSignUp) {
+            SignUpView(authViewModel: authViewModel, showSignUp: $showSignUp)
         }
         .onTapGesture {
             focusedField = nil

@@ -28,6 +28,7 @@
 		E81234560013 /* GoldGlowModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550130 /* GoldGlowModifier.swift */; };
 		E81234560014 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550140 /* AuthViewModel.swift */; };
 		E81234560015 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550150 /* LoginView.swift */; };
+		E81234560016 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550160 /* SignUpView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +54,7 @@
 		E81234550130 /* GoldGlowModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldGlowModifier.swift; sourceTree = "<group>"; };
 		E81234550140 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		E81234550150 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		E81234550160 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -151,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				E81234550150 /* LoginView.swift */,
+				E81234550160 /* SignUpView.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -279,6 +282,7 @@
 				E81234560013 /* GoldGlowModifier.swift in Sources */,
 				E81234560014 /* AuthViewModel.swift in Sources */,
 				E81234560015 /* LoginView.swift in Sources */,
+				E81234560016 /* SignUpView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
