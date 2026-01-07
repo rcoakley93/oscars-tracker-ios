@@ -29,6 +29,8 @@
 		E81234560014 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550140 /* AuthViewModel.swift */; };
 		E81234560015 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550150 /* LoginView.swift */; };
 		E81234560016 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550160 /* SignUpView.swift */; };
+		E81234560017 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550170 /* OnboardingView.swift */; };
+		E81234560018 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550180 /* OnboardingViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +57,8 @@
 		E81234550140 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		E81234550150 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		E81234550160 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
+		E81234550170 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E81234550180 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				E81234550140 /* AuthViewModel.swift */,
+				E81234550180 /* OnboardingViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -145,8 +150,17 @@
 			isa = PBXGroup;
 			children = (
 				E8123453000B /* Auth */,
+				E8123453000C /* Onboarding */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E8123453000C /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550170 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		E8123453000B /* Auth */ = {
@@ -283,6 +297,8 @@
 				E81234560014 /* AuthViewModel.swift in Sources */,
 				E81234560015 /* LoginView.swift in Sources */,
 				E81234560016 /* SignUpView.swift in Sources */,
+				E81234560017 /* OnboardingView.swift in Sources */,
+				E81234560018 /* OnboardingViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

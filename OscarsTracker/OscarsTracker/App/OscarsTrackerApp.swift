@@ -9,6 +9,9 @@ struct OscarsTrackerApp: App {
             Group {
                 if authViewModel.isAuthenticated {
                     ContentView()
+                        .sheet(isPresented: $authViewModel.needsOnboarding) {
+                            OnboardingView(authViewModel: authViewModel)
+                        }
                 } else {
                     LoginView(authViewModel: authViewModel)
                 }

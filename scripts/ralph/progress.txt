@@ -114,3 +114,27 @@
   - Binding<Bool> allows child views to dismiss themselves
   - fullScreenCover is better than sheet for auth flows (prevents dismissal by swipe)
 ---
+
+## 2026-01-06 - US-006
+- What was implemented:
+  - Created OnboardingView with username setup form
+  - Username validation (3-20 chars, alphanumeric + underscore)
+  - Profanity filter with Set<String> lookup
+  - Visual validation feedback with checkmarks
+  - OnboardingViewModel with Supabase profiles table upsert
+  - interactiveDismissDisabled to prevent dismissing sheet
+  - Integration with AuthViewModel.needsOnboarding flag
+  - Continue button saves username and dismisses sheet
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/App/OscarsTrackerApp.swift
+  - OscarsTracker/OscarsTracker/Views/Onboarding/OnboardingView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/OnboardingViewModel.swift
+  - tests/us-006-user-onboarding.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - interactiveDismissDisabled() prevents sheet swipe dismissal
+  - Set<String> with contains() efficient for profanity lookup
+  - UUID from Supabase user needs .uuidString for JSON serialization
+  - Combine isUsernameValid with multiple validation checks
+---
