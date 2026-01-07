@@ -76,3 +76,13 @@
 - Show password match indicator only when confirm field is not empty
 - Use `.interactiveDismissDisabled()` during async operations to prevent accidental dismiss
 - Clear error message on any field change with `.onChange(of:)` modifiers
+
+### Haptic Feedback Pattern
+- Use `HapticManager` enum with static functions for all haptic feedback
+- Light impact: `.light()` for toggles, selections, minor interactions
+- Medium impact: `.medium()` for drag start, significant actions
+- Heavy impact: `.heavy()` for major actions
+- Success: `.success()` after successful API operations
+- Error: `.error()` after failed API operations
+- Selection: `.selection()` for button taps, picker changes
+- Call haptics immediately before async operations start (optimistic feedback)
