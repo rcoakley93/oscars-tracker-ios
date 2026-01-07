@@ -37,6 +37,7 @@
 		E8123456001C /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501C0 /* HapticManager.swift */; };
 		E8123456001D /* WatchPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501D0 /* WatchPlanView.swift */; };
 		E8123456001E /* WatchPlanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501E0 /* WatchPlanViewModel.swift */; };
+		E8123456001F /* AddToPlanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501F0 /* AddToPlanSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +72,7 @@
 		E812345501C0 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		E812345501D0 /* WatchPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanView.swift; sourceTree = "<group>"; };
 		E812345501E0 /* WatchPlanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanViewModel.swift; sourceTree = "<group>"; };
+		E812345501F0 /* AddToPlanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlanSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +177,7 @@
 			isa = PBXGroup;
 			children = (
 				E812345501D0 /* WatchPlanView.swift */,
+				E812345501F0 /* AddToPlanSheet.swift */,
 			);
 			path = WatchPlan;
 			sourceTree = "<group>";
@@ -339,6 +342,7 @@
 				E8123456001C /* HapticManager.swift in Sources */,
 				E8123456001D /* WatchPlanView.swift in Sources */,
 				E8123456001E /* WatchPlanViewModel.swift in Sources */,
+				E8123456001F /* AddToPlanSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

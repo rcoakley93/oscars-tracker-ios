@@ -3,35 +3,68 @@ import SwiftUI
 /// Watch plan view showing movies grouped by planned date.
 struct WatchPlanView: View {
     @StateObject private var viewModel = WatchPlanViewModel()
+    @State private var showAddSheet = false
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Stats card
-                    statsCard
-                        .padding(.horizontal)
+            ZStack(alignment: .bottomTrailing) {
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Stats card
+                        statsCard
+                            .padding(.horizontal)
 
-                    // Date grouped list
-                    if viewModel.isLoading && viewModel.watchPlanItems.isEmpty {
-                        loadingView
-                    } else if viewModel.watchPlanItems.isEmpty {
-                        emptyStateView
-                    } else {
-                        dateGroupedList
+                        // Date grouped list
+                        if viewModel.isLoading && viewModel.watchPlanItems.isEmpty {
+                            loadingView
+                        } else if viewModel.watchPlanItems.isEmpty {
+                            emptyStateView
+                        } else {
+                            dateGroupedList
+                        }
                     }
+                    .padding(.vertical)
+                    // Extra padding at bottom for FAB
+                    .padding(.bottom, 80)
                 }
-                .padding(.vertical)
+                .background(Color.appBackground)
+
+                // Floating Action Button
+                floatingAddButton
             }
-            .background(Color.appBackground)
             .navigationTitle("Watch Plan")
             .refreshable {
                 await viewModel.loadData()
+            }
+            .sheet(isPresented: $showAddSheet) {
+                AddToPlanSheet(viewModel: viewModel)
+                    .presentationDetents([.large])
             }
         }
         .task {
             await viewModel.loadData()
         }
+    }
+
+    // MARK: - Floating Action Button
+
+    private var floatingAddButton: some View {
+        Button {
+            showAddSheet = true
+            HapticManager.selection()
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.black)
+                .frame(width: 56, height: 56)
+                .background(Color.goldPrimary)
+                .clipShape(Circle())
+                .shadow(color: Color.goldPrimary.opacity(0.4), radius: 8, x: 0, y: 4)
+        }
+        .padding(.trailing, 20)
+        .padding(.bottom, 20)
+        .accessibilityLabel("Add movie to plan")
+        .accessibilityHint("Opens a sheet to add a movie to your watch plan")
     }
 
     // MARK: - Stats Card

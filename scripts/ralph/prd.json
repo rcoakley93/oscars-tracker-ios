@@ -195,7 +195,7 @@
         "Sheet dismisses on successful add"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

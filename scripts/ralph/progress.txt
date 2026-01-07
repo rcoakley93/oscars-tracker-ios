@@ -15,6 +15,8 @@
 - Views: Organize by feature (e.g., Views/Auth/) with subfolders
 - Auth: Use Supabase Auth with signIn(email:password:), wrap in Task for async
 - TextFieldStyle: Create custom styles with _body(configuration:) for consistent input styling
+- Supabase Insert: Use [String: AnyJSON] dict with .string(), .integer() etc for dynamic values
+- FAB Pattern: ZStack(alignment: .bottomTrailing), add .padding(.bottom, 80) to ScrollView content
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -267,4 +269,32 @@
   - Date formatting: DateFormatter with dateFormat for custom formats
   - UPPERCASED() for date labels like "TODAY", "TOMORROW"
   - ForEach with id: \.date for date-keyed sections
+---
+
+## 2026-01-07 - US-013
+- What was implemented:
+  - AddToPlanSheet component with movie picker and date selection
+  - Floating action button (FAB) in WatchPlanView to open sheet
+  - Search/filter functionality for movie list (localizedCaseInsensitiveContains)
+  - Date picker with graphical style, restricted to future dates (Date()...)
+  - Supabase insert to watch_plan table with AnyJSON dictionary
+  - Movie selection with visual gold highlight and checkmark
+  - Loading state during add operation
+  - Sheet dismisses on successful add with haptic feedback
+  - Movies filtered to show only unwatched movies not already in plan
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/AddToPlanSheet.swift (new)
+  - OscarsTracker/OscarsTracker/ViewModels/WatchPlanViewModel.swift
+  - tests/us-013-add-movie-to-plan.spec.ts (new)
+  - AGENTS.md
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase insert: Use [String: AnyJSON] for dynamic data, .integer() for Int, .string() for String
+  - ZStack(alignment: .bottomTrailing) for FAB positioning
+  - Add padding to ScrollView content to avoid FAB overlap
+  - DatePicker with in: Date()... restricts to future dates only
+  - @ObservedObject to share ViewModel with sheet for state updates
+  - Filter chaining: filter unwatched first, then filter not-already-planned
 ---

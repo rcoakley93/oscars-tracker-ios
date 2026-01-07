@@ -142,4 +142,50 @@ final class WatchPlanViewModel: ObservableObject {
     func clearError() {
         errorMessage = nil
     }
+
+    /// Add a movie to the watch plan
+    /// - Parameters:
+    ///   - movieId: The ID of the movie to add
+    ///   - date: The planned date
+    /// - Returns: True if successful, false otherwise
+    func addToPlan(movieId: Int, date: Date) async -> Bool {
+        guard let userId = supabase.auth.currentUser?.id else {
+            errorMessage = "Not logged in"
+            return false
+        }
+
+        // Format date as yyyy-MM-dd
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: date)
+
+        // Create insert data
+        let insertData: [String: AnyJSON] = [
+            "user_id": .string(userId.uuidString),
+            "movie_id": .integer(movieId),
+            "planned_date": .string(dateString)
+        ]
+
+        do {
+            // Insert into watch_plan table
+            let response: [WatchPlanItem] = try await supabase
+                .from("watch_plan")
+                .insert(insertData)
+                .select()
+                .execute()
+                .value
+
+            // Add the new item to local state
+            if let newItem = response.first {
+                var mutableItem = newItem
+                mutableItem.movie = movies.first { $0.id == movieId }
+                watchPlanItems.append(mutableItem)
+            }
+
+            return true
+        } catch {
+            errorMessage = "Failed to add movie to plan"
+            return false
+        }
+    }
 }
