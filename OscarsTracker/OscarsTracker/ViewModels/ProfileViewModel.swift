@@ -413,4 +413,52 @@ final class ProfileViewModel: ObservableObject {
 
         return "Failed to change password. Please try again."
     }
+
+    // MARK: - Delete Account
+
+    @Published var isDeletingAccount = false
+
+    /// Delete user account via Supabase RPC
+    func deleteAccount() async {
+        isDeletingAccount = true
+        errorMessage = nil
+
+        do {
+            // Call delete_user RPC function to cascade delete all user data
+            try await supabase.rpc("delete_user").execute()
+
+            // Sign out after deletion
+            try await supabase.auth.signOut()
+
+            // Clear local state
+            profile = nil
+            watchedCount = 0
+            predictionsMade = 0
+            correctPredictions = 0
+
+            isDeletingAccount = false
+            HapticManager.success()
+        } catch {
+            isDeletingAccount = false
+            errorMessage = mapDeleteAccountError(error)
+            HapticManager.error()
+        }
+    }
+
+    /// Map delete account errors to user-friendly messages
+    private func mapDeleteAccountError(_ error: Error) -> String {
+        let errorMessage = error.localizedDescription.lowercased()
+
+        if errorMessage.contains("network") || errorMessage.contains("connection") {
+            return "Network error. Please check your connection."
+        }
+        if errorMessage.contains("permission") || errorMessage.contains("denied") {
+            return "Permission denied. Please try again later."
+        }
+        if errorMessage.contains("not found") {
+            return "Account not found. You may already be signed out."
+        }
+
+        return "Failed to delete account. Please try again."
+    }
 }

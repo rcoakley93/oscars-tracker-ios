@@ -863,3 +863,32 @@
   - interactiveDismissDisabled prevents accidental sheet dismiss during async operations
   - Clear errors on field change with .onChange(of:) modifier pattern
 ---
+
+## 2026-01-07 - US-033
+- What was implemented:
+  - Delete Account button with destructive red styling (DestructiveButtonStyle)
+  - Delete confirmation alert with warning about permanent data deletion
+  - deleteAccount() async function in ProfileViewModel
+  - Calls delete_user RPC function to cascade delete all user data
+  - Signs out after successful deletion via supabase.auth.signOut()
+  - Clears local state (profile, watchedCount, predictionsMade, correctPredictions)
+  - Loading state with isDeletingAccount @Published property
+  - Button shows ProgressView and "Deleting..." text during deletion
+  - Button disabled during deletion to prevent double-submit
+  - Error handling with mapDeleteAccountError for user-friendly messages
+  - HapticManager feedback: success on delete, error on failure
+  - Accessibility labels and hints for VoiceOver support
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/ProfileViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Profile/ProfileView.swift
+  - tests/us-033-profile-delete-account.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase RPC: .rpc("function_name").execute() for calling database functions
+  - Delete user flow: call RPC first, then signOut(), then clear local state
+  - DestructiveButtonStyle already existed in GoldButtonStyle.swift (red background)
+  - Multiple .alert() modifiers can be chained on same view for different confirmations
+  - Warning text in alert message should clearly state irreversible consequences
+  - Button(role: .destructive) makes button appear in red in system alerts
+  - Use @State showDeleteAccountConfirmation pattern for alert presentation
+---

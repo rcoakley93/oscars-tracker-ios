@@ -4,6 +4,7 @@ import SwiftUI
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showSignOutConfirmation = false
+    @State private var showDeleteAccountConfirmation = false
     @FocusState private var isUsernameFieldFocused: Bool
 
     var body: some View {
@@ -36,6 +37,16 @@ struct ProfileView: View {
                 }
             } message: {
                 Text("Are you sure you want to sign out?")
+            }
+            .alert("Delete Account", isPresented: $showDeleteAccountConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete Account", role: .destructive) {
+                    Task {
+                        await viewModel.deleteAccount()
+                    }
+                }
+            } message: {
+                Text("This action cannot be undone. All your data including watch history, predictions, and group memberships will be permanently deleted.")
             }
             .sheet(isPresented: $viewModel.showChangePasswordSheet) {
                 ChangePasswordSheet(viewModel: viewModel)
@@ -297,6 +308,27 @@ struct ProfileView: View {
             }
             .buttonStyle(GoldButtonStyle())
             .accessibilityLabel("Sign out of your account")
+
+            // Delete Account button
+            Button {
+                showDeleteAccountConfirmation = true
+            } label: {
+                HStack(spacing: 8) {
+                    if viewModel.isDeletingAccount {
+                        ProgressView()
+                            .tint(.white)
+                        Text("Deleting...")
+                    } else {
+                        Image(systemName: "trash.fill")
+                        Text("Delete Account")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(DestructiveButtonStyle())
+            .disabled(viewModel.isDeletingAccount)
+            .accessibilityLabel("Delete your account")
+            .accessibilityHint("This will permanently delete your account and all associated data")
         }
         .padding()
         .glassCard()
