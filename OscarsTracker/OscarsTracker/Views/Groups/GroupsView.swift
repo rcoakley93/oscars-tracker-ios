@@ -21,8 +21,22 @@ struct GroupsView: View {
             }
             .background(Color.appBackground)
             .navigationTitle("Groups")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        viewModel.showCreateSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundStyle(Color.goldPrimary)
+                    }
+                    .accessibilityLabel("Create group")
+                }
+            }
             .refreshable {
                 await viewModel.loadData()
+            }
+            .sheet(isPresented: $viewModel.showCreateSheet) {
+                CreateGroupSheet(viewModel: viewModel)
             }
         }
         .task {
@@ -231,6 +245,134 @@ struct GroupLeaderboardView: View {
         }
         .navigationTitle(group.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Sheet for creating a new group.
+struct CreateGroupSheet: View {
+    @ObservedObject var viewModel: GroupsViewModel
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var isNameFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
+
+                VStack(spacing: 24) {
+                    // Header icon
+                    ZStack {
+                        Circle()
+                            .fill(Color.goldPrimary.opacity(0.15))
+                            .frame(width: 80, height: 80)
+
+                        Image(systemName: "person.3.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color.goldPrimary)
+                    }
+                    .padding(.top, 20)
+
+                    // Instructions
+                    Text("Create a new group to compete with friends")
+                        .font(.bodyMedium)
+                        .foregroundStyle(Color.textMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+
+                    // Group name input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Group Name")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.textMuted)
+
+                        TextField("Enter group name", text: $viewModel.newGroupName)
+                            .textFieldStyle(OscarsTextFieldStyle())
+                            .textContentType(.organizationName)
+                            .autocorrectionDisabled()
+                            .focused($isNameFocused)
+                            .accessibilityLabel("Group name")
+                            .accessibilityHint("Enter a name for your new group")
+
+                        // Validation feedback
+                        if !viewModel.newGroupName.isEmpty {
+                            HStack(spacing: 8) {
+                                validationRow(
+                                    isValid: viewModel.isNameLengthValid,
+                                    text: "3-30 characters"
+                                )
+                            }
+                            HStack(spacing: 8) {
+                                validationRow(
+                                    isValid: !viewModel.nameContainsProfanity,
+                                    text: "No inappropriate content"
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    // Error message
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundStyle(Color.destructive)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+
+                    Spacer()
+
+                    // Create button
+                    Button {
+                        Task {
+                            await viewModel.createGroup()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if viewModel.isCreating {
+                                ProgressView()
+                                    .tint(.white)
+                            }
+                            Text(viewModel.isCreating ? "Creating..." : "Create Group")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                    }
+                    .buttonStyle(.gold)
+                    .disabled(!viewModel.isGroupNameValid || viewModel.isCreating)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                }
+            }
+            .navigationTitle("Create Group")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        viewModel.resetCreateForm()
+                        dismiss()
+                    }
+                    .foregroundStyle(Color.textMuted)
+                }
+            }
+        }
+        .onAppear {
+            isNameFocused = true
+        }
+        .interactiveDismissDisabled(viewModel.isCreating)
+    }
+
+    private func validationRow(isValid: Bool, text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 14))
+                .foregroundStyle(isValid ? Color.success : Color.textMuted)
+
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(isValid ? Color.success : Color.textMuted)
+        }
     }
 }
 
