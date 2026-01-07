@@ -159,3 +159,33 @@
   - Tab enum with Hashable for state management
   - NavigationLink(value:) works with List selection binding
 ---
+
+## 2026-01-06 - US-008
+- What was implemented:
+  - Created ProgressHeroView with watched/total count display
+  - Percentage calculation with Double division and formatted string
+  - ProgressBarView with gold LinearGradient fill and GeometryReader
+  - Days remaining calculation from current date to oscarDate
+  - Movies per day calculation (remaining movies / days remaining)
+  - Glass card styling with .glassCard() modifier
+  - Gold glow on percentage with .goldGlow() modifier
+  - DashboardViewModel with @MainActor + ObservableObject pattern
+  - Supabase data loading for movies and user_watched tables
+  - Toggle watched with optimistic UI update and rollback on error
+  - Accessibility labels for VoiceOver support
+  - Integration in DashboardPlaceholderView with .refreshable and .task
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/Views/Dashboard/ProgressHeroView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - tests/us-008-progress-hero.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - DateComponents uses dot syntax for properties: components.year, components.month, components.day
+  - GeometryReader for progress bar width calculation: geometry.size.width * progress
+  - Computed properties in ViewModel for derived state (watchedCount, totalCount)
+  - Set<UUID> efficient for tracking watched movie IDs
+  - Optimistic updates: modify local state first, then sync with server, rollback on error
+  - Views/Dashboard folder structure for dashboard-specific views
+---

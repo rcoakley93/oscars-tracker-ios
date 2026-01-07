@@ -31,6 +31,8 @@
 		E81234560016 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550160 /* SignUpView.swift */; };
 		E81234560017 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550170 /* OnboardingView.swift */; };
 		E81234560018 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550180 /* OnboardingViewModel.swift */; };
+		E81234560019 /* ProgressHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550190 /* ProgressHeroView.swift */; };
+		E8123456001A /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501A0 /* DashboardViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +61,8 @@
 		E81234550160 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
 		E81234550170 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		E81234550180 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		E81234550190 /* ProgressHeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressHeroView.swift; sourceTree = "<group>"; };
+		E812345501A0 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +146,7 @@
 			children = (
 				E81234550140 /* AuthViewModel.swift */,
 				E81234550180 /* OnboardingViewModel.swift */,
+				E812345501A0 /* DashboardViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -151,8 +156,17 @@
 			children = (
 				E8123453000B /* Auth */,
 				E8123453000C /* Onboarding */,
+				E8123453000D /* Dashboard */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E8123453000D /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550190 /* ProgressHeroView.swift */,
+			);
+			path = Dashboard;
 			sourceTree = "<group>";
 		};
 		E8123453000C /* Onboarding */ = {
@@ -299,6 +313,8 @@
 				E81234560016 /* SignUpView.swift in Sources */,
 				E81234560017 /* OnboardingView.swift in Sources */,
 				E81234560018 /* OnboardingViewModel.swift in Sources */,
+				E81234560019 /* ProgressHeroView.swift in Sources */,
+				E8123456001A /* DashboardViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

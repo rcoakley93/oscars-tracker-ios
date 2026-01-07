@@ -127,23 +127,42 @@ enum Tab: Hashable {
 // MARK: - Placeholder Views
 
 struct DashboardPlaceholderView: View {
+    @StateObject private var viewModel = DashboardViewModel()
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Image(systemName: "film.fill")
-                        .font(.system(size: 64))
-                        .foregroundStyle(Color.goldPrimary)
-                    Text("Dashboard")
-                        .font(.displayMedium)
-                        .foregroundStyle(Color.textPrimary)
-                    Text("Track your Oscar movie progress")
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textMuted)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Progress Hero
+                    ProgressHeroView(
+                        watchedCount: viewModel.watchedCount,
+                        totalCount: viewModel.totalCount > 0 ? viewModel.totalCount : 42,
+                        oscarDate: viewModel.oscarDate
+                    )
+                    .padding(.horizontal)
+
+                    // Placeholder for movie grid (US-009)
+                    VStack(spacing: 16) {
+                        Image(systemName: "film.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(Color.goldPrimary)
+                        Text("Movie grid coming soon")
+                            .font(.headingMedium)
+                            .foregroundStyle(Color.textMuted)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 60)
                 }
+                .padding(.vertical)
             }
+            .background(Color.appBackground)
             .navigationTitle("Dashboard")
+            .refreshable {
+                await viewModel.loadData()
+            }
+        }
+        .task {
+            await viewModel.loadData()
         }
     }
 }
