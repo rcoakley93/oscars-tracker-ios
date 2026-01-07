@@ -23,6 +23,14 @@
 - Alert with Data: .alert(presenting: $optionalItem) for alerts with associated value
 - iPad Grid: Use horizontalSizeClass == .regular with LazyVGrid for 2-col on iPad, 1-col on iPhone
 - Expandable Card: @State isExpanded with toggle, animate with .easeInOut, use chevron icon
+- Supabase Upsert: .upsert(data, onConflict: "col1,col2") for composite unique constraints
+- Radio Button: Circle().stroke() + Circle().fill() for filled radio indicator
+- Selection State: Dictionary<Int, Int> for parent-to-child ID mapping (e.g., categoryId -> nominationId)
+- Timer Pattern: Timer.scheduledTimer(withTimeInterval: 1, repeats: true) with onAppear/onDisappear lifecycle
+- Time Calculations: days = secs/86400, hours = (secs%86400)/3600, mins = (secs%3600)/60
+- Monospaced Digits: .font(.system(size:, weight:, design: .monospaced)) for countdowns
+- Supabase RPC: .rpc("function_name").execute().value for database function calls
+- Conditional Styling: enum for style variants (MedalType.gold/silver/bronze)
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -376,4 +384,160 @@
   - CategoryWithNominations struct to combine category with nominations
   - @State isExpanded for per-card expand state
   - Chevron rotation based on isExpanded state
+---
+
+## 2026-01-07 - US-020
+- What was implemented:
+  - Radio button style selection UI in NominationRow (Circle with inner fill when selected)
+  - Predictions dictionary [Int: Int] for categoryId -> nominationId mapping
+  - isSelected(nomination:) function to check if nomination is current prediction
+  - selectPrediction(nomination:) async function with Supabase upsert
+  - Load user_predictions from Supabase during loadData()
+  - Gold highlight background on selected nominations (opacity 0.1)
+  - Gold border stroke on selected nominations (opacity 0.3)
+  - Checkmark icon (checkmark.circle.fill) on selected items
+  - Light haptic on selection, error haptic on save failure
+  - Optimistic UI updates with rollback on error
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Ballot/BallotView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/BallotViewModel.swift
+  - tests/us-020-ballot-make-predictions.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase upsert with onConflict: "user_id,category_id" for composite unique key
+  - Radio button: Circle stroke + inner Circle fill pattern
+  - Dictionary<Int, Int> for efficient categoryId -> nominationId lookups
+  - Button(action: onSelect) wrapper for making entire row tappable
+  - Gold opacity layers: 0.1 for background fill, 0.3 for border stroke
+  - Passing closures to child views: let onSelect: () -> Void
+---
+
+## 2026-01-07 - US-021
+- What was implemented:
+  - BallotProgressCard component showing prediction progress
+  - Progress calculated as predictedCount / totalCategories
+  - Percentage string formatted with %.0f%%
+  - BallotProgressBar with gold gradient fill
+  - GeometryReader for dynamic width calculation
+  - Animation on progress change with .easeInOut
+  - Guard against division by zero
+  - Glass card styling and header with icon
+  - Accessibility labels for screen readers
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Ballot/BallotView.swift
+  - tests/us-021-ballot-progress-indicator.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Reuse ProgressBarView pattern: GeometryReader + ZStack(alignment: .leading)
+  - Guard against zero division: guard totalCategories > 0 else { return 0 }
+  - Real-time updates automatic via @Published in ObservableObject
+  - Separate struct for progress bar allows reuse across views
+---
+
+## 2026-01-07 - US-022
+- What was implemented:
+  - CountdownTimerView component with days/hours/minutes/seconds display
+  - TimeUnitView for individual time units with monospaced font
+  - Timer.scheduledTimer with 1-second interval for real-time updates
+  - ballotLockDate property on BallotViewModel (March 2, 2025 5PM PT)
+  - isLocked @Published property with checkLockStatus function
+  - Lock icon and "Ballot Locked" message when time expires
+  - isLocked parameter passed through CategoryCard to NominationRow
+  - .disabled(isLocked) modifier on NominationRow buttons
+  - Reduced opacity (0.6) when locked for visual feedback
+  - Guard in selectPrediction to block changes when locked
+  - Timer lifecycle management with onAppear/onDisappear
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Ballot/BallotView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/BallotViewModel.swift
+  - tests/us-022-ballot-countdown-timer.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Timer.scheduledTimer(withTimeInterval: 1, repeats: true) for per-second updates
+  - Time calculations: days = total / 86400, hours = (total % 86400) / 3600
+  - DateComponents with TimeZone for specific timezone lock times
+  - .design: .monospaced for consistent digit widths in countdown
+  - String(format: "%02d", value) for zero-padded numbers
+  - onLock callback pattern for parent notification when timer expires
+  - .disabled() modifier prevents button interactions when locked
+---
+
+## 2026-01-07 - US-024
+- What was implemented:
+  - LeaderboardView with ScrollView and NavigationStack
+  - LeaderboardViewModel with get_leaderboard RPC call
+  - LeaderboardRowView showing rank, username, score, stats
+  - MedalType enum (gold, silver, bronze) for top 3 positions
+  - medalType(for:) function returns correct medal by rank
+  - Medal color function for visual styling
+  - Current user highlighting with star icon and gold border
+  - Watched count (eye icon) and correct predictions (checkmark icon)
+  - Pull to refresh via .refreshable
+  - Loading and empty state views
+  - Accessibility labels for screen readers
+  - Files registered in Xcode project
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Leaderboard/LeaderboardView.swift (new)
+  - OscarsTracker/OscarsTracker/ViewModels/LeaderboardViewModel.swift (new)
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-024-leaderboard-global-rankings.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase RPC: .rpc("function_name").execute().value for calling database functions
+  - MedalType enum pattern for conditional styling based on rank
+  - Conditional border with isCurrentUser for visual distinction
+  - HStack with Label for icon + text combinations
+  - VStack spacing for grouped stats display
+---
+
+## 2026-01-07 - US-029
+- What was implemented:
+  - ProfileView with avatar, username, member since date
+  - ProfileViewModel loading profile from profiles table
+  - Avatar placeholder (Circle with person.fill icon, gold border)
+  - Member since date formatted from ISO 8601 with DateFormatter
+  - Stats card with watched count, predictions made, correct predictions
+  - StatItemView component for consistent stat display
+  - Pull to refresh via .refreshable
+  - Loading and empty state views
+  - Accessibility labels for screen readers
+  - Files registered in Xcode project
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Profile/ProfileView.swift (new)
+  - OscarsTracker/OscarsTracker/ViewModels/ProfileViewModel.swift (new)
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-029-profile-view-profile.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - ISO8601DateFormatter for parsing Supabase timestamps
+  - DateFormatter with .dateStyle = .medium for user-friendly dates
+  - Circle overlay pattern for avatar with gold border
+  - StatItemView component for reusable stat displays
+  - Multiple Supabase queries in single loadData for aggregated data
+---
+
+## 2026-01-07 - US-032
+- What was implemented:
+  - Sign Out button in ProfileView account section
+  - signOut() async function in ProfileViewModel
+  - Supabase auth.signOut() for clearing session
+  - Confirmation alert with Cancel and Sign Out (destructive) options
+  - Clear all local state on sign out (profile, watchedCount, predictions)
+  - Error handling with error message and HapticManager feedback
+  - GoldButtonStyle for sign out button
+  - Accessibility label for screen readers
+  - Glass card styling for account section
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Profile/ProfileView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/ProfileViewModel.swift
+  - tests/us-032-profile-sign-out.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - .alert("Title", isPresented:) with Button(role: .destructive) for confirmation dialogs
+  - supabase.auth.signOut() clears Supabase session
+  - Clear all @Published properties on sign out to reset state
+  - Account section pattern: VStack with header and action buttons
+  - Sign out icons: rectangle.portrait.and.arrow.right (door with arrow)
 ---

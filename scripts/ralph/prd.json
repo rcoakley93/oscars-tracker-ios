@@ -300,7 +300,7 @@
         "Visual checkmark on selected item"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -313,7 +313,7 @@
         "Shows percentage complete"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -328,7 +328,7 @@
         "All selections disabled when locked"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -357,7 +357,7 @@
         "Pull to refresh updates rankings"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -427,7 +427,7 @@
         "Account section with Change Password, Sign Out, Delete Account"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -468,7 +468,7 @@
         "Clears any cached user data"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
