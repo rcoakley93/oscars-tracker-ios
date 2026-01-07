@@ -149,11 +149,17 @@ struct CategoryCard: View {
             Divider()
                 .background(Color.borderColor)
 
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 ForEach(category.nominations) { nomination in
                     NominationRow(
                         nomination: nomination,
-                        movie: viewModel.movie(for: nomination)
+                        movie: viewModel.movie(for: nomination),
+                        isSelected: viewModel.isSelected(nomination: nomination),
+                        onSelect: {
+                            Task {
+                                await viewModel.selectPrediction(nomination: nomination)
+                            }
+                        }
                     )
                 }
             }
@@ -162,49 +168,85 @@ struct CategoryCard: View {
     }
 }
 
-/// Row view for a single nomination.
+/// Row view for a single nomination with radio button selection.
 struct NominationRow: View {
     let nomination: Nomination
     let movie: Movie?
+    let isSelected: Bool
+    let onSelect: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Poster placeholder
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.cardBackground)
-                .frame(width: 40, height: 60)
-                .overlay(
-                    Image(systemName: "film")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.textMuted)
-                )
+        Button(action: onSelect) {
+            HStack(spacing: 12) {
+                // Radio button indicator
+                ZStack {
+                    Circle()
+                        .stroke(isSelected ? Color.goldPrimary : Color.borderColor, lineWidth: 2)
+                        .frame(width: 22, height: 22)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(movie?.title ?? "Unknown Movie")
-                    .font(.bodySmall)
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(2)
+                    if isSelected {
+                        Circle()
+                            .fill(Color.goldPrimary)
+                            .frame(width: 12, height: 12)
+                    }
+                }
 
-                if let detailText = nomination.detailText, !detailText.isEmpty {
-                    Text(detailText)
-                        .font(.caption)
-                        .foregroundStyle(Color.textMuted)
-                        .lineLimit(1)
+                // Poster placeholder
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.cardBackground)
+                    .frame(width: 40, height: 60)
+                    .overlay(
+                        Image(systemName: "film")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.textMuted)
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(movie?.title ?? "Unknown Movie")
+                        .font(.bodySmall)
+                        .fontWeight(.medium)
+                        .foregroundStyle(isSelected ? Color.goldPrimary : Color.textPrimary)
+                        .lineLimit(2)
+
+                    if let detailText = nomination.detailText, !detailText.isEmpty {
+                        Text(detailText)
+                            .font(.caption)
+                            .foregroundStyle(Color.textMuted)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer()
+
+                // Checkmark for selected (in addition to radio)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Color.goldPrimary)
+                }
+
+                // Winner badge (if applicable)
+                if nomination.isWinner == true {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.goldPrimary)
                 }
             }
-
-            Spacer()
-
-            // Winner badge (if applicable)
-            if nomination.isWinner == true {
-                Image(systemName: "trophy.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color.goldPrimary)
-            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.goldPrimary.opacity(0.1) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.goldPrimary.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
         }
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? "")")
+        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")")
+        .accessibilityHint("Double tap to \(isSelected ? "deselect" : "select") this prediction")
     }
 }
 

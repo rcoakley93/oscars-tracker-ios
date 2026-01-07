@@ -6,7 +6,9 @@ import Supabase
 final class BallotViewModel: ObservableObject {
     @Published var categories: [CategoryWithNominations] = []
     @Published var movies: [Movie] = []
+    @Published var predictions: [Int: Int] = [:] // categoryId -> nominationId
     @Published var isLoading = false
+    @Published var isSaving = false
     @Published var errorMessage: String?
 
     private let supabase = SupabaseClientManager.shared.client
@@ -19,6 +21,11 @@ final class BallotViewModel: ObservableObject {
     /// Total number of categories
     var totalCategories: Int {
         categories.count
+    }
+
+    /// Number of categories with predictions
+    var predictedCategories: Int {
+        predictions.count
     }
 
     /// Initialize
@@ -53,6 +60,23 @@ final class BallotViewModel: ObservableObject {
                 .select()
                 .execute()
                 .value
+
+            // Load user predictions if logged in
+            if let userId = try? await supabase.auth.session.user.id.uuidString {
+                let predictionsResponse: [UserPrediction] = try await supabase
+                    .from("user_predictions")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .execute()
+                    .value
+
+                // Convert to dictionary for easy lookup
+                var predictionsMap: [Int: Int] = [:]
+                for prediction in predictionsResponse {
+                    predictionsMap[prediction.categoryId] = prediction.nominationId
+                }
+                predictions = predictionsMap
+            }
 
             // Group nominations by category and attach movie data
             var categoryMap: [Int: [Nomination]] = [:]
@@ -93,5 +117,57 @@ final class BallotViewModel: ObservableObject {
     /// Clear error message
     func clearError() {
         errorMessage = nil
+    }
+
+    /// Check if a nomination is selected for its category
+    func isSelected(nomination: Nomination) -> Bool {
+        guard let categoryId = nomination.categoryId else { return false }
+        return predictions[categoryId] == nomination.id
+    }
+
+    /// Select a nomination as prediction for a category
+    func selectPrediction(nomination: Nomination) async {
+        guard let categoryId = nomination.categoryId else { return }
+
+        // Optimistic update
+        let previousPrediction = predictions[categoryId]
+        predictions[categoryId] = nomination.id
+
+        // Haptic feedback
+        HapticManager.light()
+
+        do {
+            guard let userId = try? await supabase.auth.session.user.id.uuidString else {
+                // Rollback if no user
+                if let previous = previousPrediction {
+                    predictions[categoryId] = previous
+                } else {
+                    predictions.removeValue(forKey: categoryId)
+                }
+                return
+            }
+
+            // Upsert prediction to Supabase
+            let predictionData: [String: AnyJSON] = [
+                "user_id": .string(userId),
+                "category_id": .integer(categoryId),
+                "nomination_id": .integer(nomination.id)
+            ]
+
+            try await supabase
+                .from("user_predictions")
+                .upsert(predictionData, onConflict: "user_id,category_id")
+                .execute()
+
+        } catch {
+            // Rollback on error
+            if let previous = previousPrediction {
+                predictions[categoryId] = previous
+            } else {
+                predictions.removeValue(forKey: categoryId)
+            }
+            HapticManager.error()
+            errorMessage = "Failed to save prediction. Please try again."
+        }
     }
 }
