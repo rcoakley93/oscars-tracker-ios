@@ -45,6 +45,7 @@
 		E81234560024 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550240 /* ProfileView.swift */; };
 		E81234560025 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550250 /* ProfileViewModel.swift */; };
 		E81234560026 /* GoogleLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550260 /* GoogleLogoView.swift */; };
+		E81234560027 /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550270 /* CategoryListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +88,7 @@
 		E81234550240 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		E81234550250 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		E81234550260 /* GoogleLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleLogoView.swift; sourceTree = "<group>"; };
+		E81234550270 /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -231,6 +233,7 @@
 			children = (
 				E81234550190 /* ProgressHeroView.swift */,
 				E812345501B0 /* MovieCardView.swift */,
+				E81234550270 /* CategoryListView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -395,6 +398,7 @@
 				E81234560024 /* ProfileView.swift in Sources */,
 				E81234560025 /* ProfileViewModel.swift in Sources */,
 				E81234560026 /* GoogleLogoView.swift in Sources */,
+				E81234560027 /* CategoryListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

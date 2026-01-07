@@ -73,7 +73,7 @@
         "Existing Google users navigate to Dashboard"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -164,7 +164,7 @@
         "Smooth animation on view switch"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

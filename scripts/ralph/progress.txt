@@ -31,6 +31,9 @@
 - Monospaced Digits: .font(.system(size:, weight:, design: .monospaced)) for countdowns
 - Supabase RPC: .rpc("function_name").execute().value for database function calls
 - Conditional Styling: enum for style variants (MedalType.gold/silver/bronze)
+- OAuth: ASWebAuthenticationSession with callback URL scheme, getOAuthSignInURL() then session(from:)
+- OAuth Provider: Use WebAuthPresentationContextProvider conforming to ASWebAuthenticationPresentationContextProviding
+- Async Bridge: withCheckedThrowingContinuation to convert callback APIs to async/await
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -540,4 +543,71 @@
   - Clear all @Published properties on sign out to reset state
   - Account section pattern: VStack with header and action buttons
   - Sign out icons: rectangle.portrait.and.arrow.right (door with arrow)
+---
+
+## 2026-01-07 - US-005
+- What was implemented:
+  - Continue with Google button added to LoginView and SignUpView
+  - signInWithGoogle() method in AuthViewModel using Supabase OAuth
+  - ASWebAuthenticationSession for secure OAuth flow with oscarstracker:// callback scheme
+  - WebAuthPresentationContextProvider class for presenting auth session window
+  - checkIfNeedsOnboarding() checks profiles table to determine if user needs onboarding
+  - GoogleLogoView component with multicolored Google "G" logo using SwiftUI shapes
+  - GoogleAuthButtonStyle for consistent OAuth button styling
+  - "or" divider between email auth and Google OAuth buttons
+  - Error handling for OAuth cancellation and failures
+  - mapGoogleAuthError() for user-friendly error messages
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/AuthViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Auth/LoginView.swift
+  - OscarsTracker/OscarsTracker/Views/Auth/SignUpView.swift
+  - OscarsTracker/OscarsTracker/Components/GoldButtonStyle.swift
+  - OscarsTracker/OscarsTracker/Components/GoogleLogoView.swift (new)
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-005-google-oauth.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - ASWebAuthenticationSession requires import AuthenticationServices and UIKit
+  - OAuth callback: supabase.auth.getOAuthSignInURL() then session(from: callbackURL)
+  - ASWebAuthenticationPresentationContextProviding requires NSObject conformance
+  - Use withCheckedThrowingContinuation to bridge callback-based ASWebAuthenticationSession to async/await
+  - ASWebAuthenticationSessionError.canceledLogin for detecting user cancellation
+  - Custom SwiftUI logo: GeometryReader with Circle().trim() for segmented rings
+  - Google brand colors: Blue #4285F4, Green #34A853, Yellow #FBBC05, Red #EA4335
+---
+
+## 2026-01-07 - US-011
+- What was implemented:
+  - DashboardViewMode enum with masterList and byCategory cases
+  - Segmented picker (Picker with .pickerStyle(.segmented)) in DashboardPlaceholderView
+  - CategoryListView component with LazyVStack and Section for grouped display
+  - CategoryHeaderView showing category name and movie count
+  - CategoryMovieRow with poster thumbnail, title, runtime, year, and watch toggle
+  - CategoryWithMovies struct in Nomination.swift for category-movie groupings
+  - loadCategoriesWithMovies() function in DashboardViewModel
+  - Loads categories from "categories" table and nominations with embedded movie data
+  - Groups movies by category via nomination relationships
+  - Same movie can appear in multiple categories (via nominations)
+  - Smooth opacity transition animation when switching between view modes
+  - Watch toggle reuses existing toggleWatched() from DashboardViewModel
+  - Poster thumbnails with Kingfisher async loading
+  - Accessibility labels on category headers and movie rows
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift
+  - OscarsTracker/OscarsTracker/Models/Nomination.swift
+  - OscarsTracker/OscarsTracker/Views/Dashboard/CategoryListView.swift (new)
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-011-dashboard-category-list.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Picker with .pickerStyle(.segmented) for toggle-style view mode selection
+  - Use enum with CaseIterable and rawValue for picker options
+  - LazyVStack with pinnedViews: [.sectionHeaders] for sticky category headers
+  - Section with header: for grouping content under category headings
+  - Supabase join query: .select("*, movie:movies(*)") embeds related movie data
+  - Dictionary grouping: Group nominations by categoryId, extract unique movies
+  - .transition(.opacity.animation(.easeInOut(duration:))) for smooth view switches
+  - @ViewBuilder for conditional content based on view mode
+  - CategoryWithMovies struct pattern for pre-computed category-movie relationships
 ---

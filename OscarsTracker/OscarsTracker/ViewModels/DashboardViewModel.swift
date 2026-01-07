@@ -1,6 +1,12 @@
 import Foundation
 import Supabase
 
+/// View mode for dashboard display
+enum DashboardViewMode: String, CaseIterable {
+    case masterList = "Master List"
+    case byCategory = "By Category"
+}
+
 /// Manages dashboard state and movie data.
 @MainActor
 final class DashboardViewModel: ObservableObject {
@@ -8,6 +14,8 @@ final class DashboardViewModel: ObservableObject {
     @Published var watchedMovieIds: Set<Int> = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var viewMode: DashboardViewMode = .masterList
+    @Published var categoriesWithMovies: [CategoryWithMovies] = []
 
     private let supabase = SupabaseClientManager.shared.client
 
@@ -60,10 +68,77 @@ final class DashboardViewModel: ObservableObject {
                 watchedMovieIds = Set(watchedResponse.map { $0.movieId })
             }
 
+            // Load categories and nominations for category view
+            await loadCategoriesWithMovies()
+
             isLoading = false
         } catch {
             isLoading = false
             errorMessage = "Failed to load movies. Pull to refresh."
+        }
+    }
+
+    /// Load categories with their associated movies via nominations
+    private func loadCategoriesWithMovies() async {
+        do {
+            // Load all categories
+            let categoriesResponse: [Category] = try await supabase
+                .from("categories")
+                .select()
+                .order("name")
+                .execute()
+                .value
+
+            // Load nominations with movie data
+            let nominationsResponse: [Nomination] = try await supabase
+                .from("nominations")
+                .select("*, movie:movies(*)")
+                .execute()
+                .value
+
+            // Create a dictionary mapping movie IDs to movies for quick lookup
+            let movieDict = Dictionary(uniqueKeysWithValues: movies.map { ($0.id, $0) })
+
+            // Group nominations by category and extract unique movies
+            var categoryMoviesDict: [Int: [Movie]] = [:]
+            for nomination in nominationsResponse {
+                guard let categoryId = nomination.categoryId,
+                      let movieId = nomination.movieId else { continue }
+
+                // Get movie from the nomination's embedded data or from our local dictionary
+                let movie: Movie?
+                if let nominationMovie = nomination.movie {
+                    movie = nominationMovie
+                } else {
+                    movie = movieDict[movieId]
+                }
+
+                guard let validMovie = movie else { continue }
+
+                if categoryMoviesDict[categoryId] == nil {
+                    categoryMoviesDict[categoryId] = []
+                }
+
+                // Add movie if not already in the category (same movie can be nominated multiple times)
+                if !categoryMoviesDict[categoryId]!.contains(where: { $0.id == validMovie.id }) {
+                    categoryMoviesDict[categoryId]!.append(validMovie)
+                }
+            }
+
+            // Create CategoryWithMovies array
+            categoriesWithMovies = categoriesResponse.compactMap { category in
+                guard let categoryMovies = categoryMoviesDict[category.id], !categoryMovies.isEmpty else {
+                    return nil
+                }
+                return CategoryWithMovies(
+                    id: category.id,
+                    name: category.name,
+                    movies: categoryMovies.sorted { $0.title < $1.title }
+                )
+            }
+        } catch {
+            // Silently fail - category view will just be empty
+            categoriesWithMovies = []
         }
     }
 

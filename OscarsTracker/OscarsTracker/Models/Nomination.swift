@@ -27,3 +27,10 @@ struct CategoryWithNominations: Identifiable {
     let pointsValue: Int?
     let nominations: [Nomination]
 }
+
+/// Category with associated movies for dashboard category view
+struct CategoryWithMovies: Identifiable {
+    let id: Int
+    let name: String
+    let movies: [Movie]
+}

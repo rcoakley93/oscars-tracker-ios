@@ -141,7 +141,11 @@ struct DashboardPlaceholderView: View {
                     )
                     .padding(.horizontal)
 
-                    // Movie Grid
+                    // View Mode Picker
+                    viewModePicker
+                        .padding(.horizontal)
+
+                    // Content based on view mode
                     if viewModel.isLoading && viewModel.movies.isEmpty {
                         // Loading placeholder
                         VStack(spacing: 16) {
@@ -166,16 +170,8 @@ struct DashboardPlaceholderView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 60)
                     } else {
-                        // Movie grid
-                        MovieGridView(
-                            movies: viewModel.movies,
-                            watchedMovieIds: viewModel.watchedMovieIds,
-                            onToggleWatched: { movieId in
-                                Task {
-                                    await viewModel.toggleWatched(movieId: movieId)
-                                }
-                            }
-                        )
+                        // Content based on view mode
+                        dashboardContent
                     }
                 }
                 .padding(.vertical)
@@ -188,6 +184,62 @@ struct DashboardPlaceholderView: View {
         }
         .task {
             await viewModel.loadData()
+        }
+    }
+
+    // MARK: - View Mode Picker
+
+    private var viewModePicker: some View {
+        Picker("View Mode", selection: $viewModel.viewMode) {
+            ForEach(DashboardViewMode.allCases, id: \.self) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityLabel("View mode selector")
+    }
+
+    // MARK: - Dashboard Content
+
+    @ViewBuilder
+    private var dashboardContent: some View {
+        switch viewModel.viewMode {
+        case .masterList:
+            MovieGridView(
+                movies: viewModel.movies,
+                watchedMovieIds: viewModel.watchedMovieIds,
+                onToggleWatched: { movieId in
+                    Task {
+                        await viewModel.toggleWatched(movieId: movieId)
+                    }
+                }
+            )
+            .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+
+        case .byCategory:
+            if viewModel.categoriesWithMovies.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "rectangle.stack.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(Color.goldPrimary)
+                    Text("No categories found")
+                        .font(.headingMedium)
+                        .foregroundStyle(Color.textMuted)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 60)
+            } else {
+                CategoryListView(
+                    categoriesWithMovies: viewModel.categoriesWithMovies,
+                    watchedMovieIds: viewModel.watchedMovieIds,
+                    onToggleWatched: { movieId in
+                        Task {
+                            await viewModel.toggleWatched(movieId: movieId)
+                        }
+                    }
+                )
+                .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+            }
         }
     }
 }
