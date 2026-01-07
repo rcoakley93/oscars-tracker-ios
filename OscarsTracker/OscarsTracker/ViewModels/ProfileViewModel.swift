@@ -104,4 +104,26 @@ final class ProfileViewModel: ObservableObject {
     func clearError() {
         errorMessage = nil
     }
+
+    /// Sign out the current user
+    func signOut() async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            try await supabase.auth.signOut()
+
+            // Clear local state
+            profile = nil
+            watchedCount = 0
+            predictionsMade = 0
+            correctPredictions = 0
+
+            isLoading = false
+        } catch {
+            isLoading = false
+            errorMessage = "Failed to sign out. Please try again."
+            HapticManager.error()
+        }
+    }
 }
