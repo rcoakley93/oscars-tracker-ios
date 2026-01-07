@@ -23,9 +23,14 @@ final class GroupsViewModel: ObservableObject {
     @Published var currentUserId: String?
     @Published var showCreateSheet = false
     @Published var isCreating = false
+    @Published var showJoinSheet = false
+    @Published var isJoining = false
 
     // Create group form
     @Published var newGroupName = ""
+
+    // Join group form
+    @Published var inviteCodeInput = ""
 
     private let supabase = SupabaseClientManager.shared.client
 
@@ -237,6 +242,102 @@ final class GroupsViewModel: ObservableObject {
     /// Reset create form
     func resetCreateForm() {
         newGroupName = ""
+        errorMessage = nil
+    }
+
+    // MARK: - Join Group
+
+    /// Check if invite code is valid format (6 characters, alphanumeric uppercase)
+    var isInviteCodeValid: Bool {
+        let trimmed = inviteCodeInput.trimmingCharacters(in: .whitespaces).uppercased()
+        let codeRegex = #"^[A-Z0-9]{6}$"#
+        return trimmed.range(of: codeRegex, options: .regularExpression) != nil
+    }
+
+    /// Join a group using invite code
+    func joinGroup() async -> Bool {
+        let code = inviteCodeInput.trimmingCharacters(in: .whitespaces).uppercased()
+
+        guard isInviteCodeValid else {
+            errorMessage = "Please enter a valid 6-character invite code."
+            HapticManager.error()
+            return false
+        }
+
+        guard let userId = currentUserId else {
+            errorMessage = "Please sign in to join a group."
+            HapticManager.error()
+            return false
+        }
+
+        isJoining = true
+        errorMessage = nil
+
+        do {
+            // Look up group by invite code
+            let groups: [Group] = try await supabase
+                .from("groups")
+                .select()
+                .eq("invite_code", value: code)
+                .execute()
+                .value
+
+            guard let group = groups.first else {
+                isJoining = false
+                errorMessage = "No group found with that invite code."
+                HapticManager.error()
+                return false
+            }
+
+            // Check if user is already a member
+            let existingMembers: [GroupMember] = try await supabase
+                .from("group_members")
+                .select()
+                .eq("group_id", value: group.id)
+                .eq("user_id", value: userId)
+                .execute()
+                .value
+
+            if !existingMembers.isEmpty {
+                isJoining = false
+                errorMessage = "You are already a member of this group."
+                HapticManager.error()
+                return false
+            }
+
+            // Add user to group
+            let memberData: [String: AnyJSON] = [
+                "group_id": .integer(group.id),
+                "user_id": .string(userId)
+            ]
+
+            try await supabase
+                .from("group_members")
+                .insert(memberData)
+                .execute()
+
+            // Reset form
+            inviteCodeInput = ""
+            isJoining = false
+            showJoinSheet = false
+
+            HapticManager.success()
+
+            // Reload data to show joined group
+            await loadData()
+
+            return true
+        } catch {
+            isJoining = false
+            errorMessage = "Failed to join group. Please try again."
+            HapticManager.error()
+            return false
+        }
+    }
+
+    /// Reset join form
+    func resetJoinForm() {
+        inviteCodeInput = ""
         errorMessage = nil
     }
 

@@ -22,6 +22,15 @@ struct GroupsView: View {
             .background(Color.appBackground)
             .navigationTitle("Groups")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        viewModel.showJoinSheet = true
+                    } label: {
+                        Image(systemName: "person.badge.plus")
+                            .foregroundStyle(Color.goldPrimary)
+                    }
+                    .accessibilityLabel("Join group")
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         viewModel.showCreateSheet = true
@@ -37,6 +46,9 @@ struct GroupsView: View {
             }
             .sheet(isPresented: $viewModel.showCreateSheet) {
                 CreateGroupSheet(viewModel: viewModel)
+            }
+            .sheet(isPresented: $viewModel.showJoinSheet) {
+                JoinGroupSheet(viewModel: viewModel)
             }
         }
         .task {
@@ -373,6 +385,128 @@ struct CreateGroupSheet: View {
                 .font(.caption)
                 .foregroundStyle(isValid ? Color.success : Color.textMuted)
         }
+    }
+}
+
+/// Sheet for joining a group with invite code.
+struct JoinGroupSheet: View {
+    @ObservedObject var viewModel: GroupsViewModel
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var isCodeFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
+
+                VStack(spacing: 24) {
+                    // Header icon
+                    ZStack {
+                        Circle()
+                            .fill(Color.goldPrimary.opacity(0.15))
+                            .frame(width: 80, height: 80)
+
+                        Image(systemName: "person.badge.plus")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color.goldPrimary)
+                    }
+                    .padding(.top, 20)
+
+                    // Instructions
+                    Text("Enter an invite code to join a group")
+                        .font(.bodyMedium)
+                        .foregroundStyle(Color.textMuted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+
+                    // Invite code input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Invite Code")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.textMuted)
+
+                        TextField("Enter 6-character code", text: $viewModel.inviteCodeInput)
+                            .textFieldStyle(OscarsTextFieldStyle())
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                            .focused($isCodeFocused)
+                            .onChange(of: viewModel.inviteCodeInput) { _, newValue in
+                                // Auto uppercase and limit to 6 characters
+                                let uppercased = newValue.uppercased()
+                                if uppercased.count > 6 {
+                                    viewModel.inviteCodeInput = String(uppercased.prefix(6))
+                                } else if uppercased != newValue {
+                                    viewModel.inviteCodeInput = uppercased
+                                }
+                            }
+                            .accessibilityLabel("Invite code")
+                            .accessibilityHint("Enter a 6-character invite code to join a group")
+
+                        // Validation feedback
+                        if !viewModel.inviteCodeInput.isEmpty {
+                            HStack(spacing: 6) {
+                                Image(systemName: viewModel.isInviteCodeValid ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(viewModel.isInviteCodeValid ? Color.success : Color.textMuted)
+
+                                Text("6 alphanumeric characters")
+                                    .font(.caption)
+                                    .foregroundStyle(viewModel.isInviteCodeValid ? Color.success : Color.textMuted)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    // Error message
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundStyle(Color.destructive)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+
+                    Spacer()
+
+                    // Join button
+                    Button {
+                        Task {
+                            await viewModel.joinGroup()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if viewModel.isJoining {
+                                ProgressView()
+                                    .tint(.white)
+                            }
+                            Text(viewModel.isJoining ? "Joining..." : "Join Group")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                    }
+                    .buttonStyle(.gold)
+                    .disabled(!viewModel.isInviteCodeValid || viewModel.isJoining)
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                }
+            }
+            .navigationTitle("Join Group")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        viewModel.resetJoinForm()
+                        dismiss()
+                    }
+                    .foregroundStyle(Color.textMuted)
+                }
+            }
+        }
+        .onAppear {
+            isCodeFocused = true
+        }
+        .interactiveDismissDisabled(viewModel.isJoining)
     }
 }
 
