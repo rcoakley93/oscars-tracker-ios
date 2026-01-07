@@ -42,6 +42,8 @@
 		E81234560021 /* BallotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550210 /* BallotViewModel.swift */; };
 		E81234560022 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550220 /* LeaderboardView.swift */; };
 		E81234560023 /* LeaderboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550230 /* LeaderboardViewModel.swift */; };
+		E81234560024 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550240 /* ProfileView.swift */; };
+		E81234560025 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550250 /* ProfileViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -81,6 +83,8 @@
 		E81234550210 /* BallotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallotViewModel.swift; sourceTree = "<group>"; };
 		E81234550220 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		E81234550230 /* LeaderboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewModel.swift; sourceTree = "<group>"; };
+		E81234550240 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		E81234550250 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -168,6 +172,7 @@
 				E812345501E0 /* WatchPlanViewModel.swift */,
 				E81234550210 /* BallotViewModel.swift */,
 				E81234550230 /* LeaderboardViewModel.swift */,
+				E81234550250 /* ProfileViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -181,8 +186,17 @@
 				E8123453000E /* WatchPlan */,
 				E8123453000F /* Ballot */,
 				E81234530010 /* Leaderboard */,
+				E81234530011 /* Profile */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E81234530011 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550240 /* ProfileView.swift */,
+			);
+			path = Profile;
 			sourceTree = "<group>";
 		};
 		E81234530010 /* Leaderboard */ = {
@@ -375,6 +389,8 @@
 				E81234560021 /* BallotViewModel.swift in Sources */,
 				E81234560022 /* LeaderboardView.swift in Sources */,
 				E81234560023 /* LeaderboardViewModel.swift in Sources */,
+				E81234560024 /* ProfileView.swift in Sources */,
+				E81234560025 /* ProfileViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

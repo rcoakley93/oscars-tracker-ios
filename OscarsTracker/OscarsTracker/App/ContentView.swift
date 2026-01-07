@@ -234,23 +234,7 @@ struct GroupsPlaceholderView: View {
 
 struct ProfilePlaceholderView: View {
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 64))
-                        .foregroundStyle(Color.goldPrimary)
-                    Text("Profile")
-                        .font(.displayMedium)
-                        .foregroundStyle(Color.textPrimary)
-                    Text("Manage your account")
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textMuted)
-                }
-            }
-            .navigationTitle("Profile")
-        }
+        ProfileView()
     }
 }
 
