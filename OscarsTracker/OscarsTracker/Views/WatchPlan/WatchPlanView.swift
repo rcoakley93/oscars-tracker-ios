@@ -13,6 +13,13 @@ struct WatchPlanView: View {
     @State private var draggedItem: WatchPlanItem?
     @State private var highlightedDateGroup: Date?
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Detect if running on iPad (regular size class)
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
@@ -71,15 +78,27 @@ struct WatchPlanView: View {
             }
             .sheet(isPresented: $showAddSheet) {
                 AddToPlanSheet(viewModel: viewModel)
-                    .presentationDetents([.large])
+                    .presentationDetents(isIPad ? [.large] : [.large])
+                    .presentationDragIndicator(isIPad ? .hidden : .visible)
+                    .if(isIPad) { view in
+                        view.frame(minWidth: 500, maxWidth: 600, minHeight: 600, maxHeight: 800)
+                    }
             }
             .sheet(isPresented: $showAutoSchedulerSheet) {
                 AutoSchedulerSheet(viewModel: viewModel)
-                    .presentationDetents([.large])
+                    .presentationDetents(isIPad ? [.large] : [.large])
+                    .presentationDragIndicator(isIPad ? .hidden : .visible)
+                    .if(isIPad) { view in
+                        view.frame(minWidth: 500, maxWidth: 700, minHeight: 600, maxHeight: 900)
+                    }
             }
             .sheet(isPresented: $showWhatCanIWatchSheet) {
                 WhatCanIWatchSheet(viewModel: viewModel)
-                    .presentationDetents([.large])
+                    .presentationDetents(isIPad ? [.large] : [.large])
+                    .presentationDragIndicator(isIPad ? .hidden : .visible)
+                    .if(isIPad) { view in
+                        view.frame(minWidth: 500, maxWidth: 600, minHeight: 600, maxHeight: 800)
+                    }
             }
             .sheet(item: $itemToReschedule) { item in
                 RescheduleSheet(
@@ -88,7 +107,11 @@ struct WatchPlanView: View {
                     viewModel: viewModel,
                     onDismiss: { itemToReschedule = nil }
                 )
-                .presentationDetents([.medium])
+                .presentationDetents(isIPad ? [.medium] : [.medium])
+                .presentationDragIndicator(isIPad ? .hidden : .visible)
+                .if(isIPad) { view in
+                    view.frame(minWidth: 400, maxWidth: 500, minHeight: 400, maxHeight: 500)
+                }
             }
             .alert("Remove from Plan", isPresented: $showRemoveConfirmation, presenting: itemToRemove) { item in
                 Button("Cancel", role: .cancel) {

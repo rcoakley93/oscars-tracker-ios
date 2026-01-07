@@ -58,3 +58,17 @@ extension LinearGradient {
         endPoint: .trailing
     )
 }
+
+// MARK: - View Extensions for iPad Support
+
+extension View {
+    /// Apply a modifier conditionally
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}

@@ -7,7 +7,40 @@ struct CategoryListView: View {
     let watchedMovieIds: Set<Int>
     let onToggleWatched: (Int) -> Void
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Use 2-column layout on iPad
+    private var useGridLayout: Bool {
+        horizontalSizeClass == .regular
+    }
+
     var body: some View {
+        if useGridLayout {
+            // iPad: 2-column grid layout
+            iPadGridLayout
+        } else {
+            // iPhone: Standard list layout
+            iPhoneListLayout
+        }
+    }
+
+    // MARK: - iPad Grid Layout
+
+    private var iPadGridLayout: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
+            ForEach(categoriesWithMovies) { category in
+                VStack(alignment: .leading, spacing: 12) {
+                    CategoryHeaderView(categoryName: category.name, movieCount: category.movies.count)
+                    categoryMoviesGrid(for: category)
+                }
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    // MARK: - iPhone List Layout
+
+    private var iPhoneListLayout: some View {
         LazyVStack(alignment: .leading, spacing: 24, pinnedViews: [.sectionHeaders]) {
             ForEach(categoriesWithMovies) { category in
                 Section {

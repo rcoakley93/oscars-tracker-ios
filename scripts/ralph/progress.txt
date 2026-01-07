@@ -1044,3 +1044,32 @@
   - Quick add defaults to current date: Date()
   - Empty state message computed property with switch on filter
 ---
+
+## 2026-01-07 - US-038
+- What was implemented:
+  - Sidebar navigation already existed in ContentView (NavigationSplitView)
+  - Movie grid already uses 5 columns on iPad (horizontalSizeClass check)
+  - BallotView already uses 2-column grid on iPad
+  - Added 2-column grid layout to CategoryListView for iPad
+  - Added View `if` extension for conditional modifiers
+  - Added isIPad detection in WatchPlanView
+  - Added iPad-specific sheet presentation (drag indicator hidden, frame sizes)
+  - Support for multitasking/split view via horizontalSizeClass environment
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Dashboard/CategoryListView.swift
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker/Utilities/Color+Extensions.swift
+  - tests/us-038-ipad-layout.spec.ts (new)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - @Environment(\.horizontalSizeClass) for detecting iPad vs iPhone
+  - .regular means iPad or iPad-like width (multitasking)
+  - NavigationSplitView for sidebar navigation with detail view
+  - LazyVGrid for adaptive column layouts on iPad
+  - View `if` extension: @ViewBuilder func with condition and transform
+  - .presentationDragIndicator(.hidden/.visible) for sheet customization
+  - .if(condition) { view in view.frame(...) } for conditional modifiers
+  - Sheet sizing on iPad uses frame(minWidth:maxWidth:minHeight:maxHeight:)
+  - Separate computed properties for iPhone/iPad layouts (iPhoneListLayout, iPadGridLayout)
+  - useGridLayout computed property based on horizontalSizeClass
+---
