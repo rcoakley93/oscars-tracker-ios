@@ -19,6 +19,8 @@
 - FAB Pattern: ZStack(alignment: .bottomTrailing), add .padding(.bottom, 80) to ScrollView content
 - Sheet with Item: .sheet(item: $optionalItem) auto-dismisses when binding set to nil
 - Supabase Update: .update(["field": value]).eq("id", value: id) for updating specific fields
+- Supabase Delete: .delete().eq("id", value: id) for removing records
+- Alert with Data: .alert(presenting: $optionalItem) for alerts with associated value
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -322,4 +324,28 @@
   - WatchPlanItem needs explicit init when using Codable with custom properties
   - onReschedule callback pattern to pass action from parent to row view
   - Parse existing date from item.plannedDate to initialize date picker
+---
+
+## 2026-01-07 - US-015
+- What was implemented:
+  - Watched button with green success color on WatchPlanRowView
+  - X button to remove movie from plan without marking watched
+  - markWatchedAndRemove function: inserts to user_watched, deletes from watch_plan
+  - removeFromPlan function: only deletes from watch_plan
+  - Confirmation alert before removing (using .alert with presenting:)
+  - Optimistic UI updates with rollback on error
+  - Color.success added to Color extensions
+  - Action buttons row with equal-width buttons
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/WatchPlanViewModel.swift
+  - OscarsTracker/OscarsTracker/Utilities/Color+Extensions.swift
+  - tests/us-015-mark-watched-remove.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - .alert(presenting:) pattern for alerts with associated data
+  - Supabase .delete().eq() for removing records
+  - Maintain both originalItems and originalWatchedIds for complete rollback
+  - Multiple callback closures in row view: onReschedule, onMarkWatched, onRemove
+  - Button role .destructive for remove confirmation
 ---

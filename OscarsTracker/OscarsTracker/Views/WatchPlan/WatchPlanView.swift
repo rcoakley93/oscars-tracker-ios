@@ -5,6 +5,8 @@ struct WatchPlanView: View {
     @StateObject private var viewModel = WatchPlanViewModel()
     @State private var showAddSheet = false
     @State private var itemToReschedule: WatchPlanItem?
+    @State private var itemToRemove: WatchPlanItem?
+    @State private var showRemoveConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -50,10 +52,41 @@ struct WatchPlanView: View {
                 )
                 .presentationDetents([.medium])
             }
+            .alert("Remove from Plan", isPresented: $showRemoveConfirmation, presenting: itemToRemove) { item in
+                Button("Cancel", role: .cancel) {
+                    itemToRemove = nil
+                }
+                Button("Remove", role: .destructive) {
+                    Task {
+                        await removeFromPlan(item)
+                    }
+                }
+            } message: { item in
+                Text("Are you sure you want to remove \"\(viewModel.movie(for: item)?.title ?? "this movie")\" from your watch plan?")
+            }
         }
         .task {
             await viewModel.loadData()
         }
+    }
+
+    private func markAsWatched(_ item: WatchPlanItem) async {
+        let success = await viewModel.markWatchedAndRemove(itemId: item.id, movieId: item.movieId)
+        if success {
+            HapticManager.success()
+        } else {
+            HapticManager.error()
+        }
+    }
+
+    private func removeFromPlan(_ item: WatchPlanItem) async {
+        let success = await viewModel.removeFromPlan(itemId: item.id)
+        if success {
+            HapticManager.success()
+        } else {
+            HapticManager.error()
+        }
+        itemToRemove = nil
     }
 
     // MARK: - Floating Action Button
@@ -120,6 +153,16 @@ struct WatchPlanView: View {
                                 onReschedule: {
                                     itemToReschedule = item
                                     HapticManager.selection()
+                                },
+                                onMarkWatched: {
+                                    Task {
+                                        await markAsWatched(item)
+                                    }
+                                },
+                                onRemove: {
+                                    itemToRemove = item
+                                    showRemoveConfirmation = true
+                                    HapticManager.selection()
                                 }
                             )
                         }
@@ -182,61 +225,102 @@ struct WatchPlanRowView: View {
     let item: WatchPlanItem
     let movie: Movie?
     var onReschedule: (() -> Void)?
+    var onMarkWatched: (() -> Void)?
+    var onRemove: (() -> Void)?
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Poster placeholder
-            posterView
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                // Poster placeholder
+                posterView
 
-            // Movie info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(movie?.title ?? "Unknown Movie")
-                    .font(.bodyMedium)
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(2)
+                // Movie info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(movie?.title ?? "Unknown Movie")
+                        .font(.bodyMedium)
+                        .foregroundStyle(Color.textPrimary)
+                        .lineLimit(2)
 
-                HStack(spacing: 8) {
-                    if let runtime = movie?.formattedRuntime, !runtime.isEmpty {
-                        Text(runtime)
-                            .font(.caption)
-                            .foregroundStyle(Color.textMuted)
+                    HStack(spacing: 8) {
+                        if let runtime = movie?.formattedRuntime, !runtime.isEmpty {
+                            Text(runtime)
+                                .font(.caption)
+                                .foregroundStyle(Color.textMuted)
+                        }
+                        if let year = movie?.releaseYear {
+                            Text("\(year)")
+                                .font(.caption)
+                                .foregroundStyle(Color.textMuted)
+                        }
                     }
-                    if let year = movie?.releaseYear {
-                        Text("\(year)")
-                            .font(.caption)
-                            .foregroundStyle(Color.textMuted)
+
+                    if item.isMissed {
+                        missedBadge
                     }
                 }
 
-                if item.isMissed {
-                    missedBadge
+                Spacer()
+
+                // Remove button (X)
+                if let onRemove = onRemove {
+                    Button {
+                        onRemove()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.textMuted)
+                            .frame(width: 28, height: 28)
+                            .background(Color.cardBackground)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove \(movie?.title ?? "movie") from plan")
                 }
             }
 
-            Spacer()
-
-            // Move button
-            if let onReschedule = onReschedule {
-                Button {
-                    onReschedule()
-                } label: {
-                    Label("Move", systemImage: "calendar.badge.clock")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(Color.goldPrimary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.goldPrimary.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+            // Action buttons row
+            HStack(spacing: 8) {
+                // Watched button
+                if let onMarkWatched = onMarkWatched {
+                    Button {
+                        onMarkWatched()
+                    } label: {
+                        Label("Watched", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.success)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Mark \(movie?.title ?? "movie") as watched")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Move \(movie?.title ?? "movie") to different date")
+
+                // Move button
+                if let onReschedule = onReschedule {
+                    Button {
+                        onReschedule()
+                    } label: {
+                        Label("Move", systemImage: "calendar.badge.clock")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(Color.goldPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.goldPrimary.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Move \(movie?.title ?? "movie") to different date")
+                }
             }
         }
         .glassCard()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(item.isMissed ? "missed" : "planned")")
-        .accessibilityHint("Double tap to reschedule")
+        .accessibilityHint("Tap buttons to mark watched, move, or remove")
     }
 
     private var posterView: some View {

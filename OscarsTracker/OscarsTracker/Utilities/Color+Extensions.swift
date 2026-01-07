@@ -17,6 +17,7 @@ extension Color {
 
     // Semantic
     static let destructive = Color(hue: 0, saturation: 0.62, brightness: 0.50)
+    static let success = Color(hue: 142/360, saturation: 0.71, brightness: 0.45)
     static let borderColor = Color(hue: 0, saturation: 0, brightness: 0.18)
 
     // Initialize from hex string

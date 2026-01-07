@@ -143,6 +143,83 @@ final class WatchPlanViewModel: ObservableObject {
         errorMessage = nil
     }
 
+    /// Mark a movie as watched and remove from watch plan
+    /// - Parameters:
+    ///   - itemId: The ID of the watch plan item
+    ///   - movieId: The ID of the movie to mark as watched
+    /// - Returns: True if successful, false otherwise
+    func markWatchedAndRemove(itemId: Int, movieId: Int) async -> Bool {
+        guard let userId = supabase.auth.currentUser?.id else {
+            errorMessage = "Not logged in"
+            return false
+        }
+
+        // Optimistic update - remove from list
+        let originalItems = watchPlanItems
+        let originalWatchedIds = watchedMovieIds
+        watchPlanItems.removeAll { $0.id == itemId }
+
+        // Add to watched set
+        watchedMovieIds.insert(movieId)
+
+        do {
+            // Insert into user_watched
+            let watchedData: [String: AnyJSON] = [
+                "user_id": .string(userId.uuidString),
+                "movie_id": .integer(movieId)
+            ]
+
+            try await supabase
+                .from("user_watched")
+                .insert(watchedData)
+                .execute()
+
+            // Delete from watch_plan
+            try await supabase
+                .from("watch_plan")
+                .delete()
+                .eq("id", value: itemId)
+                .execute()
+
+            return true
+        } catch {
+            // Rollback on error
+            watchPlanItems = originalItems
+            watchedMovieIds = originalWatchedIds
+            errorMessage = "Failed to mark as watched"
+            return false
+        }
+    }
+
+    /// Remove a movie from the watch plan without marking watched
+    /// - Parameter itemId: The ID of the watch plan item to remove
+    /// - Returns: True if successful, false otherwise
+    func removeFromPlan(itemId: Int) async -> Bool {
+        guard supabase.auth.currentUser != nil else {
+            errorMessage = "Not logged in"
+            return false
+        }
+
+        // Optimistic update
+        let originalItems = watchPlanItems
+        watchPlanItems.removeAll { $0.id == itemId }
+
+        do {
+            try await supabase
+                .from("watch_plan")
+                .delete()
+                .eq("id", value: itemId)
+                .execute()
+
+            return true
+        } catch {
+            // Rollback on error
+            watchPlanItems = originalItems
+            errorMessage = "Failed to remove from plan"
+            return false
+        }
+    }
+
     /// Reschedule a watch plan item to a new date
     /// - Parameters:
     ///   - itemId: The ID of the watch plan item
