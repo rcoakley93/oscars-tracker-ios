@@ -23,6 +23,9 @@
 		E8123456000E /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500E0 /* Color+Extensions.swift */; };
 		E8123456000F /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500F0 /* Font+Extensions.swift */; };
 		E81234560010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E81234550100 /* Assets.xcassets */; };
+		E81234560011 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550110 /* GlassCard.swift */; };
+		E81234560012 /* GoldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550120 /* GoldButtonStyle.swift */; };
+		E81234560013 /* GoldGlowModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550130 /* GoldGlowModifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +46,9 @@
 		E812345500E0 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
 		E812345500F0 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
 		E81234550100 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E81234550110 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		E81234550120 /* GoldButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldButtonStyle.swift; sourceTree = "<group>"; };
+		E81234550130 /* GoldGlowModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldGlowModifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +144,9 @@
 		E81234530008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E81234550110 /* GlassCard.swift */,
+				E81234550120 /* GoldButtonStyle.swift */,
+				E81234550130 /* GoldGlowModifier.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -251,6 +260,9 @@
 				E8123456000D /* SupabaseClient.swift in Sources */,
 				E8123456000E /* Color+Extensions.swift in Sources */,
 				E8123456000F /* Font+Extensions.swift in Sources */,
+				E81234560011 /* GlassCard.swift in Sources */,
+				E81234560012 /* GoldButtonStyle.swift in Sources */,
+				E81234560013 /* GoldGlowModifier.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
