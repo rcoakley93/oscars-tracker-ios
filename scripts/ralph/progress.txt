@@ -1,0 +1,36 @@
+# Ralph Progress Log
+
+## Codebase Patterns
+- Xcode project structure: OscarsTracker/OscarsTracker.xcodeproj with source files in OscarsTracker/OscarsTracker/
+- Data models: Use Codable + Identifiable protocols, CodingKeys for snake_case to camelCase mapping
+- SwiftUI lifecycle: Use @main attribute on App struct
+- Swift Package Manager: Dependencies added in project.pbxproj with XCRemoteSwiftPackageReference
+- iOS 17+: Target IPHONEOS_DEPLOYMENT_TARGET = 17.0
+- Playwright tests: Can validate iOS project structure via filesystem checks
+
+## 2026-01-06 - US-001
+- What was implemented:
+  - Created Xcode project with SwiftUI lifecycle (OscarsTrackerApp.swift with @main)
+  - Integrated supabase-swift SDK via Swift Package Manager
+  - Configured SupabaseClient singleton with project URL and anon key
+  - Created all data models: Movie, Category, Nomination, UserWatched, WatchPlanItem, UserPrediction, Group, GroupMember, Profile, LeaderboardEntry
+  - Created Color+Extensions.swift and Font+Extensions.swift for theming
+  - Set up basic TabView navigation structure in ContentView.swift
+  - App configured to build on iOS 17+ simulator
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/App/OscarsTrackerApp.swift
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker/Models/*.swift (10 model files)
+  - OscarsTracker/OscarsTracker/Services/SupabaseClient.swift
+  - OscarsTracker/OscarsTracker/Utilities/Color+Extensions.swift
+  - OscarsTracker/OscarsTracker/Utilities/Font+Extensions.swift
+  - OscarsTracker/OscarsTracker/Resources/Assets.xcassets/*
+  - tests/us-001-project-setup.spec.ts
+  - scripts/validate.sh
+- **Learnings:**
+  - Playwright tests can validate iOS project structure by checking file existence and content
+  - Xcode project.pbxproj requires specific UUID format and structure
+  - Package.swift can be used alongside xcodeproj for package resolution
+  - SwiftUI colors can use HSL values via Color(hue:saturation:brightness:)
+---

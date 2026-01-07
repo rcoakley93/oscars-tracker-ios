@@ -1,0 +1,587 @@
+{
+  "branchName": "ryan/ios-app",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Project Setup & Supabase Integration",
+      "acceptanceCriteria": [
+        "Xcode project created with SwiftUI lifecycle",
+        "supabase-swift SDK integrated via Swift Package Manager",
+        "SupabaseClient singleton configured with project URL and anon key",
+        "All data models created (Movie, Category, Nomination, etc.)",
+        "App builds successfully on iOS 17+ simulator"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Foundation phase - must complete before other features"
+    },
+    {
+      "id": "US-002",
+      "title": "Design System Implementation",
+      "acceptanceCriteria": [
+        "Color+Extensions.swift with all theme colors (gold, background, text)",
+        "Font+Extensions.swift with display and body font styles",
+        "GlassCard component with blur and border effects",
+        "GoldButtonStyle with gradient and press animation",
+        "Gold glow modifier implemented",
+        "Dark theme applied app-wide"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Required for consistent UI across all screens"
+    },
+    {
+      "id": "US-003",
+      "title": "User Authentication - Login",
+      "acceptanceCriteria": [
+        "LoginView with email and password fields",
+        "Email format validation",
+        "Password field with secure entry",
+        "Sign In button triggers Supabase auth",
+        "Error messages displayed for invalid credentials",
+        "Successful login navigates to Dashboard",
+        "Loading state shown during authentication"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "User Authentication - Sign Up",
+      "acceptanceCriteria": [
+        "SignUpView with email and password fields",
+        "Password confirmation field",
+        "Email format validation",
+        "Password strength requirements enforced",
+        "Sign Up button creates Supabase user",
+        "Error handling for existing email",
+        "Successful signup triggers onboarding flow"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "User Authentication - Google OAuth",
+      "acceptanceCriteria": [
+        "Continue with Google button on login/signup screens",
+        "Google OAuth flow via Supabase",
+        "Handles callback and session creation",
+        "New Google users trigger onboarding",
+        "Existing Google users navigate to Dashboard"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "User Onboarding - Username Setup",
+      "acceptanceCriteria": [
+        "OnboardingView presented as sheet for new users",
+        "Username text field with validation",
+        "Profanity filter on username",
+        "Username saved to profiles table",
+        "Continue button dismisses sheet and shows Dashboard",
+        "Cannot proceed without valid username"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Tab Navigation Structure",
+      "acceptanceCriteria": [
+        "TabView with 5 tabs: Dashboard, Watch Plan, Ballot, Leaderboard, More",
+        "SF Symbol icons for each tab",
+        "Gold tint for selected tab",
+        "More tab shows menu with Groups and Profile options",
+        "iPad uses sidebar navigation instead of tab bar",
+        "Navigation state persists across tab switches"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Dashboard - Progress Hero",
+      "acceptanceCriteria": [
+        "ProgressHeroView displays watched count and total",
+        "Percentage calculated and displayed prominently",
+        "Gold gradient progress bar shows completion",
+        "Movies per day calculation shown (days until March 15)",
+        "Glass card styling with radial gradient background",
+        "Updates when watched status changes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Dashboard - Movie Grid (Master List)",
+      "acceptanceCriteria": [
+        "LazyVGrid displays all nominated movies",
+        "2 columns on iPhone, 4-5 columns on iPad",
+        "MovieCardView shows poster, title, runtime",
+        "Watched indicator (checkmark) on watched movies",
+        "Posters loaded async with Kingfisher",
+        "Placeholder shown while loading images",
+        "Pull to refresh reloads data"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Dashboard - Toggle Watched",
+      "acceptanceCriteria": [
+        "Tap movie card toggles watched status",
+        "Optimistic UI update (instant visual feedback)",
+        "Light haptic feedback on toggle",
+        "Supabase user_watched table updated",
+        "Rollback on API error",
+        "Progress hero updates immediately"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Dashboard - Category List View",
+      "acceptanceCriteria": [
+        "Segmented picker to switch between Master List and By Category",
+        "CategoryListView groups movies by award category",
+        "Category headers show category name",
+        "Movies under each category with watch toggle",
+        "Same movie can appear in multiple categories",
+        "Smooth animation on view switch"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Watch Plan - Date Grouped List",
+      "acceptanceCriteria": [
+        "WatchPlanView shows movies grouped by planned date",
+        "Date headers formatted as 'TODAY', 'TOMORROW', or date string",
+        "Overdue section at top with red styling",
+        "Each movie row shows poster, title, runtime, year",
+        "Missed badge shown for overdue movies",
+        "Stats shown: planned count, unplanned count, watched count"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Watch Plan - Add Movie to Plan",
+      "acceptanceCriteria": [
+        "Floating action button opens AddToPlanSheet",
+        "Sheet shows list of unwatched movies not yet in plan",
+        "Movie picker with search/filter capability",
+        "Date picker for selecting planned date",
+        "Add button inserts to watch_plan table",
+        "New movie appears in correct date group",
+        "Sheet dismisses on successful add"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Watch Plan - Reschedule Movie",
+      "acceptanceCriteria": [
+        "Move button on each movie card",
+        "Tapping Move opens date picker",
+        "Selecting new date updates watch_plan table",
+        "Movie moves to new date group with animation",
+        "Success haptic on reschedule"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Watch Plan - Mark Watched & Remove",
+      "acceptanceCriteria": [
+        "Watched button marks movie as watched",
+        "Also removes from watch plan",
+        "Updates both user_watched and watch_plan tables",
+        "X button removes from plan without marking watched",
+        "Confirmation alert before remove",
+        "Success haptic feedback"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Watch Plan - Drag and Drop",
+      "acceptanceCriteria": [
+        "Long press (200ms) initiates drag on touch devices",
+        "Drag movie between date groups to reschedule",
+        "Visual feedback during drag (rotation, scale, shadow)",
+        "Drop target highlights when dragging over",
+        "Medium haptic on drag start",
+        "Success haptic on drop",
+        "Supabase updated on drop"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Watch Plan - Auto Scheduler",
+      "acceptanceCriteria": [
+        "Auto Scheduler button in toolbar",
+        "AutoSchedulerSheet shows unwatched movies",
+        "User can select movies to schedule",
+        "Algorithm suggests dates to fill gaps",
+        "Preview of suggested schedule shown",
+        "Confirm button bulk inserts to watch_plan",
+        "Handles overdue movies appropriately"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Watch Plan - What Can I Watch",
+      "acceptanceCriteria": [
+        "What Can I Watch button in toolbar",
+        "WhatCanIWatchSheet shows unwatched movies",
+        "Filter by runtime (short, medium, long)",
+        "Filter by availability (streaming services - future)",
+        "Quick add to plan from filtered list"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Ballot - Category List",
+      "acceptanceCriteria": [
+        "BallotView shows all award categories",
+        "Categories sorted by points value (highest first)",
+        "CategoryCard shows category name and points",
+        "Each card expandable to show nominations",
+        "2-column grid on iPad",
+        "Pull to refresh reloads categories"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Ballot - Make Predictions",
+      "acceptanceCriteria": [
+        "Radio button style selection in each category",
+        "Only one nomination selectable per category",
+        "Gold highlight on selected nomination",
+        "Light haptic on selection",
+        "Auto-saves to user_predictions via upsert",
+        "Visual checkmark on selected item"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Ballot - Progress Indicator",
+      "acceptanceCriteria": [
+        "Progress card shows completed/total categories",
+        "Gold progress bar visualization",
+        "Updates in real-time as predictions are made",
+        "Shows percentage complete"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Ballot - Countdown Timer",
+      "acceptanceCriteria": [
+        "CountdownTimerView shows time until ballot locks",
+        "Displays days, hours, minutes, seconds",
+        "Updates every second",
+        "When time expires, ballot becomes locked",
+        "Lock icon shown when locked",
+        "All selections disabled when locked"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Ballot - Winner Display",
+      "acceptanceCriteria": [
+        "After ceremony, is_winner field populated",
+        "Winner badge shown on winning nomination",
+        "User's correct predictions highlighted",
+        "User's incorrect predictions shown differently",
+        "Points earned displayed per category"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Leaderboard - Global Rankings",
+      "acceptanceCriteria": [
+        "LeaderboardView calls get_leaderboard RPC",
+        "Users sorted by prediction score (rank field)",
+        "Top 3 users shown with medal styling (gold, silver, bronze)",
+        "Each row shows rank, username, score",
+        "Each row shows watched count and correct predictions",
+        "Pull to refresh updates rankings"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Leaderboard - Current User Highlight",
+      "acceptanceCriteria": [
+        "Current user's row highlighted with gold border",
+        "Star icon next to current user",
+        "Scroll position shows current user if off-screen"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Groups - View My Groups",
+      "acceptanceCriteria": [
+        "GroupsView shows two sections: My Groups and Joined Groups",
+        "My Groups shows groups where created_by matches user",
+        "Each group card shows name, invite code, member count",
+        "Copy button copies invite code to clipboard",
+        "Tap group navigates to group leaderboard"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Groups - Create Group",
+      "acceptanceCriteria": [
+        "Create button in navigation bar",
+        "CreateGroupSheet with name input",
+        "Group name validation (length, profanity)",
+        "Creates group in groups table",
+        "Auto-generates invite code",
+        "Creator automatically added as member",
+        "New group appears in My Groups"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Groups - Join Group",
+      "acceptanceCriteria": [
+        "Text field for entering invite code",
+        "Join button validates code exists",
+        "Looks up group by invite_code",
+        "Adds user to group_members table",
+        "Error shown if already a member",
+        "Joined group appears in Joined Groups section"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Profile - View Profile",
+      "acceptanceCriteria": [
+        "ProfileView shows user avatar (if available)",
+        "Displays username with edit button",
+        "Displays email (read-only)",
+        "Account section with Change Password, Sign Out, Delete Account"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Profile - Edit Username",
+      "acceptanceCriteria": [
+        "Tap Edit enables inline username editing",
+        "Save button updates profiles table",
+        "Validation prevents empty or invalid usernames",
+        "Success feedback on save"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Profile - Change Password",
+      "acceptanceCriteria": [
+        "Change Password row opens sheet",
+        "Current password field",
+        "New password field with confirmation",
+        "Password strength requirements",
+        "Supabase auth update on submit",
+        "Success/error feedback"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Profile - Sign Out",
+      "acceptanceCriteria": [
+        "Sign Out row triggers confirmation alert",
+        "Confirmed sign out clears Supabase session",
+        "Navigates to Login screen",
+        "Clears any cached user data"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-033",
+      "title": "Profile - Delete Account",
+      "acceptanceCriteria": [
+        "Delete Account row (destructive red color)",
+        "Destructive confirmation alert with warning text",
+        "Calls delete_user RPC function",
+        "Cascades deletion of all user data",
+        "Signs out and navigates to Login"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-034",
+      "title": "Haptic Feedback System",
+      "acceptanceCriteria": [
+        "HapticManager utility class implemented",
+        "Light impact for toggles and selections",
+        "Medium impact for drag start",
+        "Success notification for successful actions",
+        "Error notification for failures",
+        "Selection feedback for button taps"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-035",
+      "title": "Loading States",
+      "acceptanceCriteria": [
+        "Skeleton views shown while data loads",
+        "LoadingView component with gold spinner",
+        "Each screen shows appropriate loading state",
+        "No flash of empty content"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-036",
+      "title": "Error Handling",
+      "acceptanceCriteria": [
+        "ErrorView component for failed loads",
+        "Retry button to reload data",
+        "Toast notifications for action errors",
+        "Network error detection and messaging",
+        "Graceful degradation on partial failures"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-037",
+      "title": "Empty States",
+      "acceptanceCriteria": [
+        "Empty state for Watch Plan (no movies planned)",
+        "Empty state for Groups (no groups)",
+        "Empty state for Leaderboard (no data)",
+        "Each empty state has icon, title, subtitle",
+        "Call to action button where appropriate"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-038",
+      "title": "iPad Layout Optimization",
+      "acceptanceCriteria": [
+        "Sidebar navigation instead of tab bar on iPad",
+        "Movie grid uses 4-5 columns",
+        "Category cards in 2-column grid",
+        "Sheets presented as popovers where appropriate",
+        "Proper handling of multitasking/split view"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-039",
+      "title": "Accessibility",
+      "acceptanceCriteria": [
+        "VoiceOver labels on all interactive elements",
+        "Dynamic Type support for text scaling",
+        "Sufficient color contrast ratios",
+        "Accessibility traits properly set",
+        "Reduce Motion support where applicable"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-040",
+      "title": "App Icon & Launch Screen",
+      "acceptanceCriteria": [
+        "App icon designed with Oscar theme",
+        "All icon sizes generated for App Store",
+        "Launch screen with app logo",
+        "Launch screen matches app background color",
+        "Smooth transition from launch to app"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
