@@ -105,3 +105,11 @@
 - ToastData: `.error()`, `.success()`, `.warning()`, `.info()` static constructors
 - Toast auto-dismisses after `duration` seconds when `autoDismiss: true`
 - ViewModels use `@Published var errorMessage: String?` with try/catch
+
+### Empty States Pattern
+- Use `EmptyStateView` for reusable empty states with icon, title, subtitle
+- Optional `actionTitle` and `action` closure for call-to-action button
+- Screen-specific empty states: `WatchPlanEmptyState`, `GroupsEmptyState`, etc.
+- Icon size: `.font(.system(size: 56))` with `.foregroundStyle(Color.goldPrimary)`
+- Title uses `.headingMedium`, subtitle uses `.bodyMedium` with `.textMuted`
+- Always check `data.isEmpty` after loading completes to show empty state
