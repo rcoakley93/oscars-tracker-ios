@@ -6,6 +6,7 @@ struct WatchPlanView: View {
     @StateObject private var viewModel = WatchPlanViewModel()
     @State private var showAddSheet = false
     @State private var showAutoSchedulerSheet = false
+    @State private var showWhatCanIWatchSheet = false
     @State private var itemToReschedule: WatchPlanItem?
     @State private var itemToRemove: WatchPlanItem?
     @State private var showRemoveConfirmation = false
@@ -42,15 +43,27 @@ struct WatchPlanView: View {
             .navigationTitle("Watch Plan")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showAutoSchedulerSheet = true
-                        HapticManager.selection()
-                    } label: {
-                        Image(systemName: "wand.and.stars")
-                            .foregroundStyle(Color.goldPrimary)
+                    HStack(spacing: 16) {
+                        Button {
+                            showWhatCanIWatchSheet = true
+                            HapticManager.selection()
+                        } label: {
+                            Image(systemName: "questionmark.circle")
+                                .foregroundStyle(Color.goldPrimary)
+                        }
+                        .accessibilityLabel("What Can I Watch")
+                        .accessibilityHint("Find movies based on available time")
+
+                        Button {
+                            showAutoSchedulerSheet = true
+                            HapticManager.selection()
+                        } label: {
+                            Image(systemName: "wand.and.stars")
+                                .foregroundStyle(Color.goldPrimary)
+                        }
+                        .accessibilityLabel("Auto Scheduler")
+                        .accessibilityHint("Opens auto scheduler to automatically plan movies")
                     }
-                    .accessibilityLabel("Auto Scheduler")
-                    .accessibilityHint("Opens auto scheduler to automatically plan movies")
                 }
             }
             .refreshable {
@@ -62,6 +75,10 @@ struct WatchPlanView: View {
             }
             .sheet(isPresented: $showAutoSchedulerSheet) {
                 AutoSchedulerSheet(viewModel: viewModel)
+                    .presentationDetents([.large])
+            }
+            .sheet(isPresented: $showWhatCanIWatchSheet) {
+                WhatCanIWatchSheet(viewModel: viewModel)
                     .presentationDetents([.large])
             }
             .sheet(item: $itemToReschedule) { item in

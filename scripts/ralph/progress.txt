@@ -1013,3 +1013,34 @@
   - Toolbar button with .primaryAction placement for navigation bar trailing position
   - Back/Cancel button text: ternary based on showPreview state
 ---
+
+## 2026-01-07 - US-018
+- What was implemented:
+  - WhatCanIWatchSheet for discovering movies based on available time
+  - RuntimeFilter enum with all/short/medium/long options
+  - Filter matching logic: short < 90 min, medium 90-120 min, long > 120 min
+  - Filter chips UI with horizontal scroll and count badges
+  - Quick add functionality that adds movie to plan for today
+  - Runtime color coding: green for short, gold for medium, red-ish for long
+  - Summary header showing filtered movie count and total runtime
+  - Empty state with context-aware messages per filter
+  - Loading state during quick add operation
+  - Toolbar button (questionmark.circle icon) in WatchPlanView
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WhatCanIWatchSheet.swift (new)
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-018-what-can-i-watch.spec.ts (new)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - RuntimeFilter enum with CaseIterable + Identifiable for ForEach iteration
+  - matches(_ movie:) method on enum for runtime filtering logic
+  - Capsule shape for pill-style filter chips
+  - HStack in ToolbarItem for multiple toolbar buttons
+  - isAddingMovie: Int? pattern for tracking which specific item is loading
+  - Color coding based on runtime: Color.success/goldPrimary/destructive
+  - countForFilter computed function for per-filter counts
+  - Filter chip selected state: background color and foreground color inversion
+  - Quick add defaults to current date: Date()
+  - Empty state message computed property with switch on filter
+---
