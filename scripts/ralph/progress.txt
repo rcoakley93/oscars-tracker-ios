@@ -644,3 +644,34 @@
   - Filter drop targets by checking label != "OVERDUE" to prevent invalid drops
   - HapticManager.medium() for drag start, success/error for drop result
 ---
+
+## 2026-01-07 - US-023
+- What was implemented:
+  - WinnerBadge component with trophy icon and "WINNER" text in gold pill
+  - NominationRow enhanced with isWinner, isUserCorrect, isUserIncorrect parameters
+  - Dynamic background/border/title colors based on prediction result
+  - Green success styling for correct predictions
+  - Red destructive styling for incorrect predictions
+  - Gold styling for winners and regular selections
+  - BallotViewModel helper functions: hasWinner, winningNomination, isPredictionCorrect, isPredictionIncorrect
+  - pointsEarned function showing earned points per category
+  - totalPointsEarned and maxPossiblePoints computed properties
+  - CategoryCard shows prediction result with checkmark/xmark icons
+  - CategoryCard border color indicates correct (green) or incorrect (red) predictions
+  - Points display shows "+X pts" with success color when correct, muted when incorrect
+  - Updated accessibility labels for winner and prediction result status
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Ballot/BallotView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/BallotViewModel.swift
+  - tests/us-023-ballot-winner-display.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Computed properties in View for deriving state from ViewModel
+  - Multi-state visual styling: backgroundColor, borderColor, titleColor as computed
+  - Conditional ZStack content: replace radio button with result icon when appropriate
+  - Category-level result tracking via hasWinner() check
+  - Points display format: "+X pts" for earned, "X pts" for potential
+  - RoundedRectangle overlay for category card border based on result
+  - Opacity pattern: `.opacity(isLocked ? (isWinner ? 1.0 : 0.6) : 1.0)` keeps winners visible
+  - Accessibility labels should include selection state, winner status, and prediction result
+---

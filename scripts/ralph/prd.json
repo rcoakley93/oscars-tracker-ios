@@ -342,7 +342,7 @@
         "Points earned displayed per category"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

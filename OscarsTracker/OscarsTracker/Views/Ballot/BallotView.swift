@@ -298,6 +298,22 @@ struct CategoryCard: View {
     @ObservedObject var viewModel: BallotViewModel
     @State private var isExpanded = false
 
+    private var hasWinner: Bool {
+        viewModel.hasWinner(for: category)
+    }
+
+    private var isPredictionCorrect: Bool {
+        viewModel.isPredictionCorrect(for: category)
+    }
+
+    private var isPredictionIncorrect: Bool {
+        viewModel.isPredictionIncorrect(for: category)
+    }
+
+    private var pointsEarned: Int {
+        viewModel.pointsEarned(for: category)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Category header (always visible)
@@ -309,8 +325,15 @@ struct CategoryCard: View {
             }
         }
         .glassCard()
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(
+                    hasWinner ? (isPredictionCorrect ? Color.success : (isPredictionIncorrect ? Color.destructive.opacity(0.5) : Color.clear)) : Color.clear,
+                    lineWidth: 2
+                )
+        )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(category.name), \(category.pointsValue ?? 0) points, \(isExpanded ? "expanded" : "collapsed")")
+        .accessibilityLabel("\(category.name), \(category.pointsValue ?? 0) points, \(isExpanded ? "expanded" : "collapsed")\(hasWinner ? ", winner announced" : "")")
         .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand")")
     }
 
@@ -323,16 +346,39 @@ struct CategoryCard: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(category.name)
-                        .font(.bodyMedium)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Color.textPrimary)
-                        .multilineTextAlignment(.leading)
+                    HStack(spacing: 8) {
+                        Text(category.name)
+                            .font(.bodyMedium)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.textPrimary)
+                            .multilineTextAlignment(.leading)
+
+                        // Prediction result indicator
+                        if hasWinner {
+                            if isPredictionCorrect {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Color.success)
+                            } else if isPredictionIncorrect {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Color.destructive)
+                            }
+                        }
+                    }
 
                     HStack(spacing: 4) {
-                        Text("\(category.pointsValue ?? 0) pts")
-                            .font(.caption)
-                            .foregroundStyle(Color.goldPrimary)
+                        // Points - show earned if winner, otherwise potential
+                        if hasWinner {
+                            Text("+\(pointsEarned) pts")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(isPredictionCorrect ? Color.success : Color.textMuted)
+                        } else {
+                            Text("\(category.pointsValue ?? 0) pts")
+                                .font(.caption)
+                                .foregroundStyle(Color.goldPrimary)
+                        }
 
                         Text("•")
                             .font(.caption)
@@ -367,6 +413,9 @@ struct CategoryCard: View {
                         nomination: nomination,
                         movie: viewModel.movie(for: nomination),
                         isSelected: viewModel.isSelected(nomination: nomination),
+                        isWinner: nomination.isWinner == true,
+                        isUserCorrect: viewModel.isSelected(nomination: nomination) && nomination.isWinner == true,
+                        isUserIncorrect: viewModel.isSelected(nomination: nomination) && viewModel.hasWinner(for: category) && nomination.isWinner != true,
                         isLocked: viewModel.isLocked,
                         onSelect: {
                             Task {
@@ -386,22 +435,77 @@ struct NominationRow: View {
     let nomination: Nomination
     let movie: Movie?
     let isSelected: Bool
+    let isWinner: Bool
+    let isUserCorrect: Bool
+    let isUserIncorrect: Bool
     let isLocked: Bool
     let onSelect: () -> Void
+
+    /// Background color based on prediction result
+    private var backgroundColor: Color {
+        if isUserCorrect {
+            return Color.success.opacity(0.15)
+        } else if isUserIncorrect {
+            return Color.destructive.opacity(0.1)
+        } else if isWinner {
+            return Color.goldPrimary.opacity(0.1)
+        } else if isSelected {
+            return Color.goldPrimary.opacity(0.1)
+        }
+        return Color.clear
+    }
+
+    /// Border color based on prediction result
+    private var borderColor: Color {
+        if isUserCorrect {
+            return Color.success.opacity(0.5)
+        } else if isUserIncorrect {
+            return Color.destructive.opacity(0.3)
+        } else if isWinner {
+            return Color.goldPrimary.opacity(0.5)
+        } else if isSelected {
+            return Color.goldPrimary.opacity(0.3)
+        }
+        return Color.clear
+    }
+
+    /// Text color for movie title
+    private var titleColor: Color {
+        if isUserCorrect {
+            return Color.success
+        } else if isUserIncorrect {
+            return Color.destructive
+        } else if isWinner {
+            return Color.goldPrimary
+        } else if isSelected {
+            return Color.goldPrimary
+        }
+        return Color.textPrimary
+    }
 
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
-                // Radio button indicator
+                // Radio button indicator (or result indicator)
                 ZStack {
-                    Circle()
-                        .stroke(isSelected ? Color.goldPrimary : Color.borderColor, lineWidth: 2)
-                        .frame(width: 22, height: 22)
-
-                    if isSelected {
+                    if isUserCorrect {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(Color.success)
+                    } else if isUserIncorrect {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(Color.destructive)
+                    } else {
                         Circle()
-                            .fill(Color.goldPrimary)
-                            .frame(width: 12, height: 12)
+                            .stroke(isSelected ? Color.goldPrimary : Color.borderColor, lineWidth: 2)
+                            .frame(width: 22, height: 22)
+
+                        if isSelected {
+                            Circle()
+                                .fill(Color.goldPrimary)
+                                .frame(width: 12, height: 12)
+                        }
                     }
                 }
 
@@ -419,7 +523,7 @@ struct NominationRow: View {
                     Text(movie?.title ?? "Unknown Movie")
                         .font(.bodySmall)
                         .fontWeight(.medium)
-                        .foregroundStyle(isSelected ? Color.goldPrimary : Color.textPrimary)
+                        .foregroundStyle(titleColor)
                         .lineLimit(2)
 
                     if let detailText = nomination.detailText, !detailText.isEmpty {
@@ -432,37 +536,46 @@ struct NominationRow: View {
 
                 Spacer()
 
-                // Checkmark for selected (in addition to radio)
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(Color.goldPrimary)
-                }
-
-                // Winner badge (if applicable)
-                if nomination.isWinner == true {
-                    Image(systemName: "trophy.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.goldPrimary)
+                // Winner badge (shown prominently)
+                if isWinner {
+                    WinnerBadge()
                 }
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.goldPrimary.opacity(0.1) : Color.clear)
+                    .fill(backgroundColor)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.goldPrimary.opacity(0.3) : Color.clear, lineWidth: 1)
+                    .stroke(borderColor, lineWidth: isWinner ? 2 : 1)
             )
         }
         .buttonStyle(.plain)
         .disabled(isLocked)
-        .opacity(isLocked ? 0.6 : 1.0)
+        .opacity(isLocked ? (isWinner ? 1.0 : 0.6) : 1.0)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")\(isLocked ? ", ballot is locked" : "")")
+        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")\(isWinner ? ", winner" : "")\(isUserCorrect ? ", correct prediction" : "")\(isUserIncorrect ? ", incorrect prediction" : "")")
         .accessibilityHint(isLocked ? "Ballot is locked, selections cannot be changed" : "Double tap to \(isSelected ? "deselect" : "select") this prediction")
+    }
+}
+
+/// Badge showing winner status with trophy icon.
+struct WinnerBadge: View {
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "trophy.fill")
+                .font(.system(size: 12))
+            Text("WINNER")
+                .font(.caption2)
+                .fontWeight(.bold)
+        }
+        .foregroundStyle(Color.black)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.goldPrimary)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 

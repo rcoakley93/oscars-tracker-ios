@@ -143,6 +143,56 @@ final class BallotViewModel: ObservableObject {
         return predictions[categoryId] == nomination.id
     }
 
+    /// Check if any winner has been announced for a category
+    func hasWinner(for category: CategoryWithNominations) -> Bool {
+        category.nominations.contains { $0.isWinner == true }
+    }
+
+    /// Get the winning nomination for a category
+    func winningNomination(for category: CategoryWithNominations) -> Nomination? {
+        category.nominations.first { $0.isWinner == true }
+    }
+
+    /// Check if the user's prediction was correct for a category
+    func isPredictionCorrect(for category: CategoryWithNominations) -> Bool {
+        guard let userPredictionId = predictions[category.id],
+              let winner = winningNomination(for: category) else {
+            return false
+        }
+        return userPredictionId == winner.id
+    }
+
+    /// Check if the user's prediction was incorrect (made a prediction but didn't pick winner)
+    func isPredictionIncorrect(for category: CategoryWithNominations) -> Bool {
+        guard hasWinner(for: category),
+              let _ = predictions[category.id] else {
+            return false
+        }
+        return !isPredictionCorrect(for: category)
+    }
+
+    /// Points earned for a specific category
+    func pointsEarned(for category: CategoryWithNominations) -> Int {
+        if isPredictionCorrect(for: category) {
+            return category.pointsValue ?? 0
+        }
+        return 0
+    }
+
+    /// Total points earned across all categories
+    var totalPointsEarned: Int {
+        categories.reduce(0) { total, category in
+            total + pointsEarned(for: category)
+        }
+    }
+
+    /// Maximum possible points
+    var maxPossiblePoints: Int {
+        categories.reduce(0) { total, category in
+            total + (category.pointsValue ?? 0)
+        }
+    }
+
     /// Select a nomination as prediction for a category
     func selectPrediction(nomination: Nomination) async {
         // Don't allow changes if ballot is locked
