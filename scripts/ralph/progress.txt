@@ -1104,3 +1104,29 @@
   - WCAG AA contrast ratio: 4.5:1 for normal text, 3:1 for large text
   - minimumScaleFactor allows text to shrink when space is limited
 ---
+
+## 2026-01-07 - US-040
+- What was implemented:
+  - AppIcon.appiconset configured with Oscar theme structure
+  - 1024x1024 universal icon for iOS App Store
+  - Dark mode and tinted appearance variants for app icon
+  - LaunchBackgroundColor.colorset matching app background (0.05 brightness)
+  - Launch screen generation enabled with custom background color
+  - Project build settings updated for launch screen configuration
+- Files changed:
+  - OscarsTracker/OscarsTracker/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json
+  - OscarsTracker/OscarsTracker/Resources/Assets.xcassets/LaunchBackgroundColor.colorset/Contents.json (new)
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-040-app-icon-launch-screen.spec.ts (new)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - iOS 18+ uses single 1024x1024 universal icon for all sizes
+  - AppIcon supports appearances: dark, tinted, light
+  - LaunchBackgroundColor.colorset provides custom launch screen background
+  - INFOPLIST_KEY_UILaunchScreen_Generation = YES for auto-generated launch screen
+  - Color components in srgb color-space with 0-1 float values
+  - idiom: universal for iOS icons (replaces device-specific sizes)
+  - filenames must end with .png and be specified in Contents.json
+  - info.author: xcode, info.version: 1 for proper asset catalog metadata
+  - Launch screen matches app background for smooth transition
+---

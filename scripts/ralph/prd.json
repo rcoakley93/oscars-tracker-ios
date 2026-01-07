@@ -580,7 +580,7 @@
         "Smooth transition from launch to app"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]
