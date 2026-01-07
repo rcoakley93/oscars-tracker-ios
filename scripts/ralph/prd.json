@@ -566,7 +566,7 @@
         "Reduce Motion support where applicable"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

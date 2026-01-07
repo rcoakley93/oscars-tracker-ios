@@ -1073,3 +1073,34 @@
   - Separate computed properties for iPhone/iPad layouts (iPhoneListLayout, iPadGridLayout)
   - useGridLayout computed property based on horizontalSizeClass
 ---
+
+## 2026-01-07 - US-039
+- What was implemented:
+  - AccessibilityManager.swift with Reduce Motion and VoiceOver checks
+  - UIAccessibility.isReduceMotionEnabled/isVoiceOverRunning/isBoldTextEnabled
+  - accessibilityAnimation View extension that respects Reduce Motion
+  - Updated Font+Extensions to use system text styles for Dynamic Type
+  - Font styles now use .largeTitle/.title/.body/.caption etc.
+  - scaledFont and dynamicLineLimit View extensions
+  - Accessibility helper functions: accessibilityAsButton/Header/StaticText
+  - VoiceOver labels already existed on interactive elements (verified)
+  - Accessibility hints already existed on buttons (verified)
+  - Color contrast considerations documented with WCAG reference
+- Files changed:
+  - OscarsTracker/OscarsTracker/Utilities/AccessibilityManager.swift (new)
+  - OscarsTracker/OscarsTracker/Utilities/Font+Extensions.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-039-accessibility.spec.ts (new)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - UIAccessibility provides all system accessibility preferences
+  - Font.system(.textStyle) automatically supports Dynamic Type
+  - .largeTitle, .title, .headline, .body, .caption are semantic text styles
+  - accessibilityAnimation: conditionally apply animations based on Reduce Motion
+  - animationDuration helper: return 0 when Reduce Motion is enabled
+  - @ViewBuilder allows conditional view modification
+  - accessibilityElement(children: .combine/.ignore) groups elements for VoiceOver
+  - .accessibilityAddTraits(.isButton/.isHeader) for proper semantic roles
+  - WCAG AA contrast ratio: 4.5:1 for normal text, 3:1 for large text
+  - minimumScaleFactor allows text to shrink when space is limited
+---
