@@ -240,7 +240,7 @@
         "Supabase updated on drop"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

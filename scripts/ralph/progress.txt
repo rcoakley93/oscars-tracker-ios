@@ -611,3 +611,36 @@
   - @ViewBuilder for conditional content based on view mode
   - CategoryWithMovies struct pattern for pre-computed category-movie relationships
 ---
+
+## 2026-01-07 - US-016
+- What was implemented:
+  - WatchPlanItemTransfer struct conforming to Codable and Transferable for drag data
+  - Custom UTType (com.oscars.tracker.watchplanitem) for watch plan item transfers
+  - DraggableWatchPlanRow wrapper view with .draggable() modifier
+  - Visual feedback during drag: opacity (0.5), scale (0.95), rotation (2 degrees), shadow
+  - WatchPlanDragPreview showing movie title in styled card
+  - Drop target highlighting with goldPrimary background and arrow indicator
+  - highlightedDateGroup state to track which date section is highlighted
+  - .dropDestination() modifier on date group sections
+  - Medium haptic on drag start via HapticManager.medium()
+  - Success/error haptic on drop completion
+  - Drag handle indicator (line.3.horizontal) in row view
+  - Cannot drop on overdue section - filtered out in drop handler
+  - Animation for highlight transitions using .animation(.easeInOut)
+  - Updated accessibility hint to mention drag support
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - tests/us-016-watch-plan-drag-drop.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - SwiftUI drag and drop uses .draggable() and .dropDestination() modifiers
+  - Transferable protocol with CodableRepresentation for custom data types
+  - UTType extension with exportedAs: for custom content type identifiers
+  - import UniformTypeIdentifiers required for UTType
+  - .draggable() takes a preview closure for custom drag preview
+  - isTargeted callback in .dropDestination() for real-time highlight state
+  - Visual feedback pattern: opacity, scale, rotation, shadow on isDragging state
+  - Drag preview appears on drag start via .onAppear
+  - Filter drop targets by checking label != "OVERDUE" to prevent invalid drops
+  - HapticManager.medium() for drag start, success/error for drop result
+---

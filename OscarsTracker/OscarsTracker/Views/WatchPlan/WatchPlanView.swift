@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Watch plan view showing movies grouped by planned date.
 struct WatchPlanView: View {
@@ -7,6 +8,8 @@ struct WatchPlanView: View {
     @State private var itemToReschedule: WatchPlanItem?
     @State private var itemToRemove: WatchPlanItem?
     @State private var showRemoveConfirmation = false
+    @State private var draggedItem: WatchPlanItem?
+    @State private var highlightedDateGroup: Date?
 
     var body: some View {
         NavigationStack {
@@ -147,9 +150,18 @@ struct WatchPlanView: View {
                 Section {
                     VStack(spacing: 12) {
                         ForEach(group.items) { item in
-                            WatchPlanRowView(
+                            DraggableWatchPlanRow(
                                 item: item,
                                 movie: viewModel.movie(for: item),
+                                isDragging: draggedItem?.id == item.id,
+                                onDragStart: {
+                                    draggedItem = item
+                                    HapticManager.medium()
+                                },
+                                onDragEnd: {
+                                    draggedItem = nil
+                                    highlightedDateGroup = nil
+                                },
                                 onReschedule: {
                                     itemToReschedule = item
                                     HapticManager.selection()
@@ -168,23 +180,51 @@ struct WatchPlanView: View {
                         }
                     }
                     .padding(.horizontal)
+                    .dropDestination(for: WatchPlanItemTransfer.self) { items, _ in
+                        guard let droppedItem = items.first,
+                              group.label != "OVERDUE" else { return false }
+
+                        Task {
+                            let success = await viewModel.reschedule(itemId: droppedItem.itemId, to: group.date)
+                            if success {
+                                HapticManager.success()
+                            } else {
+                                HapticManager.error()
+                            }
+                        }
+                        return true
+                    } isTargeted: { isTargeted in
+                        if group.label != "OVERDUE" {
+                            highlightedDateGroup = isTargeted ? group.date : nil
+                        }
+                    }
                 } header: {
-                    dateHeader(label: group.label, isOverdue: group.label == "OVERDUE")
+                    dateHeader(
+                        label: group.label,
+                        isOverdue: group.label == "OVERDUE",
+                        isHighlighted: highlightedDateGroup == group.date
+                    )
                 }
             }
         }
     }
 
-    private func dateHeader(label: String, isOverdue: Bool) -> some View {
+    private func dateHeader(label: String, isOverdue: Bool, isHighlighted: Bool = false) -> some View {
         HStack {
             Text(label)
                 .font(.headingSmall)
-                .foregroundStyle(isOverdue ? Color.destructive : Color.textPrimary)
+                .foregroundStyle(isOverdue ? Color.destructive : (isHighlighted ? Color.goldPrimary : Color.textPrimary))
             Spacer()
+            if isHighlighted {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundStyle(Color.goldPrimary)
+                    .transition(.scale.combined(with: .opacity))
+            }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color.appBackground)
+        .background(isHighlighted ? Color.goldPrimary.opacity(0.1) : Color.appBackground)
+        .animation(.easeInOut(duration: 0.2), value: isHighlighted)
     }
 
     // MARK: - Loading & Empty States
@@ -217,6 +257,87 @@ struct WatchPlanView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 40)
         .padding(.vertical, 60)
+    }
+}
+
+/// Transferable data for drag and drop of watch plan items.
+struct WatchPlanItemTransfer: Codable, Transferable {
+    let itemId: Int
+    let movieId: Int
+
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .watchPlanItem)
+    }
+}
+
+extension UTType {
+    static var watchPlanItem: UTType {
+        UTType(exportedAs: "com.oscars.tracker.watchplanitem")
+    }
+}
+
+/// Draggable wrapper for watch plan row with visual feedback.
+struct DraggableWatchPlanRow: View {
+    let item: WatchPlanItem
+    let movie: Movie?
+    let isDragging: Bool
+    var onDragStart: (() -> Void)?
+    var onDragEnd: (() -> Void)?
+    var onReschedule: (() -> Void)?
+    var onMarkWatched: (() -> Void)?
+    var onRemove: (() -> Void)?
+
+    @State private var dragOffset: CGFloat = 0
+
+    var body: some View {
+        WatchPlanRowView(
+            item: item,
+            movie: movie,
+            onReschedule: onReschedule,
+            onMarkWatched: onMarkWatched,
+            onRemove: onRemove
+        )
+        .opacity(isDragging ? 0.5 : 1.0)
+        .scaleEffect(isDragging ? 0.95 : 1.0)
+        .rotationEffect(.degrees(isDragging ? 2 : 0))
+        .shadow(color: isDragging ? Color.goldPrimary.opacity(0.3) : Color.clear, radius: 8, x: 0, y: 4)
+        .animation(.easeInOut(duration: 0.2), value: isDragging)
+        .draggable(WatchPlanItemTransfer(itemId: item.id, movieId: item.movieId)) {
+            // Drag preview
+            WatchPlanDragPreview(movie: movie)
+                .onAppear {
+                    onDragStart?()
+                }
+        }
+        .onDrop(of: [.watchPlanItem], isTargeted: nil) { _ in
+            onDragEnd?()
+            return false
+        }
+    }
+}
+
+/// Preview shown while dragging a watch plan item.
+struct WatchPlanDragPreview: View {
+    let movie: Movie?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "film")
+                .foregroundStyle(Color.goldPrimary)
+            Text(movie?.title ?? "Movie")
+                .font(.bodyMedium)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.goldPrimary, lineWidth: 2)
+        )
+        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
     }
 }
 
@@ -260,6 +381,11 @@ struct WatchPlanRowView: View {
                 }
 
                 Spacer()
+
+                // Drag handle indicator
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color.textMuted.opacity(0.5))
 
                 // Remove button (X)
                 if let onRemove = onRemove {
@@ -320,7 +446,7 @@ struct WatchPlanRowView: View {
         .glassCard()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(item.isMissed ? "missed" : "planned")")
-        .accessibilityHint("Tap buttons to mark watched, move, or remove")
+        .accessibilityHint("Long press and drag to reschedule, or use action buttons")
     }
 
     private var posterView: some View {
