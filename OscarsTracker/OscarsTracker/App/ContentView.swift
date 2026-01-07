@@ -206,23 +206,7 @@ struct BallotPlaceholderView: View {
 
 struct LeaderboardPlaceholderView: View {
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Image(systemName: "trophy.fill")
-                        .font(.system(size: 64))
-                        .foregroundStyle(Color.goldPrimary)
-                    Text("Leaderboard")
-                        .font(.displayMedium)
-                        .foregroundStyle(Color.textPrimary)
-                    Text("See how you rank")
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textMuted)
-                }
-            }
-            .navigationTitle("Leaderboard")
-        }
+        LeaderboardView()
     }
 }
 
