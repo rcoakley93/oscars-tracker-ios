@@ -264,23 +264,7 @@ struct LeaderboardPlaceholderView: View {
 
 struct GroupsPlaceholderView: View {
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                VStack(spacing: 16) {
-                    Image(systemName: "person.3.fill")
-                        .font(.system(size: 64))
-                        .foregroundStyle(Color.goldPrimary)
-                    Text("Groups")
-                        .font(.displayMedium)
-                        .foregroundStyle(Color.textPrimary)
-                    Text("Compete with friends")
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textMuted)
-                }
-            }
-            .navigationTitle("Groups")
-        }
+        GroupsView()
     }
 }
 

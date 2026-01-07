@@ -46,6 +46,8 @@
 		E81234560025 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550250 /* ProfileViewModel.swift */; };
 		E81234560026 /* GoogleLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550260 /* GoogleLogoView.swift */; };
 		E81234560027 /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550270 /* CategoryListView.swift */; };
+		E81234560028 /* GroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550280 /* GroupsView.swift */; };
+		E81234560029 /* GroupsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550290 /* GroupsViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +91,8 @@
 		E81234550250 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		E81234550260 /* GoogleLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleLogoView.swift; sourceTree = "<group>"; };
 		E81234550270 /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
+		E81234550280 /* GroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsView.swift; sourceTree = "<group>"; };
+		E81234550290 /* GroupsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,6 +181,7 @@
 				E81234550210 /* BallotViewModel.swift */,
 				E81234550230 /* LeaderboardViewModel.swift */,
 				E81234550250 /* ProfileViewModel.swift */,
+				E81234550290 /* GroupsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -191,8 +196,17 @@
 				E8123453000F /* Ballot */,
 				E81234530010 /* Leaderboard */,
 				E81234530011 /* Profile */,
+				E81234530012 /* Groups */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E81234530012 /* Groups */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550280 /* GroupsView.swift */,
+			);
+			path = Groups;
 			sourceTree = "<group>";
 		};
 		E81234530011 /* Profile */ = {
@@ -399,6 +413,8 @@
 				E81234560025 /* ProfileViewModel.swift in Sources */,
 				E81234560026 /* GoogleLogoView.swift in Sources */,
 				E81234560027 /* CategoryListView.swift in Sources */,
+				E81234560028 /* GroupsView.swift in Sources */,
+				E81234560029 /* GroupsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
