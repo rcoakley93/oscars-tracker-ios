@@ -71,6 +71,9 @@ final class DashboardViewModel: ObservableObject {
     func toggleWatched(movieId: Int) async {
         guard let userId = supabase.auth.currentUser?.id else { return }
 
+        // Haptic feedback on toggle
+        HapticManager.light()
+
         // Optimistic update
         let wasWatched = watchedMovieIds.contains(movieId)
         if wasWatched {
@@ -99,7 +102,8 @@ final class DashboardViewModel: ObservableObject {
                     .execute()
             }
         } catch {
-            // Rollback on error
+            // Rollback on error with error haptic
+            HapticManager.error()
             if wasWatched {
                 watchedMovieIds.insert(movieId)
             } else {

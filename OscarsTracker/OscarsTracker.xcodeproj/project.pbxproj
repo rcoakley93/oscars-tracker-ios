@@ -34,6 +34,7 @@
 		E81234560019 /* ProgressHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550190 /* ProgressHeroView.swift */; };
 		E8123456001A /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501A0 /* DashboardViewModel.swift */; };
 		E8123456001B /* MovieCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501B0 /* MovieCardView.swift */; };
+		E8123456001C /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501C0 /* HapticManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -65,6 +66,7 @@
 		E81234550190 /* ProgressHeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressHeroView.swift; sourceTree = "<group>"; };
 		E812345501A0 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
 		E812345501B0 /* MovieCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieCardView.swift; sourceTree = "<group>"; };
+		E812345501C0 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -204,6 +206,7 @@
 			children = (
 				E812345500E0 /* Color+Extensions.swift */,
 				E812345500F0 /* Font+Extensions.swift */,
+				E812345501C0 /* HapticManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -319,6 +322,7 @@
 				E81234560019 /* ProgressHeroView.swift in Sources */,
 				E8123456001A /* DashboardViewModel.swift in Sources */,
 				E8123456001B /* MovieCardView.swift in Sources */,
+				E8123456001C /* HapticManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

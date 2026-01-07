@@ -218,3 +218,24 @@
   - Button with .buttonStyle(.plain) for custom tap handling
   - Accessibility: combine children and provide custom label/hint
 ---
+
+## 2026-01-06 - US-010
+- What was implemented:
+  - HapticManager utility with UIImpactFeedbackGenerator and UINotificationFeedbackGenerator
+  - Light haptic on toggle start, error haptic on API failure
+  - Optimistic update pattern: modify local state first, rollback on error
+  - Progress hero auto-updates via computed property watchedCount
+  - All toggle behavior was already implemented in US-008/009, just added haptics
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/Utilities/HapticManager.swift
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift (added haptics)
+  - tests/us-010-toggle-watched.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - UIImpactFeedbackGenerator(style:) for light/medium/heavy impacts
+  - UINotificationFeedbackGenerator for success/warning/error notifications
+  - UISelectionFeedbackGenerator for selection changes
+  - Haptic feedback should be immediate, before async operations start
+  - enum with static funcs pattern for haptic utility
+---
