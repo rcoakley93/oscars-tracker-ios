@@ -7,6 +7,14 @@
 - Swift Package Manager: Dependencies added in project.pbxproj with XCRemoteSwiftPackageReference
 - iOS 17+: Target IPHONEOS_DEPLOYMENT_TARGET = 17.0
 - Playwright tests: Can validate iOS project structure via filesystem checks
+- Components: Place in OscarsTracker/OscarsTracker/Components/ folder
+- ViewModifiers: Implement as struct conforming to ViewModifier, add extension on View for convenience
+- ButtonStyles: Implement as struct conforming to ButtonStyle with makeBody(configuration:)
+- Glow effects: Use multiple stacked shadows with varying radii and opacities
+- ViewModels: Place in OscarsTracker/OscarsTracker/ViewModels/ folder, use @MainActor + ObservableObject
+- Views: Organize by feature (e.g., Views/Auth/) with subfolders
+- Auth: Use Supabase Auth with signIn(email:password:), wrap in Task for async
+- TextFieldStyle: Create custom styles with _body(configuration:) for consistent input styling
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -33,4 +41,50 @@
   - Xcode project.pbxproj requires specific UUID format and structure
   - Package.swift can be used alongside xcodeproj for package resolution
   - SwiftUI colors can use HSL values via Color(hue:saturation:brightness:)
+---
+
+## 2026-01-06 - US-002
+- What was implemented:
+  - Created GlassCard component with blur/glass morphism effects and border styling
+  - Created GoldButtonStyle with gold gradient and press animation (scale effect)
+  - Created GoldGlowModifier for adding gold glow shadows to elements
+  - Added convenience extensions on View for .glassCard() and .goldGlow() modifiers
+  - Added static accessors for button styles (.gold, .goldOutline, .destructive)
+  - Verified dark theme applied via .preferredColorScheme(.dark) in OscarsTrackerApp
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/Components/GlassCard.swift
+  - OscarsTracker/OscarsTracker/Components/GoldButtonStyle.swift
+  - OscarsTracker/OscarsTracker/Components/GoldGlowModifier.swift
+  - tests/us-002-design-system.spec.ts
+- **Learnings:**
+  - Glass morphism in SwiftUI achieved via layered backgrounds with opacity and RadialGradient
+  - Button press animation: use configuration.isPressed with scaleEffect and explicit animation
+  - Glow effects: stack multiple shadows with different radii for depth
+  - Xcode project.pbxproj requires file refs in PBXFileReference, PBXGroup, PBXBuildFile, and PBXSourcesBuildPhase
+---
+
+## 2026-01-06 - US-003
+- What was implemented:
+  - Created AuthViewModel with Supabase authentication (signIn, signOut, checkSession)
+  - Created LoginView with email/password fields, custom styling, and accessibility
+  - Email validation with regex pattern
+  - SecureField for password with proper content types
+  - Loading state with ProgressView during authentication
+  - Error message display with destructive styling
+  - Auth-based navigation in OscarsTrackerApp (isAuthenticated -> ContentView, else -> LoginView)
+  - Custom OscarsTextFieldStyle for consistent input styling
+  - Added proper file references to project.pbxproj for ViewModels and Views/Auth
+- Files changed:
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - OscarsTracker/OscarsTracker/App/OscarsTrackerApp.swift
+  - OscarsTracker/OscarsTracker/ViewModels/AuthViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Auth/LoginView.swift
+  - tests/us-003-user-login.spec.ts
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase Auth errors can be mapped via AuthError.api(apiError) pattern
+  - Use @FocusState for managing keyboard focus across form fields
+  - onChange(of:) with iOS 17+ uses new closure signature (oldValue, newValue)
+  - project.pbxproj needs groups for nested folder structures (Views/Auth requires separate PBXGroup)
 ---

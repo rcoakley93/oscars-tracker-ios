@@ -27,7 +27,7 @@
         "Dark theme applied app-wide"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Required for consistent UI across all screens"
     },
     {
@@ -43,7 +43,7 @@
         "Loading state shown during authentication"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

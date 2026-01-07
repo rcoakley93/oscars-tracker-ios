@@ -26,6 +26,8 @@
 		E81234560011 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550110 /* GlassCard.swift */; };
 		E81234560012 /* GoldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550120 /* GoldButtonStyle.swift */; };
 		E81234560013 /* GoldGlowModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550130 /* GoldGlowModifier.swift */; };
+		E81234560014 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550140 /* AuthViewModel.swift */; };
+		E81234560015 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550150 /* LoginView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +51,8 @@
 		E81234550110 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		E81234550120 /* GoldButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldButtonStyle.swift; sourceTree = "<group>"; };
 		E81234550130 /* GoldGlowModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldGlowModifier.swift; sourceTree = "<group>"; };
+		E81234550140 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		E81234550150 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +134,7 @@
 		E81234530006 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				E81234550140 /* AuthViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -137,8 +142,17 @@
 		E81234530007 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E8123453000B /* Auth */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E8123453000B /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550150 /* LoginView.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		E81234530008 /* Components */ = {
@@ -263,6 +277,8 @@
 				E81234560011 /* GlassCard.swift in Sources */,
 				E81234560012 /* GoldButtonStyle.swift in Sources */,
 				E81234560013 /* GoldGlowModifier.swift in Sources */,
+				E81234560014 /* AuthViewModel.swift in Sources */,
+				E81234560015 /* LoginView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
