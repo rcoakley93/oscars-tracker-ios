@@ -4,6 +4,7 @@ import SwiftUI
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showSignOutConfirmation = false
+    @FocusState private var isUsernameFieldFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -60,11 +61,24 @@ struct ProfileView: View {
                         .stroke(Color.goldPrimary, lineWidth: 3)
                 )
 
-            // Username
-            Text(viewModel.profile?.username ?? "User")
-                .font(.displaySmall)
-                .fontWeight(.bold)
-                .foregroundStyle(Color.textPrimary)
+            // Username with edit functionality
+            if viewModel.isEditingUsername {
+                usernameEditView
+            } else {
+                usernameDisplayView
+            }
+
+            // Success message
+            if let successMessage = viewModel.usernameSuccessMessage {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.success)
+                    Text(successMessage)
+                        .foregroundStyle(Color.success)
+                }
+                .font(.caption)
+                .transition(.opacity.combined(with: .scale))
+            }
 
             // Member since
             HStack(spacing: 4) {
@@ -78,8 +92,116 @@ struct ProfileView: View {
             }
         }
         .padding(.vertical, 16)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isEditingUsername)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.usernameSuccessMessage)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Profile for \(viewModel.profile?.username ?? "User"), member since \(viewModel.memberSinceFormatted())")
+    }
+
+    // MARK: - Username Display
+
+    private var usernameDisplayView: some View {
+        HStack(spacing: 8) {
+            Text(viewModel.profile?.username ?? "User")
+                .font(.displaySmall)
+                .fontWeight(.bold)
+                .foregroundStyle(Color.textPrimary)
+
+            Button {
+                viewModel.startEditingUsername()
+                isUsernameFieldFocused = true
+            } label: {
+                Image(systemName: "pencil.circle.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.goldPrimary)
+            }
+            .accessibilityLabel("Edit username")
+            .accessibilityHint("Tap to edit your username")
+        }
+    }
+
+    // MARK: - Username Edit View
+
+    private var usernameEditView: some View {
+        VStack(spacing: 12) {
+            // Text field
+            TextField("Username", text: $viewModel.editedUsername)
+                .textFieldStyle(OscarsTextFieldStyle())
+                .textContentType(.username)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .focused($isUsernameFieldFocused)
+                .frame(maxWidth: 250)
+                .accessibilityLabel("Username")
+                .accessibilityHint("Enter your new username")
+
+            // Validation indicators
+            VStack(alignment: .leading, spacing: 4) {
+                validationRow(
+                    isValid: viewModel.isUsernameLengthValid,
+                    text: "3-20 characters"
+                )
+                validationRow(
+                    isValid: viewModel.isUsernameFormatValid,
+                    text: "Letters, numbers, underscores only"
+                )
+                validationRow(
+                    isValid: !viewModel.usernameContainsProfanity,
+                    text: "No inappropriate content"
+                )
+            }
+            .font(.caption)
+
+            // Error message
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(Color.destructive)
+                    .multilineTextAlignment(.center)
+            }
+
+            // Action buttons
+            HStack(spacing: 12) {
+                Button("Cancel") {
+                    viewModel.cancelEditingUsername()
+                    isUsernameFieldFocused = false
+                }
+                .buttonStyle(GoldOutlineButtonStyle())
+                .accessibilityLabel("Cancel editing")
+
+                Button {
+                    Task {
+                        await viewModel.saveUsername()
+                        isUsernameFieldFocused = false
+                    }
+                } label: {
+                    if viewModel.isSavingUsername {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .tint(.black)
+                            Text("Saving...")
+                        }
+                    } else {
+                        Text("Save")
+                    }
+                }
+                .buttonStyle(GoldButtonStyle())
+                .disabled(!viewModel.isEditedUsernameValid || viewModel.isSavingUsername)
+                .accessibilityLabel("Save username")
+                .accessibilityHint(viewModel.isEditedUsernameValid ? "Tap to save your new username" : "Enter a valid username to save")
+            }
+        }
+    }
+
+    // MARK: - Validation Row Helper
+
+    private func validationRow(isValid: Bool, text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: isValid ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(isValid ? Color.success : Color.textMuted)
+            Text(text)
+                .foregroundStyle(isValid ? Color.success : Color.textMuted)
+        }
     }
 
     // MARK: - Stats Card

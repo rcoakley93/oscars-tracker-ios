@@ -11,7 +11,20 @@ final class ProfileViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    // Edit username state
+    @Published var isEditingUsername = false
+    @Published var editedUsername = ""
+    @Published var isSavingUsername = false
+    @Published var usernameSuccessMessage: String?
+
     private let supabase = SupabaseClientManager.shared.client
+
+    /// Common profanity words to filter (basic list)
+    private let profanityList: Set<String> = [
+        "fuck", "shit", "ass", "bitch", "damn", "crap", "bastard",
+        "dick", "pussy", "cock", "cunt", "whore", "slut", "fag",
+        "nigger", "nigga", "retard", "nazi", "hitler"
+    ]
 
     /// Initialize
     init() {}
@@ -103,6 +116,116 @@ final class ProfileViewModel: ObservableObject {
     /// Clear error message
     func clearError() {
         errorMessage = nil
+    }
+
+    // MARK: - Username Editing
+
+    /// Check if username length is valid (3-20 characters)
+    var isUsernameLengthValid: Bool {
+        editedUsername.count >= 3 && editedUsername.count <= 20
+    }
+
+    /// Check if username format is valid (alphanumeric and underscores only)
+    var isUsernameFormatValid: Bool {
+        let usernameRegex = #"^[A-Za-z0-9_]+$"#
+        return editedUsername.range(of: usernameRegex, options: .regularExpression) != nil
+    }
+
+    /// Check if username contains profanity
+    var usernameContainsProfanity: Bool {
+        let lowercased = editedUsername.lowercased()
+        return profanityList.contains { profanity in
+            lowercased.contains(profanity)
+        }
+    }
+
+    /// Check if username is fully valid
+    var isEditedUsernameValid: Bool {
+        isUsernameLengthValid && isUsernameFormatValid && !usernameContainsProfanity
+    }
+
+    /// Start editing username
+    func startEditingUsername() {
+        editedUsername = profile?.username ?? ""
+        isEditingUsername = true
+        usernameSuccessMessage = nil
+        errorMessage = nil
+    }
+
+    /// Cancel editing username
+    func cancelEditingUsername() {
+        isEditingUsername = false
+        editedUsername = ""
+        errorMessage = nil
+    }
+
+    /// Save the edited username to Supabase
+    func saveUsername() async {
+        guard isEditedUsernameValid else {
+            errorMessage = validateUsername()
+            HapticManager.error()
+            return
+        }
+
+        guard let userId = try? await supabase.auth.session.user.id.uuidString else {
+            errorMessage = "Not logged in"
+            HapticManager.error()
+            return
+        }
+
+        isSavingUsername = true
+        errorMessage = nil
+        usernameSuccessMessage = nil
+
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["username": editedUsername])
+                .eq("id", value: userId)
+                .execute()
+
+            // Update local profile
+            if var updatedProfile = profile {
+                updatedProfile.username = editedUsername
+                profile = updatedProfile
+            }
+
+            isSavingUsername = false
+            isEditingUsername = false
+            usernameSuccessMessage = "Username updated!"
+            HapticManager.success()
+
+            // Clear success message after a delay
+            Task {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                usernameSuccessMessage = nil
+            }
+        } catch {
+            isSavingUsername = false
+            errorMessage = "Failed to update username. Please try again."
+            HapticManager.error()
+        }
+    }
+
+    /// Validate username and return error message if invalid
+    private func validateUsername() -> String? {
+        if editedUsername.isEmpty {
+            return "Please enter a username."
+        }
+
+        if !isUsernameLengthValid {
+            return "Username must be 3-20 characters long."
+        }
+
+        if !isUsernameFormatValid {
+            return "Username can only contain letters, numbers, and underscores."
+        }
+
+        if usernameContainsProfanity {
+            return "Username contains inappropriate content."
+        }
+
+        return nil
     }
 
     /// Sign out the current user

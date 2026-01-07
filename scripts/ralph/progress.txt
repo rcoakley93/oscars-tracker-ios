@@ -699,3 +699,133 @@
   - anchor: .center places scrolled item in center of visible area
   - Combine id modifier on rows with computed property in ViewModel for target
 ---
+
+## 2026-01-07 - US-026
+- What was implemented:
+  - GroupsView with two sections: My Groups and Joined Groups
+  - GroupWithMemberCount struct combining group data with member count
+  - GroupsViewModel with Supabase data loading (groups and group_members tables)
+  - GroupCard component showing name, invite code (monospaced), member count
+  - Copy button on invite code that copies to UIPasteboard.general
+  - NavigationLink to GroupLeaderboardView placeholder
+  - Owner badge shown when user created the group (isOwner flag)
+  - Section headers with count badges
+  - Pull to refresh via .refreshable
+  - Loading and empty state views
+  - Glass card styling via .glassCard() modifier
+  - Accessibility labels and hints
+  - ContentView updated to use GroupsView() instead of placeholder
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/GroupsViewModel.swift (new)
+  - OscarsTracker/OscarsTracker/Views/Groups/GroupsView.swift (new)
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-026-groups-view-my-groups.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Separate queries for groups and group_members, then compute member counts in Swift
+  - Dictionary[Int: Int] pattern for groupId -> memberCount aggregation
+  - Set<Int> for tracking which groups the current user is a member of
+  - Split groups into "my groups" (creator) vs "joined groups" (member but not creator)
+  - SupabaseClientManager.shared.client is the pattern used in this codebase
+  - import UIKit required for UIPasteboard clipboard access
+  - HapticManager.success() for feedback on copy action
+  - sectionHeader helper function for reusable styled section titles
+  - GroupLeaderboardView placeholder navigates via NavigationLink with group parameter
+---
+
+## 2026-01-07 - US-027
+- What was implemented:
+  - Create button (+) in navigation bar toolbar with goldPrimary tint
+  - CreateGroupSheet presented as .sheet when button tapped
+  - Group name TextField with OscarsTextFieldStyle
+  - Name validation: 3-30 characters, no profanity
+  - Profanity filter using same Set<String> pattern from OnboardingViewModel
+  - validationRow helper for showing checkmark/circle with validation feedback
+  - generateInviteCode() creates random 6-character alphanumeric code
+  - createGroup() async function inserts to groups table then group_members
+  - Creator automatically added as member in same createGroup transaction
+  - isCreating loading state with ProgressView and "Creating..." text
+  - Button disabled when name invalid or during creation
+  - interactiveDismissDisabled while creating to prevent accidental dismiss
+  - @FocusState for auto-focusing name field on appear
+  - Error handling with HapticManager.error() and errorMessage display
+  - Success haptic and auto-reload of groups list on successful creation
+  - resetCreateForm() clears form state on cancel
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/GroupsViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Groups/GroupsView.swift
+  - tests/us-027-groups-create-group.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase insert with .select().single() returns the created record for chaining
+  - Use [String: AnyJSON] with .string() and .integer() for dynamic insert data
+  - generateInviteCode pattern: characters string + map with randomElement
+  - Group creation is two-step: insert group, then insert creator as member
+  - Sheet state management via @Published showCreateSheet on ViewModel
+  - Reuse profanityList from OnboardingViewModel pattern for consistency
+  - validationRow helper pattern for consistent validation feedback UI
+  - Cancel button in navigationBarLeading ToolbarItem for sheet dismissal
+---
+
+## 2026-01-07 - US-028
+- What was implemented:
+  - Join button (person.badge.plus icon) in navigation bar leading position
+  - JoinGroupSheet presented as .sheet when button tapped
+  - TextField for invite code with .textInputAutocapitalization(.characters)
+  - Auto-uppercase and limit to 6 characters via .onChange handler
+  - isInviteCodeValid computed property with regex [A-Z0-9]{6}
+  - Validation feedback showing checkmark when code format valid
+  - joinGroup() async function: looks up group by invite_code, checks membership, inserts
+  - Error handling for group not found and already a member scenarios
+  - Supabase .eq() chaining for querying by invite_code, group_id, and user_id
+  - isJoining loading state with ProgressView and "Joining..." text
+  - Button disabled when code invalid or during join
+  - interactiveDismissDisabled while joining
+  - @FocusState for auto-focusing code field on appear
+  - Success/error haptic feedback
+  - resetJoinForm() clears form state on cancel
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/GroupsViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Groups/GroupsView.swift
+  - tests/us-028-groups-join-group.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase .eq() can be chained for multiple WHERE conditions
+  - Check array.isEmpty for "already exists" validation before insert
+  - .textInputAutocapitalization(.characters) for uppercase-only input
+  - Use .onChange with prefix(6) for character limiting
+  - Regex validation: #"^[A-Z0-9]{6}$"# with range(of:options:.regularExpression)
+  - Multiple ToolbarItems: .navigationBarLeading for Join, .navigationBarTrailing for Create
+  - Same sheet pattern reusable: state binding, form fields, cancel/action buttons
+---
+
+## 2026-01-07 - US-030
+- What was implemented:
+  - Edit button (pencil.circle.fill icon) next to username display
+  - Inline username editing view with TextField and validation indicators
+  - Username validation: 3-20 characters, alphanumeric + underscore only, profanity filter
+  - validationRow helper for consistent validation feedback with checkmark/circle icons
+  - startEditingUsername() initializes editing state with current username
+  - cancelEditingUsername() resets state and dismisses edit view
+  - saveUsername() async function updates profiles table via Supabase
+  - Local profile object updated after successful save
+  - Success message with auto-dismiss after 2 seconds
+  - HapticManager feedback: success on save, error on failure
+  - @FocusState for text field focus management
+  - Animation on mode switch between display and edit views
+  - Cancel and Save buttons with GoldOutlineButtonStyle and GoldButtonStyle
+  - Accessibility labels on edit controls
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/ProfileViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Profile/ProfileView.swift
+  - tests/us-030-profile-edit-username.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Reuse profanityList pattern from OnboardingViewModel for consistency
+  - Profile model has mutable username property, can update in-place
+  - Task.sleep(nanoseconds:) for delayed state changes (clear success message)
+  - .animation() modifier with value: parameter for specific property animations
+  - validationRow helper pattern for consistent validation feedback UI
+  - Use @FocusState with .focused() modifier for programmatic keyboard control
+---

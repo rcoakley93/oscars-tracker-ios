@@ -383,7 +383,7 @@
         "Tap group navigates to group leaderboard"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -399,7 +399,7 @@
         "New group appears in My Groups"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -414,7 +414,7 @@
         "Joined group appears in Joined Groups section"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -440,7 +440,7 @@
         "Success feedback on save"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
