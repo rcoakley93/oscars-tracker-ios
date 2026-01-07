@@ -14,6 +14,7 @@ struct BallotView: View {
                     } else if viewModel.categories.isEmpty {
                         emptyStateView
                     } else {
+                        ballotProgressCard
                         categoryGrid
                     }
                 }
@@ -28,6 +29,15 @@ struct BallotView: View {
         .task {
             await viewModel.loadData()
         }
+    }
+
+    // MARK: - Progress Card
+
+    private var ballotProgressCard: some View {
+        BallotProgressCard(
+            predictedCount: viewModel.predictedCategories,
+            totalCategories: viewModel.totalCategories
+        )
     }
 
     // MARK: - Category Grid
@@ -77,6 +87,78 @@ struct BallotView: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 40)
         .padding(.vertical, 60)
+    }
+}
+
+/// Progress card showing ballot completion progress.
+struct BallotProgressCard: View {
+    let predictedCount: Int
+    let totalCategories: Int
+
+    private var progress: Double {
+        guard totalCategories > 0 else { return 0 }
+        return Double(predictedCount) / Double(totalCategories)
+    }
+
+    private var percentageString: String {
+        let percent = progress * 100
+        return String(format: "%.0f%%", percent)
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Header
+            HStack {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.goldPrimary)
+
+                Text("Ballot Progress")
+                    .font(.headingMedium)
+                    .foregroundStyle(Color.textPrimary)
+
+                Spacer()
+
+                Text(percentageString)
+                    .font(.displaySmall)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.goldPrimary)
+            }
+
+            // Progress bar
+            BallotProgressBar(progress: progress)
+                .frame(height: 8)
+
+            // Count text
+            Text("\(predictedCount) of \(totalCategories) categories predicted")
+                .font(.bodySmall)
+                .foregroundStyle(Color.textMuted)
+        }
+        .padding()
+        .glassCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Ballot progress: \(predictedCount) of \(totalCategories) categories predicted, \(percentageString) complete")
+    }
+}
+
+/// Gold gradient progress bar for ballot.
+struct BallotProgressBar: View {
+    let progress: Double
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Background
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.borderColor)
+
+                // Progress fill
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(LinearGradient.gold)
+                    .frame(width: max(0, geometry.size.width * progress))
+                    .animation(.easeInOut(duration: 0.3), value: progress)
+            }
+        }
     }
 }
 
