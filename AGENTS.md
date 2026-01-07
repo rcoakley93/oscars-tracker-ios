@@ -86,3 +86,12 @@
 - Error: `.error()` after failed API operations
 - Selection: `.selection()` for button taps, picker changes
 - Call haptics immediately before async operations start (optimistic feedback)
+
+### Loading States Pattern
+- Use `LoadingView` component for standardized loading spinner with message
+- Use `SkeletonView` for pulse-animated placeholder elements
+- Screen-specific skeleton views: `MovieCardSkeletonView`, `ListRowSkeletonView`, etc.
+- Check `viewModel.isLoading && data.isEmpty` before showing loading state
+- Skeleton animations: `Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)`
+- Hide skeleton views from accessibility tree with `.accessibilityHidden(true)`
+- Use `Color.borderColor` as fill color for skeleton views
