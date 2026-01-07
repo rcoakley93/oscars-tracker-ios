@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct WatchPlanView: View {
     @StateObject private var viewModel = WatchPlanViewModel()
     @State private var showAddSheet = false
+    @State private var showAutoSchedulerSheet = false
     @State private var itemToReschedule: WatchPlanItem?
     @State private var itemToRemove: WatchPlanItem?
     @State private var showRemoveConfirmation = false
@@ -39,11 +40,28 @@ struct WatchPlanView: View {
                 floatingAddButton
             }
             .navigationTitle("Watch Plan")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showAutoSchedulerSheet = true
+                        HapticManager.selection()
+                    } label: {
+                        Image(systemName: "wand.and.stars")
+                            .foregroundStyle(Color.goldPrimary)
+                    }
+                    .accessibilityLabel("Auto Scheduler")
+                    .accessibilityHint("Opens auto scheduler to automatically plan movies")
+                }
+            }
             .refreshable {
                 await viewModel.loadData()
             }
             .sheet(isPresented: $showAddSheet) {
                 AddToPlanSheet(viewModel: viewModel)
+                    .presentationDetents([.large])
+            }
+            .sheet(isPresented: $showAutoSchedulerSheet) {
+                AutoSchedulerSheet(viewModel: viewModel)
                     .presentationDetents([.large])
             }
             .sheet(item: $itemToReschedule) { item in

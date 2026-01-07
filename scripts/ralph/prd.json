@@ -256,7 +256,7 @@
         "Handles overdue movies appropriately"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -497,7 +497,7 @@
         "Selection feedback for button taps"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -510,7 +510,7 @@
         "No flash of empty content"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -524,7 +524,7 @@
         "Graceful degradation on partial failures"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -538,7 +538,7 @@
         "Call to action button where appropriate"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

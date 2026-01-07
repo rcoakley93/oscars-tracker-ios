@@ -892,3 +892,124 @@
   - Button(role: .destructive) makes button appear in red in system alerts
   - Use @State showDeleteAccountConfirmation pattern for alert presentation
 ---
+
+## 2026-01-07 - US-034
+- What was implemented:
+  - HapticManager was already fully implemented in US-010
+  - Created Playwright test spec to validate implementation
+  - Verified all acceptance criteria are met
+- Files changed:
+  - tests/us-034-haptic-feedback-system.spec.ts (new)
+  - AGENTS.md (updated with haptic feedback patterns)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - HapticManager enum pattern with static functions is clean, reusable utility
+  - UIImpactFeedbackGenerator: light, medium, heavy styles for impact feedback
+  - UINotificationFeedbackGenerator: success, warning, error for outcome feedback
+  - UISelectionFeedbackGenerator: selection changes like picker/toggle interactions
+  - Story was already implemented as part of US-010, just needed formal test validation
+  - When a story's functionality exists from earlier work, create tests to verify and mark complete
+---
+
+## 2026-01-07 - US-035
+- What was implemented:
+  - LoadingView component with gold ProgressView and customizable message
+  - SkeletonView component with pulse animation for loading placeholders
+  - Screen-specific skeleton views: MovieCardSkeletonView, ListRowSkeletonView, ProgressHeroSkeletonView
+  - Additional skeleton views: MovieGridSkeletonView, LeaderboardSkeletonView, BallotCategorySkeletonView
+  - WatchPlanSkeletonView, ProfileSkeletonView, GroupsSkeletonView for complete coverage
+  - All skeleton views hidden from accessibility tree
+  - iPad-responsive column counts in MovieGridSkeletonView
+- Files changed:
+  - OscarsTracker/OscarsTracker/Components/LoadingView.swift (new)
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-035-loading-states.spec.ts (new)
+  - AGENTS.md (updated with loading state patterns)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - Skeleton animation: Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)
+  - Use @State isAnimating = false, then set to true in onAppear for animation trigger
+  - SkeletonView fill uses Color.borderColor for consistent theming
+  - .accessibilityHidden(true) hides decorative loading elements from VoiceOver
+  - Screen loading pattern: check `viewModel.isLoading && data.isEmpty` to avoid flash
+  - Skeleton views are composable: build specific skeletons from base SkeletonView
+  - Use optional width parameter (CGFloat?) for flexible width, required height
+---
+
+## 2026-01-07 - US-036
+- What was implemented:
+  - ErrorView component with customizable title, message, icon, and retry button
+  - NetworkErrorView for network-specific errors with wifi.slash icon
+  - ToastView component with ToastType enum (error, success, warning, info)
+  - ToastModifier view modifier with top/bottom positioning and auto-dismiss
+  - ToastData model with convenience static constructors
+  - ErrorBanner for inline form validation errors
+  - PartialErrorView for graceful degradation on partial failures
+- Files changed:
+  - OscarsTracker/OscarsTracker/Components/ErrorView.swift (new)
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-036-error-handling.spec.ts (new)
+  - AGENTS.md (updated with error handling patterns)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - Toast pattern: @Binding var toast: ToastData? with .toast() modifier
+  - Auto-dismiss: DispatchQueue.main.asyncAfter with configurable duration
+  - ToastData uses UUID for Equatable conformance to trigger view updates
+  - Spring animation: .spring(response: 0.3, dampingFraction: 0.8)
+  - Transition: .move(edge:).combined(with: .opacity) for slide+fade
+  - ViewModifier pattern allows adding toast to any view via extension
+  - Existing ViewModels already have @Published var errorMessage, just need display
+---
+
+## 2026-01-07 - US-037
+- What was implemented:
+  - EmptyStateView reusable component with icon, title, subtitle, optional action
+  - Screen-specific empty states: WatchPlanEmptyState, GroupsEmptyState
+  - LeaderboardEmptyState, BallotEmptyState, DashboardEmptyState
+  - ProfileEmptyState, SearchEmptyState, CategoryEmptyState
+  - All empty states use consistent styling with goldPrimary icons
+- Files changed:
+  - OscarsTracker/OscarsTracker/Components/EmptyStateView.swift (new)
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-037-empty-states.spec.ts (new)
+  - AGENTS.md (updated with empty states pattern)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - Empty state icon size: .font(.system(size: 56)) for prominence
+  - Action button is optional with actionTitle/action parameters
+  - Views already have inline empty states, component provides reusability
+  - Screen-specific variants keep API simple and consistent
+  - Pattern: check data.isEmpty after !isLoading to show empty state
+  - Accessibility: combine elements and provide descriptive label
+---
+
+## 2026-01-07 - US-017
+- What was implemented:
+  - AutoSchedulerSheet component for automatically scheduling unwatched movies
+  - Movie selection UI with select all/deselect all functionality
+  - Scheduling algorithm that avoids existing planned dates and targets Oscar deadline
+  - Preview section showing suggested schedule with date badges
+  - Summary header with total runtime calculation
+  - bulkAddToPlan function in WatchPlanViewModel for batch inserts
+  - Toolbar button (wand.and.stars icon) in WatchPlanView navigation bar
+  - Back navigation from preview to selection
+  - Loading state during bulk scheduling
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/AutoSchedulerSheet.swift (new)
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/WatchPlanViewModel.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - tests/us-017-auto-scheduler.spec.ts (new)
+  - scripts/ralph/prd.json (passes: true)
+- **Learnings:**
+  - Supabase bulk insert: .insert() accepts [[String: AnyJSON]] array for batch operations
+  - Scheduling algorithm: iterate dates from today, skip existing planned dates using Set
+  - Two-phase UI: selection phase with checkbox list, then preview phase with date badges
+  - Date badge pattern: VStack with dayOfWeek, dayNumber, monthAbbrev formatters
+  - Summary calculations: reduce over array to compute total runtime
+  - showPreview state controls which phase is displayed with animation
+  - Select all pattern: allSelected computed property checks if count matches available count
+  - Calendar.startOfDay(for:) for day-level date comparison
+  - Toolbar button with .primaryAction placement for navigation bar trailing position
+  - Back/Cancel button text: ternary based on showPreview state
+---

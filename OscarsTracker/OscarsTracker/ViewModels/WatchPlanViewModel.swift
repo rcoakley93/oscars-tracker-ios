@@ -314,4 +314,50 @@ final class WatchPlanViewModel: ObservableObject {
             return false
         }
     }
+
+    /// Bulk add movies to the watch plan
+    /// - Parameter movies: Array of (movieId, date) tuples to add
+    /// - Returns: True if all successful, false otherwise
+    func bulkAddToPlan(movies: [(movieId: Int, date: Date)]) async -> Bool {
+        guard let userId = supabase.auth.currentUser?.id else {
+            errorMessage = "Not logged in"
+            return false
+        }
+
+        guard !movies.isEmpty else { return true }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        // Create array of insert data
+        let insertData: [[String: AnyJSON]] = movies.map { movieId, date in
+            [
+                "user_id": .string(userId.uuidString),
+                "movie_id": .integer(movieId),
+                "planned_date": .string(formatter.string(from: date))
+            ]
+        }
+
+        do {
+            // Bulk insert into watch_plan table
+            let response: [WatchPlanItem] = try await supabase
+                .from("watch_plan")
+                .insert(insertData)
+                .select()
+                .execute()
+                .value
+
+            // Add all new items to local state with movie data attached
+            for newItem in response {
+                var mutableItem = newItem
+                mutableItem.movie = self.movies.first { $0.id == newItem.movieId }
+                watchPlanItems.append(mutableItem)
+            }
+
+            return true
+        } catch {
+            errorMessage = "Failed to add movies to plan"
+            return false
+        }
+    }
 }

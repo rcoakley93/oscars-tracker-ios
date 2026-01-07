@@ -51,6 +51,7 @@
 		E8123456002A /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502A0 /* LoadingView.swift */; };
 		E8123456002B /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502B0 /* ErrorView.swift */; };
 		E8123456002C /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502C0 /* EmptyStateView.swift */; };
+		E8123456002D /* AutoSchedulerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502D0 /* AutoSchedulerSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -99,6 +100,7 @@
 		E812345502A0 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		E812345502B0 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
 		E812345502C0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		E812345502D0 /* AutoSchedulerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSchedulerSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -244,6 +246,7 @@
 			children = (
 				E812345501D0 /* WatchPlanView.swift */,
 				E812345501F0 /* AddToPlanSheet.swift */,
+				E812345502D0 /* AutoSchedulerSheet.swift */,
 			);
 			path = WatchPlan;
 			sourceTree = "<group>";
@@ -427,6 +430,7 @@
 				E8123456002A /* LoadingView.swift in Sources */,
 				E8123456002B /* ErrorView.swift in Sources */,
 				E8123456002C /* EmptyStateView.swift in Sources */,
+				E8123456002D /* AutoSchedulerSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
