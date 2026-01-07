@@ -143,6 +143,55 @@ final class WatchPlanViewModel: ObservableObject {
         errorMessage = nil
     }
 
+    /// Reschedule a watch plan item to a new date
+    /// - Parameters:
+    ///   - itemId: The ID of the watch plan item
+    ///   - date: The new planned date
+    /// - Returns: True if successful, false otherwise
+    func reschedule(itemId: Int, to date: Date) async -> Bool {
+        guard supabase.auth.currentUser != nil else {
+            errorMessage = "Not logged in"
+            return false
+        }
+
+        // Format date as yyyy-MM-dd
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: date)
+
+        // Optimistic update
+        let originalItems = watchPlanItems
+        if let index = watchPlanItems.firstIndex(where: { $0.id == itemId }) {
+            var updatedItem = watchPlanItems[index]
+            // Create a new item with updated date (WatchPlanItem is a struct)
+            updatedItem = WatchPlanItem(
+                id: updatedItem.id,
+                userId: updatedItem.userId,
+                movieId: updatedItem.movieId,
+                plannedDate: dateString,
+                createdAt: updatedItem.createdAt
+            )
+            updatedItem.movie = originalItems[index].movie
+            watchPlanItems[index] = updatedItem
+        }
+
+        do {
+            // Update in Supabase
+            try await supabase
+                .from("watch_plan")
+                .update(["planned_date": dateString])
+                .eq("id", value: itemId)
+                .execute()
+
+            return true
+        } catch {
+            // Rollback on error
+            watchPlanItems = originalItems
+            errorMessage = "Failed to reschedule movie"
+            return false
+        }
+    }
+
     /// Add a movie to the watch plan
     /// - Parameters:
     ///   - movieId: The ID of the movie to add

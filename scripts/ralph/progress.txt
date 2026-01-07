@@ -17,6 +17,8 @@
 - TextFieldStyle: Create custom styles with _body(configuration:) for consistent input styling
 - Supabase Insert: Use [String: AnyJSON] dict with .string(), .integer() etc for dynamic values
 - FAB Pattern: ZStack(alignment: .bottomTrailing), add .padding(.bottom, 80) to ScrollView content
+- Sheet with Item: .sheet(item: $optionalItem) auto-dismisses when binding set to nil
+- Supabase Update: .update(["field": value]).eq("id", value: id) for updating specific fields
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -297,4 +299,27 @@
   - DatePicker with in: Date()... restricts to future dates only
   - @ObservedObject to share ViewModel with sheet for state updates
   - Filter chaining: filter unwatched first, then filter not-already-planned
+---
+
+## 2026-01-07 - US-014
+- What was implemented:
+  - Move button on WatchPlanRowView with calendar.badge.clock icon
+  - RescheduleSheet component with date picker for rescheduling
+  - ViewModel reschedule function with Supabase update
+  - Optimistic UI update with rollback on error
+  - WatchPlanItem model updated with mutable plannedDate and custom init
+  - Loading state and haptic feedback
+  - Cancel button to dismiss reschedule sheet
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - OscarsTracker/OscarsTracker/ViewModels/WatchPlanViewModel.swift
+  - OscarsTracker/OscarsTracker/Models/WatchPlanItem.swift
+  - tests/us-014-reschedule-movie.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - .sheet(item:) pattern for presenting sheet with item binding (auto-dismisses when nil)
+  - Supabase .update() with dictionary for updating specific fields
+  - WatchPlanItem needs explicit init when using Codable with custom properties
+  - onReschedule callback pattern to pass action from parent to row view
+  - Parse existing date from item.plannedDate to initialize date picker
 ---

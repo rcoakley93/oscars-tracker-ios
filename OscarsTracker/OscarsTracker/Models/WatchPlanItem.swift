@@ -4,7 +4,7 @@ struct WatchPlanItem: Codable, Identifiable {
     let id: Int
     let userId: String
     let movieId: Int
-    let plannedDate: String
+    var plannedDate: String
     let createdAt: String?
 
     var movie: Movie?
@@ -16,6 +16,14 @@ struct WatchPlanItem: Codable, Identifiable {
         case plannedDate = "planned_date"
         case createdAt = "created_at"
         case movie
+    }
+
+    init(id: Int, userId: String, movieId: Int, plannedDate: String, createdAt: String?) {
+        self.id = id
+        self.userId = userId
+        self.movieId = movieId
+        self.plannedDate = plannedDate
+        self.createdAt = createdAt
     }
 
     var isMissed: Bool {

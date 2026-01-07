@@ -4,6 +4,7 @@ import SwiftUI
 struct WatchPlanView: View {
     @StateObject private var viewModel = WatchPlanViewModel()
     @State private var showAddSheet = false
+    @State private var itemToReschedule: WatchPlanItem?
 
     var body: some View {
         NavigationStack {
@@ -39,6 +40,15 @@ struct WatchPlanView: View {
             .sheet(isPresented: $showAddSheet) {
                 AddToPlanSheet(viewModel: viewModel)
                     .presentationDetents([.large])
+            }
+            .sheet(item: $itemToReschedule) { item in
+                RescheduleSheet(
+                    item: item,
+                    movie: viewModel.movie(for: item),
+                    viewModel: viewModel,
+                    onDismiss: { itemToReschedule = nil }
+                )
+                .presentationDetents([.medium])
             }
         }
         .task {
@@ -106,7 +116,11 @@ struct WatchPlanView: View {
                         ForEach(group.items) { item in
                             WatchPlanRowView(
                                 item: item,
-                                movie: viewModel.movie(for: item)
+                                movie: viewModel.movie(for: item),
+                                onReschedule: {
+                                    itemToReschedule = item
+                                    HapticManager.selection()
+                                }
                             )
                         }
                     }
@@ -167,6 +181,7 @@ struct WatchPlanView: View {
 struct WatchPlanRowView: View {
     let item: WatchPlanItem
     let movie: Movie?
+    var onReschedule: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -199,10 +214,29 @@ struct WatchPlanRowView: View {
             }
 
             Spacer()
+
+            // Move button
+            if let onReschedule = onReschedule {
+                Button {
+                    onReschedule()
+                } label: {
+                    Label("Move", systemImage: "calendar.badge.clock")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color.goldPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.goldPrimary.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Move \(movie?.title ?? "movie") to different date")
+            }
         }
         .glassCard()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(item.isMissed ? "missed" : "planned")")
+        .accessibilityHint("Double tap to reschedule")
     }
 
     private var posterView: some View {
@@ -225,6 +259,138 @@ struct WatchPlanRowView: View {
             .padding(.vertical, 2)
             .background(Color.destructive)
             .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+}
+
+/// Sheet for rescheduling a watch plan item.
+struct RescheduleSheet: View {
+    let item: WatchPlanItem
+    let movie: Movie?
+    @ObservedObject var viewModel: WatchPlanViewModel
+    let onDismiss: () -> Void
+
+    @State private var selectedDate: Date
+    @State private var isRescheduling = false
+
+    init(item: WatchPlanItem, movie: Movie?, viewModel: WatchPlanViewModel, onDismiss: @escaping () -> Void) {
+        self.item = item
+        self.movie = movie
+        self.viewModel = viewModel
+        self.onDismiss = onDismiss
+
+        // Parse current date or use today
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let currentDate = formatter.date(from: item.plannedDate) ?? Date()
+        _selectedDate = State(initialValue: currentDate)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                // Movie info header
+                movieHeader
+
+                // Date picker
+                DatePicker(
+                    "New date",
+                    selection: $selectedDate,
+                    in: Date()...,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .tint(Color.goldPrimary)
+                .labelsHidden()
+
+                Spacer()
+
+                // Reschedule button
+                rescheduleButton
+            }
+            .padding()
+            .background(Color.appBackground)
+            .navigationTitle("Reschedule")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        onDismiss()
+                    }
+                    .foregroundStyle(Color.textMuted)
+                }
+            }
+        }
+    }
+
+    private var movieHeader: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.cardBackground)
+                .frame(width: 50, height: 75)
+                .overlay(
+                    Image(systemName: "film")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color.textMuted)
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(movie?.title ?? "Unknown Movie")
+                    .font(.bodyMedium)
+                    .foregroundStyle(Color.textPrimary)
+                    .lineLimit(2)
+
+                if let runtime = movie?.formattedRuntime, !runtime.isEmpty {
+                    Text(runtime)
+                        .font(.caption)
+                        .foregroundStyle(Color.textMuted)
+                }
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var rescheduleButton: some View {
+        Button {
+            Task {
+                await rescheduleItem()
+            }
+        } label: {
+            HStack {
+                if isRescheduling {
+                    ProgressView()
+                        .tint(.black)
+                } else {
+                    Text("Move to Date")
+                        .fontWeight(.semibold)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.goldPrimary)
+            .foregroundStyle(.black)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .disabled(isRescheduling)
+        .accessibilityLabel("Move movie to selected date")
+    }
+
+    private func rescheduleItem() async {
+        isRescheduling = true
+
+        let success = await viewModel.reschedule(itemId: item.id, to: selectedDate)
+
+        isRescheduling = false
+
+        if success {
+            HapticManager.success()
+            onDismiss()
+        } else {
+            HapticManager.error()
+        }
     }
 }
 
