@@ -389,19 +389,17 @@ struct AddToPlanSheet: View {
                 }
             }
             .frame(width: 40, height: 44)
-            .background(
-                Group {
-                    if isSelected {
-                        Circle()
-                            .fill(Color.goldPrimary)
-                            .frame(width: 40, height: 40)
-                    } else if isToday {
-                        Circle()
-                            .stroke(Color.goldPrimary, lineWidth: 2)
-                            .frame(width: 40, height: 40)
-                    }
+            .background {
+                if isSelected {
+                    Circle()
+                        .fill(Color.goldPrimary)
+                        .frame(width: 40, height: 40)
+                } else if isToday {
+                    Circle()
+                        .stroke(Color.goldPrimary, lineWidth: 2)
+                        .frame(width: 40, height: 40)
                 }
-            )
+            }
         }
         .buttonStyle(.plain)
         .disabled(isPast)

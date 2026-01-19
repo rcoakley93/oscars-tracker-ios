@@ -363,6 +363,45 @@ final class WatchPlanViewModel: ObservableObject {
 
     // MARK: - AI Auto Scheduler
 
+    /// Request body for the AI auto-scheduler edge function
+    struct AutoSchedulerRequest: Codable {
+        let userPrompt: String
+        let today: String
+        let moviesPool: [MoviePoolItem]
+        let existingSchedule: [ExistingScheduleItem]
+
+        enum CodingKeys: String, CodingKey {
+            case userPrompt = "user_prompt"
+            case today
+            case moviesPool = "movies_pool"
+            case existingSchedule = "existing_schedule"
+        }
+
+        struct MoviePoolItem: Codable {
+            let id: Int
+            let title: String
+            let runtimeMinutes: Int
+
+            enum CodingKeys: String, CodingKey {
+                case id
+                case title
+                case runtimeMinutes = "runtime_minutes"
+            }
+        }
+
+        struct ExistingScheduleItem: Codable {
+            let movieId: Int
+            let title: String
+            let date: String
+
+            enum CodingKeys: String, CodingKey {
+                case movieId = "movie_id"
+                case title
+                case date
+            }
+        }
+    }
+
     /// Response from the AI auto-scheduler edge function
     struct AutoSchedulerResponse: Codable {
         let plan: [ScheduledItem]
@@ -401,31 +440,31 @@ final class WatchPlanViewModel: ObservableObject {
         let todayString = formatter.string(from: Date())
 
         // Build movies_pool array for API
-        let moviesPoolData: [[String: Any]] = moviesPool.map { movie in
-            [
-                "id": movie.id,
-                "title": movie.title,
-                "runtime_minutes": movie.runtimeMinutes ?? 0
-            ]
+        let moviesPoolData = moviesPool.map { movie in
+            AutoSchedulerRequest.MoviePoolItem(
+                id: movie.id,
+                title: movie.title,
+                runtimeMinutes: movie.runtimeMinutes ?? 0
+            )
         }
 
         // Build existing_schedule array for API
-        let existingScheduleData: [[String: Any]] = existingSchedule.compactMap { item in
+        let existingScheduleData = existingSchedule.compactMap { item -> AutoSchedulerRequest.ExistingScheduleItem? in
             guard let movie = item.movie else { return nil }
-            return [
-                "movie_id": item.movieId,
-                "title": movie.title,
-                "date": item.plannedDate
-            ]
+            return AutoSchedulerRequest.ExistingScheduleItem(
+                movieId: item.movieId,
+                title: movie.title,
+                date: item.plannedDate
+            )
         }
 
         // Build request body
-        let requestBody: [String: Any] = [
-            "user_prompt": userPrompt,
-            "today": todayString,
-            "movies_pool": moviesPoolData,
-            "existing_schedule": existingScheduleData
-        ]
+        let requestBody = AutoSchedulerRequest(
+            userPrompt: userPrompt,
+            today: todayString,
+            moviesPool: moviesPoolData,
+            existingSchedule: existingScheduleData
+        )
 
         do {
             // Call the auto-scheduler edge function

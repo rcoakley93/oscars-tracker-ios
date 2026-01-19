@@ -121,7 +121,7 @@ struct AutoSchedulerSheet: View {
                 .font(.system(size: 48))
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [Color.goldPrimary, Color.goldSecondary],
+                        colors: [Color.goldPrimary, Color.goldLight],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
