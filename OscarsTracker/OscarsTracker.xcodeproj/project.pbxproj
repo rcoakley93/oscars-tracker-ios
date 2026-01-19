@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		13502F312F0ED0740004D325 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E81234580001 /* Supabase */; };
+		13502F322F0ED0740004D325 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E81234580002 /* Kingfisher */; };
 		E81234560001 /* OscarsTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550001 /* OscarsTrackerApp.swift */; };
 		E81234560002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550002 /* ContentView.swift */; };
 		E81234560003 /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550003 /* Movie.swift */; };
@@ -51,6 +53,7 @@
 		E8123456002A /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502A0 /* LoadingView.swift */; };
 		E8123456002B /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502B0 /* ErrorView.swift */; };
 		E8123456002C /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502C0 /* EmptyStateView.swift */; };
+		E81234560030 /* PlanCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550310 /* PlanCalendarView.swift */; };
 		E8123456002D /* AutoSchedulerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502D0 /* AutoSchedulerSheet.swift */; };
 		E8123456002E /* WhatCanIWatchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502E0 /* WhatCanIWatchSheet.swift */; };
 		E8123456002F /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502F0 /* AccessibilityManager.swift */; };
@@ -102,9 +105,11 @@
 		E812345502A0 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		E812345502B0 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
 		E812345502C0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		E81234550310 /* PlanCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanCalendarView.swift; sourceTree = "<group>"; };
 		E812345502D0 /* AutoSchedulerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSchedulerSheet.swift; sourceTree = "<group>"; };
 		E812345502E0 /* WhatCanIWatchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatCanIWatchSheet.swift; sourceTree = "<group>"; };
 		E812345502F0 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
+		E81234550300 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +117,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				13502F322F0ED0740004D325 /* Kingfisher in Frameworks */,
+				13502F312F0ED0740004D325 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -129,6 +136,7 @@
 		E81234530001 /* OscarsTracker */ = {
 			isa = PBXGroup;
 			children = (
+				E81234550300 /* Info.plist */,
 				E81234530003 /* App */,
 				E81234530004 /* Models */,
 				E81234530005 /* Services */,
@@ -213,76 +221,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		E81234530012 /* Groups */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550280 /* GroupsView.swift */,
-			);
-			path = Groups;
-			sourceTree = "<group>";
-		};
-		E81234530011 /* Profile */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550240 /* ProfileView.swift */,
-			);
-			path = Profile;
-			sourceTree = "<group>";
-		};
-		E81234530010 /* Leaderboard */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550220 /* LeaderboardView.swift */,
-			);
-			path = Leaderboard;
-			sourceTree = "<group>";
-		};
-		E8123453000F /* Ballot */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550200 /* BallotView.swift */,
-			);
-			path = Ballot;
-			sourceTree = "<group>";
-		};
-		E8123453000E /* WatchPlan */ = {
-			isa = PBXGroup;
-			children = (
-				E812345501D0 /* WatchPlanView.swift */,
-				E812345501F0 /* AddToPlanSheet.swift */,
-				E812345502D0 /* AutoSchedulerSheet.swift */,
-				E812345502E0 /* WhatCanIWatchSheet.swift */,
-			);
-			path = WatchPlan;
-			sourceTree = "<group>";
-		};
-		E8123453000D /* Dashboard */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550190 /* ProgressHeroView.swift */,
-				E812345501B0 /* MovieCardView.swift */,
-				E81234550270 /* CategoryListView.swift */,
-			);
-			path = Dashboard;
-			sourceTree = "<group>";
-		};
-		E8123453000C /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550170 /* OnboardingView.swift */,
-			);
-			path = Onboarding;
-			sourceTree = "<group>";
-		};
-		E8123453000B /* Auth */ = {
-			isa = PBXGroup;
-			children = (
-				E81234550150 /* LoginView.swift */,
-				E81234550160 /* SignUpView.swift */,
-			);
-			path = Auth;
-			sourceTree = "<group>";
-		};
 		E81234530008 /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -293,6 +231,7 @@
 				E812345502A0 /* LoadingView.swift */,
 				E812345502B0 /* ErrorView.swift */,
 				E812345502C0 /* EmptyStateView.swift */,
+				E81234550310 /* PlanCalendarView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -314,6 +253,76 @@
 				E81234550100 /* Assets.xcassets */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		E8123453000B /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550150 /* LoginView.swift */,
+				E81234550160 /* SignUpView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		E8123453000C /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550170 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		E8123453000D /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550190 /* ProgressHeroView.swift */,
+				E812345501B0 /* MovieCardView.swift */,
+				E81234550270 /* CategoryListView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		E8123453000E /* WatchPlan */ = {
+			isa = PBXGroup;
+			children = (
+				E812345501D0 /* WatchPlanView.swift */,
+				E812345501F0 /* AddToPlanSheet.swift */,
+				E812345502D0 /* AutoSchedulerSheet.swift */,
+				E812345502E0 /* WhatCanIWatchSheet.swift */,
+			);
+			path = WatchPlan;
+			sourceTree = "<group>";
+		};
+		E8123453000F /* Ballot */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550200 /* BallotView.swift */,
+			);
+			path = Ballot;
+			sourceTree = "<group>";
+		};
+		E81234530010 /* Leaderboard */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550220 /* LeaderboardView.swift */,
+			);
+			path = Leaderboard;
+			sourceTree = "<group>";
+		};
+		E81234530011 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550240 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		E81234530012 /* Groups */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550280 /* GroupsView.swift */,
+			);
+			path = Groups;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -436,6 +445,7 @@
 				E8123456002A /* LoadingView.swift in Sources */,
 				E8123456002B /* ErrorView.swift in Sources */,
 				E8123456002C /* EmptyStateView.swift in Sources */,
+				E81234560030 /* PlanCalendarView.swift in Sources */,
 				E8123456002D /* AutoSchedulerSheet.swift in Sources */,
 				E8123456002E /* WhatCanIWatchSheet.swift in Sources */,
 				E8123456002F /* AccessibilityManager.swift in Sources */,
@@ -572,19 +582,23 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OscarsTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				"INFOPLIST_KEY_UILaunchStoryboardName" = "";
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -601,19 +615,23 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OscarsTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				"INFOPLIST_KEY_UILaunchStoryboardName" = "";
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
