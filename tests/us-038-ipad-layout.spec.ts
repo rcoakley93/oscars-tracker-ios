@@ -144,9 +144,8 @@ test.describe('US-038: iPad Layout Optimization', () => {
     const filePath = path.join(OSCARS_TRACKER_PATH, 'Views', 'WatchPlan', 'WatchPlanView.swift');
     const content = fs.readFileSync(filePath, 'utf-8');
 
-    // Check for detents
+    // Check for detents - all sheets use .large for proper graphical calendar display
     expect(content).toContain('.presentationDetents');
     expect(content).toContain('[.large]');
-    expect(content).toContain('[.medium]');
   });
 });
