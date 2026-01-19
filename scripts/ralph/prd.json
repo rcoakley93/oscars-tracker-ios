@@ -655,7 +655,7 @@
         "Complete adding movie and verify it's saved"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "Feature Enhancement - Improve Add to Plan sheet calendar experience with better visual flow and indicators"
     }
   ]

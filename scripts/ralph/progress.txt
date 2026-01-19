@@ -1248,3 +1248,33 @@
   - Remove added items from recommendedMovies array to update UI after adding
   - When all recommendations added, auto-navigate back to selection view
 ---
+
+## 2026-01-18 - US-045
+- What was implemented:
+  - Replaced graphical DatePicker with custom compact calendar grid
+  - Added two-step flow: movie list -> tap movie -> calendar appears
+  - Added white dot indicators (6x6 Circle) below dates with scheduled movies
+  - Added distinct selected date styling (gold filled circle with black text)
+  - Added today styling (gold stroked circle)
+  - Added popover showing scheduled movies when tapping a date that has movies
+  - Added month navigation with chevron buttons
+  - Added day of week headers (S, M, T, W, T, F, S)
+  - Disabled past dates with reduced opacity
+  - Added selected movie header in calendar view
+  - Added formattedShortDate for "Today", "Tomorrow", or "MMM d" display
+  - Movie rows show chevron.right instead of selection circles
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/AddToPlanSheet.swift
+  - tests/us-045-add-to-plan-calendar.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Custom calendar: Use LazyVGrid with 7 GridItem(.flexible()) columns
+  - daysInMonth function: Get month interval, add nil padding for weekday offset
+  - Date comparison: calendar.isDate(_:inSameDayAs:) for same day check
+  - calendar.startOfDay(for:) to normalize dates for comparison
+  - scheduledDates: Set<Date> for O(1) lookup of scheduled dates
+  - Popover with Binding(get:, set:) for conditional presentation per cell
+  - .presentationCompactAdaptation(.popover) for consistent popover on iOS
+  - DispatchQueue.main.asyncAfter for delayed transition after selection
+  - isDateInToday and isDateInTomorrow for special date labels
+---
