@@ -1,0 +1,142 @@
+# Test: Add to Plan Feature
+# Tests the improved calendar UX for adding movies to plan
+appId: com.oscars.tracker
+
+---
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Navigate to Watch Plan tab
+- tapOn: "Watch Plan"
+
+# Wait for Watch Plan to load
+- extendedWaitUntil:
+    visible: "Watch Plan"
+    timeout: 5000
+
+# Tap Add to Plan button (plus icon)
+- tapOn:
+    text: "Add movie to plan"
+
+# Wait for Add to Plan sheet
+- extendedWaitUntil:
+    visible: "Add to Plan"
+    timeout: 5000
+
+- takeScreenshot: screenshots/04-add-to-plan-movie-list
+
+# ========================================
+# Test: Movie Selection View
+# ========================================
+
+# Verify movie selection view
+- assertVisible: "Select Movie"
+- assertVisible: "Search movies..."
+
+# Test search functionality
+- tapOn: "Search movies..."
+- inputText: "Brutalist"
+- hideKeyboard
+
+- takeScreenshot: screenshots/04-add-to-plan-search
+
+# Clear search
+- tapOn:
+    id: "xmark.circle.fill"
+
+# ========================================
+# Test: Calendar View
+# ========================================
+
+# Tap on the first movie in the list
+- tapOn:
+    index: 0
+
+# Wait for calendar view
+- extendedWaitUntil:
+    visible: "Select Date"
+    timeout: 5000
+
+- takeScreenshot: screenshots/04-add-to-plan-calendar
+
+# Verify selected movie header is shown
+- assertVisible:
+    id: "film"
+
+# Verify calendar day of week headers
+- assertVisible: "S"
+- assertVisible: "M"
+- assertVisible: "T"
+- assertVisible: "W"
+- assertVisible: "F"
+
+# Verify Add to Plan button with Today
+- assertVisible:
+    text: "Add to Plan for.*"
+
+# ========================================
+# Test: Calendar Month Navigation
+# ========================================
+
+# Navigate to next month
+- tapOn:
+    id: "chevron.right"
+
+- takeScreenshot: screenshots/04-calendar-next-month
+
+# Navigate to previous month (back to current)
+- tapOn:
+    id: "chevron.left"
+
+# Navigate to previous month (before current)
+- tapOn:
+    id: "chevron.left"
+
+- takeScreenshot: screenshots/04-calendar-prev-month
+
+# Past dates should be disabled
+# Navigate back to current month
+- tapOn:
+    id: "chevron.right"
+
+# ========================================
+# Test: Date Selection
+# ========================================
+
+# Tap on a future date (a number that's likely to be in the current month)
+- tapOn:
+    text: "15"
+    optional: true
+
+# Button text should update to show selected date
+- takeScreenshot: screenshots/04-calendar-date-selected
+
+# ========================================
+# Test: Calendar Scheduled Movie Indicators
+# ========================================
+
+# If there are scheduled movies, the calendar should show dot indicators
+# Tapping a day with indicator should show popover with movie info and runtime
+
+# The popover shows:
+# - "Scheduled for [date]"
+# - Movie title with runtime in parentheses, e.g., "The Brutalist (3h 35m)"
+
+# ========================================
+# Test: Navigation Back
+# ========================================
+
+# Go back to movie selection
+- tapOn: "Back"
+
+# Verify we're back at movie selection
+- extendedWaitUntil:
+    visible: "Select Movie"
+    timeout: 3000
+
+# Close the sheet
+- tapOn: "Cancel"

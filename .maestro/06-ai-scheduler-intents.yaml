@@ -1,0 +1,83 @@
+# Test: AI Scheduler UI and Quick Actions
+# Tests the AI scheduler UI elements and quick action buttons
+appId: com.oscars.tracker
+
+---
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Navigate to Watch Plan tab
+- tapOn: "Watch Plan"
+
+# Wait for Watch Plan to load
+- extendedWaitUntil:
+    visible: "Watch Plan"
+    timeout: 5000
+
+# ========================================
+# Test: AI Scheduler UI Elements
+# ========================================
+
+# Open AI Scheduler
+- tapOn:
+    text: "Auto Scheduler"
+
+# Wait for AI Scheduler sheet
+- extendedWaitUntil:
+    visible: "AI-Powered Scheduler"
+    timeout: 5000
+
+- takeScreenshot: screenshots/06-ai-scheduler-main
+
+# Verify header elements
+- assertVisible: "AI-Powered Scheduler"
+- assertVisible: "Tell me how you'd like to organize your movie watching"
+
+# Verify prompt input section
+- assertVisible: "What would you like me to do?"
+
+# Verify Quick Actions section
+- assertVisible: "Quick Actions"
+
+# Verify all three quick action buttons with correct labels
+- assertVisible: "Fill Gaps"
+- assertVisible: "Add movies to empty days"
+
+- assertVisible: "Reschedule Overdue"
+- assertVisible: "Move missed movies forward"
+
+- assertVisible: "Reorganize Plan"
+- assertVisible: "Optimize your schedule"
+
+# Verify Generate Plan button
+- assertVisible: "Generate Plan"
+
+# ========================================
+# Test: Custom Prompt Input
+# ========================================
+
+# Tap on text input area
+- tapOn: "What would you like me to do?"
+
+# Enter a custom prompt
+- inputText: "Schedule short movies on weekdays"
+
+- takeScreenshot: screenshots/06-ai-scheduler-custom-prompt
+
+# Hide keyboard
+- hideKeyboard
+
+# Verify Generate Plan button is still visible
+- assertVisible: "Generate Plan"
+
+# Close the sheet
+- tapOn: "Cancel"
+
+# Verify we're back on Watch Plan
+- extendedWaitUntil:
+    visible: "Watch Plan"
+    timeout: 5000
