@@ -1221,3 +1221,30 @@
   - Display AI reasons with sparkles icon for visual consistency
   - LinearGradient on SF Symbol for gold gradient effect on AI icon
 ---
+
+## 2026-01-18 - US-044
+- What was implemented:
+  - Replaced RuntimeFilter enum with TimeOption enum matching web version
+  - Changed from horizontal scroll chips to 2x2 LazyVGrid layout
+  - Updated filter ranges: Short (<40m), Medium (40-90m), Standard (91-120m), Unlimited (3 longest)
+  - Added two-view system: time selection view and recommendation view
+  - On time option selection, shows random movie recommendation (or top 3 for Unlimited)
+  - Added "Try Another" button to shuffle recommendations
+  - Added stats section showing unwatched and planned counts
+  - Added empty state messages specific to each filter type
+  - Added back navigation from recommendation view to time selection
+  - Disabled options with no matching movies (with 0.5 opacity)
+  - Movie is removed from recommendations after being added to plan
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WhatCanIWatchSheet.swift
+  - tests/us-044-what-can-i-watch-ui.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Use optional selectedOption: TimeOption? = nil for two-view state management
+  - .randomElement() for random selection from array
+  - .prefix(3) to get first N elements from sorted array
+  - LazyVGrid with [GridItem(.flexible()), GridItem(.flexible())] for 2x2 layout
+  - Disable buttons with count == 0 using .disabled() and .opacity() for visual feedback
+  - Remove added items from recommendedMovies array to update UI after adding
+  - When all recommendations added, auto-navigate back to selection view
+---

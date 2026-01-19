@@ -640,7 +640,7 @@
         "Quick add to plan functionality"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Feature Enhancement - Update UI to match web behavior exactly with different time ranges"
     },
     {
