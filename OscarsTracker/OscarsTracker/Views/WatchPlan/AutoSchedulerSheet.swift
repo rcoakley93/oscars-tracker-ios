@@ -1,14 +1,49 @@
 import SwiftUI
 
-/// Sheet for automatically scheduling unwatched movies.
+/// Quick action presets for the AI auto scheduler
+enum QuickAction: String, CaseIterable, Identifiable {
+    case fillGaps = "Fill Gaps"
+    case rescheduleOverdue = "Reschedule Overdue"
+    case reorganizePlan = "Reorganize Plan"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .fillGaps: return "calendar.badge.plus"
+        case .rescheduleOverdue: return "clock.arrow.circlepath"
+        case .reorganizePlan: return "arrow.triangle.swap"
+        }
+    }
+
+    var prompt: String {
+        switch self {
+        case .fillGaps: return "Fill in the gaps in my schedule with unwatched movies"
+        case .rescheduleOverdue: return "Reschedule all overdue movies to available upcoming dates"
+        case .reorganizePlan: return "Reorganize my entire watch plan for a better viewing experience"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .fillGaps: return "Add movies to empty days"
+        case .rescheduleOverdue: return "Move missed movies forward"
+        case .reorganizePlan: return "Optimize your schedule"
+        }
+    }
+}
+
+/// Sheet for AI-powered automatic scheduling of movies.
 struct AutoSchedulerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: WatchPlanViewModel
 
-    @State private var selectedMovieIds: Set<Int> = []
-    @State private var suggestedSchedule: [(movie: Movie, date: Date)] = []
+    @State private var userPrompt: String = ""
+    @State private var suggestedSchedule: [(movie: Movie, date: Date, reason: String?)] = []
+    @State private var isGenerating = false
     @State private var isScheduling = false
     @State private var showPreview = false
+    @FocusState private var isPromptFocused: Bool
 
     /// Get unwatched movies that aren't already in the plan
     private var availableMovies: [Movie] {
@@ -18,14 +53,16 @@ struct AutoSchedulerSheet: View {
         }.sorted { ($0.runtimeMinutes ?? 0) < ($1.runtimeMinutes ?? 0) }
     }
 
-    /// Selected movies from the available list
-    private var selectedMovies: [Movie] {
-        availableMovies.filter { selectedMovieIds.contains($0.id) }
-    }
-
-    /// Check if all movies are selected
-    private var allSelected: Bool {
-        !availableMovies.isEmpty && selectedMovieIds.count == availableMovies.count
+    /// Check if there are overdue items
+    private var hasOverdueItems: Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return viewModel.watchPlanItems.contains { item in
+            if let date = parseDate(item.plannedDate) {
+                return calendar.startOfDay(for: date) < today
+            }
+            return false
+        }
     }
 
     var body: some View {
@@ -34,11 +71,11 @@ struct AutoSchedulerSheet: View {
                 if showPreview {
                     previewSection
                 } else {
-                    movieSelectionSection
+                    promptSection
                 }
             }
             .background(Color.appBackground)
-            .navigationTitle(showPreview ? "Schedule Preview" : "Auto Scheduler")
+            .navigationTitle(showPreview ? "AI Schedule Preview" : "AI Scheduler")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -57,188 +94,222 @@ struct AutoSchedulerSheet: View {
         }
     }
 
-    // MARK: - Movie Selection Section
+    // MARK: - Prompt Section
 
-    private var movieSelectionSection: some View {
-        VStack(spacing: 0) {
-            // Header with select all
-            selectAllHeader
-
-            Divider()
-                .background(Color.borderColor)
-
-            // Movie list
-            if availableMovies.isEmpty {
-                emptyStateView
-            } else {
-                movieListView
-            }
-
-            Spacer()
-
-            // Generate schedule button
-            generateButton
-        }
-    }
-
-    private var selectAllHeader: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Select Movies to Schedule")
-                    .font(.headingSmall)
-                    .foregroundStyle(Color.textPrimary)
-                Text("\(selectedMovieIds.count) of \(availableMovies.count) selected")
-                    .font(.caption)
-                    .foregroundStyle(Color.textMuted)
-            }
-
-            Spacer()
-
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    if allSelected {
-                        selectedMovieIds.removeAll()
-                    } else {
-                        selectedMovieIds = Set(availableMovies.map { $0.id })
-                    }
-                }
-                HapticManager.selection()
-            } label: {
-                Text(allSelected ? "Deselect All" : "Select All")
-                    .font(.bodyMedium)
-                    .foregroundStyle(Color.goldPrimary)
-            }
-        }
-        .padding()
-    }
-
-    private var emptyStateView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 48))
-                .foregroundStyle(Color.goldPrimary)
-            Text("All caught up!")
-                .font(.headingMedium)
-                .foregroundStyle(Color.textPrimary)
-            Text("All movies are either watched or already scheduled")
-                .font(.bodyMedium)
-                .foregroundStyle(Color.textMuted)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-
-    private var movieListView: some View {
+    private var promptSection: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(availableMovies) { movie in
-                    movieSelectionRow(movie)
-                }
+            VStack(spacing: 24) {
+                // AI Header
+                aiHeader
+
+                // Text Input
+                promptInput
+
+                // Quick Actions
+                quickActionsSection
+
+                // Stats Summary
+                statsSummary
             }
             .padding()
         }
     }
 
-    private func movieSelectionRow(_ movie: Movie) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                if selectedMovieIds.contains(movie.id) {
-                    selectedMovieIds.remove(movie.id)
-                } else {
-                    selectedMovieIds.insert(movie.id)
-                }
-            }
-            HapticManager.light()
-        } label: {
-            HStack(spacing: 12) {
-                // Checkbox
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(selectedMovieIds.contains(movie.id) ? Color.goldPrimary : Color.borderColor, lineWidth: 2)
-                        .frame(width: 24, height: 24)
-
-                    if selectedMovieIds.contains(movie.id) {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.goldPrimary)
-                            .frame(width: 24, height: 24)
-
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(.black)
-                    }
-                }
-
-                // Poster placeholder
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.cardBackground)
-                    .frame(width: 40, height: 60)
-                    .overlay(
-                        Image(systemName: "film")
-                            .font(.system(size: 14))
-                            .foregroundStyle(Color.textMuted)
+    private var aiHeader: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "wand.and.stars")
+                .font(.system(size: 48))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Color.goldPrimary, Color.goldSecondary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
+                )
 
-                // Movie info
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(movie.title)
-                        .font(.bodyMedium)
-                        .foregroundStyle(Color.textPrimary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
+            Text("AI-Powered Scheduler")
+                .font(.headingMedium)
+                .foregroundStyle(Color.textPrimary)
 
-                    HStack(spacing: 8) {
-                        if let runtime = movie.formattedRuntime, !runtime.isEmpty {
-                            Text(runtime)
-                                .font(.caption)
-                                .foregroundStyle(Color.textMuted)
-                        }
-                        if let year = movie.releaseYear {
-                            Text("\(year)")
-                                .font(.caption)
-                                .foregroundStyle(Color.textMuted)
-                        }
-                    }
-                }
-
-                Spacer()
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(selectedMovieIds.contains(movie.id) ? Color.goldPrimary.opacity(0.5) : Color.clear, lineWidth: 1)
-                    )
-            )
+            Text("Tell me how you'd like to organize your movie watching")
+                .font(.bodyMedium)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(movie.title), \(selectedMovieIds.contains(movie.id) ? "selected" : "not selected")")
-        .accessibilityHint("Double tap to toggle selection")
+        .padding(.top, 8)
     }
 
-    private var generateButton: some View {
+    private var promptInput: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("What would you like me to do?")
+                .font(.headingSmall)
+                .foregroundStyle(Color.textPrimary)
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $userPrompt)
+                    .focused($isPromptFocused)
+                    .frame(minHeight: 100, maxHeight: 150)
+                    .padding(12)
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isPromptFocused ? Color.goldPrimary : Color.borderColor, lineWidth: 1)
+                    )
+                    .scrollContentBackground(.hidden)
+
+                if userPrompt.isEmpty {
+                    Text("e.g., 'Plan my weekends', 'I missed yesterday, fix it', 'Schedule short movies first'")
+                        .font(.bodyMedium)
+                        .foregroundStyle(Color.textMuted)
+                        .padding(16)
+                        .allowsHitTesting(false)
+                }
+            }
+
+            // Generate button
+            Button {
+                Task {
+                    await generateWithPrompt(userPrompt)
+                }
+            } label: {
+                HStack {
+                    if isGenerating {
+                        ProgressView()
+                            .tint(.black)
+                    } else {
+                        Image(systemName: "sparkles")
+                        Text("Generate Plan")
+                            .fontWeight(.semibold)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    userPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isGenerating
+                        ? Color.cardBackground
+                        : Color.goldPrimary
+                )
+                .foregroundStyle(
+                    userPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isGenerating
+                        ? Color.textMuted
+                        : .black
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .disabled(userPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isGenerating)
+            .accessibilityLabel("Generate plan")
+            .accessibilityHint(userPrompt.isEmpty ? "Enter a prompt first" : "Creates a suggested schedule based on your request")
+        }
+        .glassCard()
+    }
+
+    private var quickActionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Quick Actions")
+                .font(.headingSmall)
+                .foregroundStyle(Color.textPrimary)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                ForEach(QuickAction.allCases) { action in
+                    quickActionButton(action)
+                }
+            }
+        }
+    }
+
+    private func quickActionButton(_ action: QuickAction) -> some View {
         Button {
-            generateSchedule()
+            Task {
+                await generateWithPrompt(action.prompt)
+            }
         } label: {
-            HStack {
-                Image(systemName: "wand.and.stars")
-                Text("Generate Schedule")
-                    .fontWeight(.semibold)
+            VStack(spacing: 8) {
+                Image(systemName: action.icon)
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.goldPrimary)
+
+                Text(action.rawValue)
+                    .font(.bodyMedium)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.textPrimary)
+
+                Text(action.description)
+                    .font(.caption)
+                    .foregroundStyle(Color.textMuted)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(
-                selectedMovieIds.isEmpty ? Color.cardBackground : Color.goldPrimary
-            )
-            .foregroundStyle(selectedMovieIds.isEmpty ? Color.textMuted : .black)
+            .padding(.horizontal, 8)
+            .background(Color.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.borderColor, lineWidth: 1)
+            )
         }
-        .disabled(selectedMovieIds.isEmpty)
+        .buttonStyle(.plain)
+        .disabled(isGenerating)
+        .opacity(isGenerating ? 0.5 : 1)
+        .accessibilityLabel(action.rawValue)
+        .accessibilityHint(action.description)
+    }
+
+    private var statsSummary: some View {
+        HStack(spacing: 16) {
+            statItem(
+                value: "\(availableMovies.count)",
+                label: "Unwatched",
+                icon: "film"
+            )
+
+            statItem(
+                value: "\(viewModel.watchPlanItems.count)",
+                label: "Scheduled",
+                icon: "calendar"
+            )
+
+            if hasOverdueItems {
+                statItem(
+                    value: "\(overdueCount)",
+                    label: "Overdue",
+                    icon: "exclamationmark.triangle",
+                    isWarning: true
+                )
+            }
+        }
         .padding()
-        .accessibilityLabel("Generate schedule")
-        .accessibilityHint(selectedMovieIds.isEmpty ? "Select movies first" : "Creates a suggested viewing schedule for \(selectedMovieIds.count) movies")
+        .glassCard()
+    }
+
+    private var overdueCount: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return viewModel.watchPlanItems.filter { item in
+            if let date = parseDate(item.plannedDate) {
+                return calendar.startOfDay(for: date) < today
+            }
+            return false
+        }.count
+    }
+
+    private func statItem(value: String, label: String, icon: String, isWarning: Bool = false) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 12))
+                Text(value)
+                    .font(.headingMedium)
+            }
+            .foregroundStyle(isWarning ? Color.destructive : Color.goldPrimary)
+
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(Color.textMuted)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Preview Section
@@ -252,24 +323,49 @@ struct AutoSchedulerSheet: View {
                 .background(Color.borderColor)
 
             // Schedule preview list
-            schedulePreviewList
+            if suggestedSchedule.isEmpty {
+                emptyPreviewState
+            } else {
+                schedulePreviewList
+            }
 
             Spacer()
 
             // Confirm button
-            confirmButton
+            if !suggestedSchedule.isEmpty {
+                confirmButton
+            }
         }
+    }
+
+    private var emptyPreviewState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.system(size: 48))
+                .foregroundStyle(Color.textMuted)
+
+            Text("No schedule generated")
+                .font(.headingMedium)
+                .foregroundStyle(Color.textPrimary)
+
+            Text("Try a different prompt or check that you have movies available to schedule")
+                .font(.bodyMedium)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 
     private var summaryHeader: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: "calendar.badge.clock")
+                Image(systemName: "sparkles")
                     .font(.system(size: 24))
                     .foregroundStyle(Color.goldPrimary)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Suggested Schedule")
+                    Text("AI Suggested Schedule")
                         .font(.headingSmall)
                         .foregroundStyle(Color.textPrimary)
                     Text("\(suggestedSchedule.count) movies over \(daysSpan) days")
@@ -296,66 +392,83 @@ struct AutoSchedulerSheet: View {
     private var daysSpan: Int {
         guard let firstDate = suggestedSchedule.first?.date,
               let lastDate = suggestedSchedule.last?.date else { return 0 }
-        return Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0 + 1
+        return max(1, (Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0) + 1)
     }
 
     private var schedulePreviewList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(Array(suggestedSchedule.enumerated()), id: \.element.movie.id) { index, item in
-                    schedulePreviewRow(item.movie, date: item.date, index: index)
+                    schedulePreviewRow(item.movie, date: item.date, reason: item.reason, index: index)
                 }
             }
             .padding()
         }
     }
 
-    private func schedulePreviewRow(_ movie: Movie, date: Date, index: Int) -> some View {
-        HStack(spacing: 12) {
-            // Date badge
-            VStack(spacing: 2) {
-                Text(dayOfWeek(date))
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color.textMuted)
-                Text(dayNumber(date))
-                    .font(.headingMedium)
-                    .foregroundStyle(Color.goldPrimary)
-                Text(monthAbbrev(date))
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color.textMuted)
-            }
-            .frame(width: 50)
-            .padding(.vertical, 8)
-            .background(Color.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-
-            // Poster placeholder
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color.cardBackground)
-                .frame(width: 40, height: 60)
-                .overlay(
-                    Image(systemName: "film")
-                        .font(.system(size: 14))
+    private func schedulePreviewRow(_ movie: Movie, date: Date, reason: String?, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                // Date badge
+                VStack(spacing: 2) {
+                    Text(dayOfWeek(date))
+                        .font(.caption2)
+                        .fontWeight(.medium)
                         .foregroundStyle(Color.textMuted)
-                )
-
-            // Movie info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(movie.title)
-                    .font(.bodyMedium)
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(2)
-
-                if let runtime = movie.formattedRuntime, !runtime.isEmpty {
-                    Text(runtime)
-                        .font(.caption)
+                    Text(dayNumber(date))
+                        .font(.headingMedium)
+                        .foregroundStyle(Color.goldPrimary)
+                    Text(monthAbbrev(date))
+                        .font(.caption2)
+                        .fontWeight(.medium)
                         .foregroundStyle(Color.textMuted)
                 }
+                .frame(width: 50)
+                .padding(.vertical, 8)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                // Poster placeholder
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.cardBackground)
+                    .frame(width: 40, height: 60)
+                    .overlay(
+                        Image(systemName: "film")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.textMuted)
+                    )
+
+                // Movie info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(movie.title)
+                        .font(.bodyMedium)
+                        .foregroundStyle(Color.textPrimary)
+                        .lineLimit(2)
+
+                    if !movie.formattedRuntime.isEmpty {
+                        Text(movie.formattedRuntime)
+                            .font(.caption)
+                            .foregroundStyle(Color.textMuted)
+                    }
+                }
+
+                Spacer()
             }
 
-            Spacer()
+            // AI Reason
+            if let reason = reason, !reason.isEmpty {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.goldPrimary)
+
+                    Text(reason)
+                        .font(.caption)
+                        .foregroundStyle(Color.textMuted)
+                        .italic()
+                }
+                .padding(.leading, 62)
+            }
         }
         .padding(12)
         .background(
@@ -363,7 +476,7 @@ struct AutoSchedulerSheet: View {
                 .fill(Color.cardBackground)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(movie.title) scheduled for \(formattedDate(date))")
+        .accessibilityLabel("\(movie.title) scheduled for \(formattedDate(date))\(reason != nil ? ", \(reason!)" : "")")
     }
 
     private var confirmButton: some View {
@@ -396,6 +509,12 @@ struct AutoSchedulerSheet: View {
 
     // MARK: - Helper Functions
 
+    private func parseDate(_ dateString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: dateString)
+    }
+
     private func dayOfWeek(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
@@ -420,59 +539,29 @@ struct AutoSchedulerSheet: View {
         return formatter.string(from: date)
     }
 
-    // MARK: - Scheduling Logic
+    // MARK: - AI Scheduling Logic
 
-    /// Generate a suggested schedule for selected movies
-    private func generateSchedule() {
+    /// Generate a schedule using the AI backend
+    private func generateWithPrompt(_ prompt: String) async {
+        isGenerating = true
         HapticManager.selection()
 
-        let movies = selectedMovies
-        guard !movies.isEmpty else { return }
+        // Call the AI auto-scheduler edge function
+        if let schedule = await viewModel.callAutoScheduler(
+            userPrompt: prompt,
+            moviesPool: availableMovies,
+            existingSchedule: viewModel.watchPlanItems
+        ) {
+            suggestedSchedule = schedule
 
-        // Get existing planned dates to avoid conflicts
-        let existingDates = Set(viewModel.watchPlanItems.compactMap { item -> Date? in
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            guard let date = formatter.date(from: item.plannedDate) else { return nil }
-            return Calendar.current.startOfDay(for: date)
-        })
-
-        // Calculate Oscar date (March 15, 2025 as deadline)
-        let calendar = Calendar.current
-        var oscarComponents = DateComponents()
-        oscarComponents.year = 2025
-        oscarComponents.month = 3
-        oscarComponents.day = 15
-        let oscarDate = calendar.date(from: oscarComponents) ?? Date()
-
-        // Start from today
-        var currentDate = calendar.startOfDay(for: Date())
-        var schedule: [(movie: Movie, date: Date)] = []
-
-        // Sort movies by runtime (shorter first) for better distribution
-        let sortedMovies = movies.sorted { ($0.runtimeMinutes ?? 0) < ($1.runtimeMinutes ?? 0) }
-
-        for movie in sortedMovies {
-            // Find next available date that doesn't conflict
-            while existingDates.contains(currentDate) || schedule.contains(where: { calendar.isDate($0.date, inSameDayAs: currentDate) }) {
-                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showPreview = true
             }
-
-            // Don't schedule past Oscar date
-            if currentDate > oscarDate {
-                // Wrap around to fill gaps if possible
-                break
-            }
-
-            schedule.append((movie: movie, date: currentDate))
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        } else {
+            HapticManager.error()
         }
 
-        suggestedSchedule = schedule
-
-        withAnimation(.easeInOut(duration: 0.3)) {
-            showPreview = true
-        }
+        isGenerating = false
     }
 
     /// Confirm and save the generated schedule

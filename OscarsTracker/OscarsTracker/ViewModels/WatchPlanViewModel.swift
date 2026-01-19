@@ -360,4 +360,147 @@ final class WatchPlanViewModel: ObservableObject {
             return false
         }
     }
+
+    // MARK: - AI Auto Scheduler
+
+    /// Response from the AI auto-scheduler edge function
+    struct AutoSchedulerResponse: Codable {
+        let plan: [ScheduledItem]
+
+        struct ScheduledItem: Codable {
+            let movieId: Int
+            let date: String
+            let reason: String?
+
+            enum CodingKeys: String, CodingKey {
+                case movieId = "movie_id"
+                case date
+                case reason
+            }
+        }
+    }
+
+    /// Call the AI auto-scheduler edge function
+    /// - Parameters:
+    ///   - userPrompt: Natural language prompt from the user
+    ///   - moviesPool: Available movies to schedule
+    ///   - existingSchedule: Current watch plan items
+    /// - Returns: Array of scheduled items with movie, date, and reason, or nil on error
+    func callAutoScheduler(
+        userPrompt: String,
+        moviesPool: [Movie],
+        existingSchedule: [WatchPlanItem]
+    ) async -> [(movie: Movie, date: Date, reason: String?)]? {
+        guard supabase.auth.currentUser != nil else {
+            errorMessage = "Not logged in"
+            return nil
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let todayString = formatter.string(from: Date())
+
+        // Build movies_pool array for API
+        let moviesPoolData: [[String: Any]] = moviesPool.map { movie in
+            [
+                "id": movie.id,
+                "title": movie.title,
+                "runtime_minutes": movie.runtimeMinutes ?? 0
+            ]
+        }
+
+        // Build existing_schedule array for API
+        let existingScheduleData: [[String: Any]] = existingSchedule.compactMap { item in
+            guard let movie = item.movie else { return nil }
+            return [
+                "movie_id": item.movieId,
+                "title": movie.title,
+                "date": item.plannedDate
+            ]
+        }
+
+        // Build request body
+        let requestBody: [String: Any] = [
+            "user_prompt": userPrompt,
+            "today": todayString,
+            "movies_pool": moviesPoolData,
+            "existing_schedule": existingScheduleData
+        ]
+
+        do {
+            // Call the auto-scheduler edge function
+            let response: AutoSchedulerResponse = try await supabase.functions
+                .invoke(
+                    "auto-scheduler",
+                    options: FunctionInvokeOptions(body: requestBody)
+                )
+
+            // Parse the response and convert to schedule format
+            var schedule: [(movie: Movie, date: Date, reason: String?)] = []
+
+            for item in response.plan {
+                guard let movie = moviesPool.first(where: { $0.id == item.movieId }),
+                      let date = formatter.date(from: item.date) else {
+                    continue
+                }
+                schedule.append((movie: movie, date: date, reason: item.reason))
+            }
+
+            return schedule
+        } catch {
+            errorMessage = "AI scheduling failed. Please try again."
+            return nil
+        }
+    }
+
+    /// Update existing watch plan items (for reschedule operations)
+    /// - Parameter updates: Array of (itemId, newDate) tuples
+    /// - Returns: True if all successful, false otherwise
+    func bulkReschedule(updates: [(itemId: Int, newDate: Date)]) async -> Bool {
+        guard supabase.auth.currentUser != nil else {
+            errorMessage = "Not logged in"
+            return false
+        }
+
+        guard !updates.isEmpty else { return true }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+
+        // Store original state for rollback
+        let originalItems = watchPlanItems
+
+        // Optimistic update
+        for (itemId, newDate) in updates {
+            if let index = watchPlanItems.firstIndex(where: { $0.id == itemId }) {
+                var updatedItem = watchPlanItems[index]
+                updatedItem = WatchPlanItem(
+                    id: updatedItem.id,
+                    userId: updatedItem.userId,
+                    movieId: updatedItem.movieId,
+                    plannedDate: formatter.string(from: newDate),
+                    createdAt: updatedItem.createdAt
+                )
+                updatedItem.movie = originalItems[index].movie
+                watchPlanItems[index] = updatedItem
+            }
+        }
+
+        do {
+            // Update each item in Supabase
+            for (itemId, newDate) in updates {
+                try await supabase
+                    .from("watch_plan")
+                    .update(["planned_date": formatter.string(from: newDate)])
+                    .eq("id", value: itemId)
+                    .execute()
+            }
+            return true
+        } catch {
+            // Rollback on error
+            watchPlanItems = originalItems
+            errorMessage = "Failed to update schedule"
+            return false
+        }
+    }
 }

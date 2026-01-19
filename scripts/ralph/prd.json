@@ -582,6 +582,81 @@
       "priority": 3,
       "passes": true,
       "notes": ""
+    },
+    {
+      "id": "US-041",
+      "title": "Fix Visual Bugs in Watch Plan Move Functionality",
+      "acceptanceCriteria": [
+        "Move modal/sheet opens without visual glitches",
+        "Calendar component is properly positioned and aligned",
+        "Transitions/animations are smooth when opening and closing",
+        "No overlapping elements or misaligned components"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Bug Fix - Layout/positioning issues and animation/transition bugs when opening Move functionality"
+    },
+    {
+      "id": "US-042",
+      "title": "Fix Drag and Drop in Watch Plan",
+      "acceptanceCriteria": [
+        "User can long-press a movie card to start dragging",
+        "Drag preview appears showing the movie being dragged",
+        "Drop zones highlight when dragging over valid date groups",
+        "Dropping on a date group reschedules the movie",
+        "Haptic feedback on successful drop",
+        "Cannot drop on OVERDUE section"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Bug Fix - Drag and drop to move movies between dates doesn't work. Uses SwiftUI .draggable() and .dropDestination() with WatchPlanItemTransfer type"
+    },
+    {
+      "id": "US-043",
+      "title": "Implement AI-Powered Auto Scheduler (Match Web)",
+      "acceptanceCriteria": [
+        "Text input field for natural language prompts (e.g., 'Plan my weekends', 'I missed yesterday, fix it')",
+        "Quick action buttons: 'Fill Gaps', 'Reschedule Overdue', 'Reorganize Plan'",
+        "'Generate Plan' button that calls AI backend",
+        "Preview of suggested schedule before confirming",
+        "Calls Supabase Edge Function 'auto-scheduler' with user_prompt, today, movies_pool, existing_schedule",
+        "Handles API response with plan array containing movie_id, date, and reason"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Feature Enhancement - Replace client-side scheduling algorithm with AI-powered scheduling matching web version"
+    },
+    {
+      "id": "US-044",
+      "title": "Update 'What Can I Watch' UI to Match Web",
+      "acceptanceCriteria": [
+        "Modal with 'How much time do you have?' header",
+        "Four button options in 2x2 grid: Short (<40m), Medium (<90m), Standard (<2h), Unlimited",
+        "On selection, show random movie recommendation(s) from matching runtime",
+        "Short filter: < 40 minutes",
+        "Medium filter: 40-90 minutes",
+        "Standard filter: 91-120 minutes",
+        "Unlimited filter: 3 longest unwatched movies",
+        "Quick add to plan functionality"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Feature Enhancement - Update UI to match web behavior exactly with different time ranges"
+    },
+    {
+      "id": "US-045",
+      "title": "Redesign Add to Plan Calendar UX",
+      "acceptanceCriteria": [
+        "Flow: Show unwatched movie list -> User taps movie -> Compact calendar appears",
+        "White dot indicators below dates that have movies scheduled",
+        "Distinct styling for currently selected date",
+        "When user selects a day with movies, show popover listing movies already scheduled",
+        "Calendar takes less vertical space than current graphical DatePicker",
+        "Complete adding movie and verify it's saved"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Feature Enhancement - Improve Add to Plan sheet calendar experience with better visual flow and indicators"
     }
   ]
 }

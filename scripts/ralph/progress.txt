@@ -34,6 +34,11 @@
 - OAuth: ASWebAuthenticationSession with callback URL scheme, getOAuthSignInURL() then session(from:)
 - OAuth Provider: Use WebAuthPresentationContextProvider conforming to ASWebAuthenticationPresentationContextProviding
 - Async Bridge: withCheckedThrowingContinuation to convert callback APIs to async/await
+- Sheet Detents: Use .presentationDetents([.large]) for sheets with graphical DatePicker
+- Sheet Animation: @State isAppeared with .onAppear + withAnimation for smooth open transition
+- Prevent Accidental Dismiss: interactiveDismissDisabled(isLoading) during async operations
+- Drag and Drop: Use CodableRepresentation(contentType: .data) instead of custom UTType
+- Drag Hit Testing: Add .contentShape(Rectangle()) for proper drag recognition area
 
 ## 2026-01-06 - US-001
 - What was implemented:
@@ -1129,4 +1134,90 @@
   - filenames must end with .png and be specified in Contents.json
   - info.author: xcode, info.version: 1 for proper asset catalog metadata
   - Launch screen matches app background for smooth transition
+---
+
+## 2026-01-18 - US-041
+- What was implemented:
+  - Fixed RescheduleSheet visual bugs by changing detent from .medium to .large
+  - Added smooth opening animation with opacity and offset transitions
+  - Added interactiveDismissDisabled during reschedule to prevent accidental dismiss
+  - Added "FROM" date badge in movie header showing current scheduled date
+  - Improved movie header to show year in addition to runtime
+  - Added calendar icon to Move button with loading state text ("Moving...")
+  - Renamed navigation title from "Reschedule" to "Move Movie" for clarity
+  - Increased iPad frame sizes (minHeight: 550, maxHeight: 700) to accommodate calendar
+  - Added proper spacing with Divider and section headers
+  - Added accessibility hint for reschedule button
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - tests/us-041-fix-watch-plan-move-visual-bugs.spec.ts (new)
+  - tests/us-038-ipad-layout.spec.ts (updated to remove .medium expectation)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - .presentationDetents([.large]) required for graphical DatePicker to display properly
+  - Sheet appearance animation: @State isAppeared with .onAppear and withAnimation
+  - Combine opacity + offset transitions: .opacity(isAppeared ? 1 : 0) + .offset(y: isAppeared ? 0 : 20)
+  - interactiveDismissDisabled(isRescheduling) prevents sheet dismiss during async operations
+  - Task.sleep(nanoseconds: 200_000_000) adds visual feedback delay before dismiss
+  - Date badge pattern: VStack with "FROM" label and formatted date
+  - DateFormatter chaining: parse with yyyy-MM-dd, display with MMM d
+  - iPad frame minHeight should accommodate graphical calendar (~550pt minimum)
+  - Loading state text pattern: show "Moving..." with ProgressView during operation
+---
+
+## 2026-01-18 - US-042
+- What was implemented:
+  - Fixed drag and drop by changing from custom UTType to built-in .data contentType
+  - Added .contentShape(Rectangle()) to DraggableWatchPlanRow for proper drag recognition
+  - Removed conflicting .onDrop modifier that prevented drops
+  - Added visual drop zone highlighting with RoundedRectangle background
+  - Added "Drop here" text indicator in date header when highlighted
+  - Properly reset drag state (draggedItem and highlightedDateGroup) after drop
+  - Added withAnimation for smoother highlight transitions
+  - Added vertical padding to drop zones for better hit area
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/WatchPlanView.swift
+  - tests/us-042-fix-drag-and-drop.spec.ts (new)
+  - tests/us-016-watch-plan-drag-drop.spec.ts (updated)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Custom UTType with UTType(exportedAs:) requires Info.plist declaration to work
+  - Use CodableRepresentation(contentType: .data) for simpler drag/drop without Info.plist
+  - .contentShape(Rectangle()) is essential for proper drag hit-testing
+  - .onDrop on child views can conflict with parent's .dropDestination
+  - Drop zones need .contentShape and visible background for better UX
+  - Use withAnimation in isTargeted callback for smooth highlight transitions
+  - Always reset state in both success and failure branches of drop handler
+---
+
+## 2026-01-18 - US-043
+- What was implemented:
+  - Replaced client-side scheduling algorithm with AI-powered scheduling via Supabase Edge Function
+  - Added TextEditor for natural language prompts with placeholder examples
+  - Created QuickAction enum with Fill Gaps, Reschedule Overdue, and Reorganize Plan presets
+  - Added callAutoScheduler function in WatchPlanViewModel to call 'auto-scheduler' edge function
+  - Created AutoSchedulerResponse struct to decode API response with plan array (movie_id, date, reason)
+  - Updated preview section to display AI-generated reasons for each scheduled movie
+  - Added stats summary showing unwatched, scheduled, and overdue counts
+  - Added AI header with gradient wand.and.stars icon
+  - Updated navigation titles to include "AI" prefix
+  - Added empty preview state for when AI returns no schedule
+  - Added isGenerating loading state for the Generate Plan button
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/WatchPlan/AutoSchedulerSheet.swift
+  - OscarsTracker/OscarsTracker/ViewModels/WatchPlanViewModel.swift
+  - tests/us-043-ai-auto-scheduler.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Supabase Edge Functions: supabase.functions.invoke("function-name", options: FunctionInvokeOptions(body: requestBody))
+  - FunctionInvokeOptions accepts a body parameter with [String: Any] dictionary
+  - Use nested structs for Codable API responses (AutoSchedulerResponse with ScheduledItem)
+  - TextEditor with .scrollContentBackground(.hidden) for custom background color
+  - Placeholder text overlay with .allowsHitTesting(false) to pass taps through
+  - @FocusState for tracking text editor focus state and styling border accordingly
+  - QuickAction enum with CaseIterable, Identifiable for ForEach iteration
+  - Each QuickAction has prompt property that generates the AI request
+  - Store schedule with tuple: [(movie: Movie, date: Date, reason: String?)]
+  - Display AI reasons with sparkles icon for visual consistency
+  - LinearGradient on SF Symbol for gold gradient effect on AI icon
 ---
