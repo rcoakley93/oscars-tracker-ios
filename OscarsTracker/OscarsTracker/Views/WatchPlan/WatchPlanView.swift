@@ -238,9 +238,25 @@ struct WatchPlanView: View {
                         }
                     }
                     .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(highlightedDateGroup == group.date ? Color.goldPrimary.opacity(0.1) : Color.clear)
+                            .padding(.horizontal, 4)
+                    )
+                    .contentShape(Rectangle())
                     .dropDestination(for: WatchPlanItemTransfer.self) { items, _ in
                         guard let droppedItem = items.first,
-                              group.label != "OVERDUE" else { return false }
+                              group.label != "OVERDUE" else {
+                            // Reset drag state on invalid drop
+                            draggedItem = nil
+                            highlightedDateGroup = nil
+                            return false
+                        }
+
+                        // Reset drag state
+                        draggedItem = nil
+                        highlightedDateGroup = nil
 
                         Task {
                             let success = await viewModel.reschedule(itemId: droppedItem.itemId, to: group.date)
@@ -252,8 +268,10 @@ struct WatchPlanView: View {
                         }
                         return true
                     } isTargeted: { isTargeted in
-                        if group.label != "OVERDUE" {
-                            highlightedDateGroup = isTargeted ? group.date : nil
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            if group.label != "OVERDUE" {
+                                highlightedDateGroup = isTargeted ? group.date : nil
+                            }
                         }
                     }
                 } header: {
@@ -273,15 +291,21 @@ struct WatchPlanView: View {
                 .font(.headingSmall)
                 .foregroundStyle(isOverdue ? Color.destructive : (isHighlighted ? Color.goldPrimary : Color.textPrimary))
             Spacer()
-            if isHighlighted {
-                Image(systemName: "arrow.down.circle.fill")
-                    .foregroundStyle(Color.goldPrimary)
-                    .transition(.scale.combined(with: .opacity))
+            if isHighlighted && !isOverdue {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down")
+                        .font(.caption)
+                    Text("Drop here")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .foregroundStyle(Color.goldPrimary)
+                .transition(.scale.combined(with: .opacity))
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(isHighlighted ? Color.goldPrimary.opacity(0.1) : Color.appBackground)
+        .background(Color.appBackground)
         .animation(.easeInOut(duration: 0.2), value: isHighlighted)
     }
 
@@ -324,13 +348,8 @@ struct WatchPlanItemTransfer: Codable, Transferable {
     let movieId: Int
 
     static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(contentType: .watchPlanItem)
-    }
-}
-
-extension UTType {
-    static var watchPlanItem: UTType {
-        UTType(exportedAs: "com.oscars.tracker.watchplanitem")
+        // Use .data instead of custom UTType to avoid Info.plist requirements
+        CodableRepresentation(contentType: .data)
     }
 }
 
@@ -345,8 +364,6 @@ struct DraggableWatchPlanRow: View {
     var onMarkWatched: (() -> Void)?
     var onRemove: (() -> Void)?
 
-    @State private var dragOffset: CGFloat = 0
-
     var body: some View {
         WatchPlanRowView(
             item: item,
@@ -355,6 +372,7 @@ struct DraggableWatchPlanRow: View {
             onMarkWatched: onMarkWatched,
             onRemove: onRemove
         )
+        .contentShape(Rectangle())
         .opacity(isDragging ? 0.5 : 1.0)
         .scaleEffect(isDragging ? 0.95 : 1.0)
         .rotationEffect(.degrees(isDragging ? 2 : 0))
@@ -366,10 +384,6 @@ struct DraggableWatchPlanRow: View {
                 .onAppear {
                     onDragStart?()
                 }
-        }
-        .onDrop(of: [.watchPlanItem], isTargeted: nil) { _ in
-            onDragEnd?()
-            return false
         }
     }
 }

@@ -19,14 +19,13 @@ test.describe('US-016: Watch Plan - Drag and Drop', () => {
     expect(content).toContain('movieId');
   });
 
-  test('Custom UTType for watch plan items', async () => {
+  test('Uses built-in .data contentType for Transferable', async () => {
     const watchPlanViewPath = path.join(OSCARS_TRACKER_PATH, 'Views', 'WatchPlan', 'WatchPlanView.swift');
     const content = fs.readFileSync(watchPlanViewPath, 'utf-8');
 
-    // Check for UTType extension
-    expect(content).toContain('extension UTType');
-    expect(content).toContain('watchPlanItem');
-    expect(content).toContain('UTType(exportedAs:');
+    // Check for .data content type (avoids Info.plist requirements)
+    expect(content).toContain('CodableRepresentation(contentType: .data)');
+    expect(content).toContain('TransferRepresentation');
   });
 
   test('DraggableWatchPlanRow with draggable modifier', async () => {
@@ -134,8 +133,9 @@ test.describe('US-016: Watch Plan - Drag and Drop', () => {
     const watchPlanViewPath = path.join(OSCARS_TRACKER_PATH, 'Views', 'WatchPlan', 'WatchPlanView.swift');
     const content = fs.readFileSync(watchPlanViewPath, 'utf-8');
 
-    // Check for drop indicator in header
-    expect(content).toContain('arrow.down.circle.fill');
+    // Check for drop indicator in header with "Drop here" text
+    expect(content).toContain('arrow.down');
+    expect(content).toContain('Drop here');
     expect(content).toContain('isHighlighted');
   });
 
