@@ -111,6 +111,7 @@ struct LeaderboardView: View {
             ForEach(viewModel.entries) { entry in
                 LeaderboardRowView(
                     entry: entry,
+                    totalMovieCount: viewModel.totalMovieCount,
                     isCurrentUser: viewModel.isCurrentUser(entry),
                     medalType: viewModel.medalType(for: entry.rank)
                 )
@@ -155,6 +156,7 @@ struct LeaderboardView: View {
 /// Row view for a single leaderboard entry on Movies Watched tab.
 struct LeaderboardRowView: View {
     let entry: LeaderboardEntry
+    let totalMovieCount: Int
     let isCurrentUser: Bool
     let medalType: MedalType?
 
@@ -213,10 +215,8 @@ struct LeaderboardRowView: View {
 
     /// Display watched percentage/count text
     private var watchedPercentageText: String {
-        // Assuming a fixed total of nominated movies (e.g., 57 for typical Oscar year)
-        // In production, this would come from the backend
-        let totalMovies = 57
-        let percentage = min(100, (entry.watchedCount * 100) / totalMovies)
+        guard totalMovieCount > 0 else { return "0% complete" }
+        let percentage = min(100, (entry.watchedCount * 100) / totalMovieCount)
         return "\(percentage)% complete"
     }
 

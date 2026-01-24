@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import Kingfisher
 
 /// Watch plan view showing movies grouped by planned date.
 struct WatchPlanView: View {
@@ -522,9 +523,29 @@ struct WatchPlanRowView: View {
     }
 
     private var posterView: some View {
+        SwiftUI.Group {
+            if let posterUrl = movie?.posterUrl, let url = URL(string: posterUrl) {
+                KFImage(url)
+                    .placeholder {
+                        posterPlaceholder
+                    }
+                    .resizable()
+                    .aspectRatio(2/3, contentMode: .fill)
+            } else {
+                posterPlaceholder
+            }
+        }
+        .frame(width: 60, height: 90)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.borderColor.opacity(0.5), lineWidth: 1)
+        )
+    }
+
+    private var posterPlaceholder: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(Color.cardBackground)
-            .frame(width: 60, height: 90)
             .overlay(
                 Image(systemName: "film")
                     .font(.system(size: 20))
@@ -630,14 +651,32 @@ struct RescheduleSheet: View {
 
     private var movieHeader: some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.cardBackground)
-                .frame(width: 50, height: 75)
-                .overlay(
-                    Image(systemName: "film")
-                        .font(.system(size: 16))
-                        .foregroundStyle(Color.textMuted)
-                )
+            SwiftUI.Group {
+                if let posterUrl = movie?.posterUrl, let url = URL(string: posterUrl) {
+                    KFImage(url)
+                        .placeholder {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.cardBackground)
+                                .overlay(
+                                    Image(systemName: "film")
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(Color.textMuted)
+                                )
+                        }
+                        .resizable()
+                        .aspectRatio(2/3, contentMode: .fill)
+                } else {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.cardBackground)
+                        .overlay(
+                            Image(systemName: "film")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Color.textMuted)
+                        )
+                }
+            }
+            .frame(width: 50, height: 75)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(movie?.title ?? "Unknown Movie")

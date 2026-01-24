@@ -53,10 +53,10 @@
 		E8123456002A /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502A0 /* LoadingView.swift */; };
 		E8123456002B /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502B0 /* ErrorView.swift */; };
 		E8123456002C /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502C0 /* EmptyStateView.swift */; };
-		E81234560030 /* PlanCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550310 /* PlanCalendarView.swift */; };
 		E8123456002D /* AutoSchedulerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502D0 /* AutoSchedulerSheet.swift */; };
 		E8123456002E /* WhatCanIWatchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502E0 /* WhatCanIWatchSheet.swift */; };
 		E8123456002F /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502F0 /* AccessibilityManager.swift */; };
+		E81234560030 /* PlanCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550310 /* PlanCalendarView.swift */; };
 		E81234560031 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550320 /* SplashView.swift */; };
 /* End PBXBuildFile section */
 
@@ -106,11 +106,11 @@
 		E812345502A0 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		E812345502B0 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
 		E812345502C0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
-		E81234550310 /* PlanCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanCalendarView.swift; sourceTree = "<group>"; };
 		E812345502D0 /* AutoSchedulerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSchedulerSheet.swift; sourceTree = "<group>"; };
 		E812345502E0 /* WhatCanIWatchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatCanIWatchSheet.swift; sourceTree = "<group>"; };
 		E812345502F0 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
 		E81234550300 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E81234550310 /* PlanCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanCalendarView.swift; sourceTree = "<group>"; };
 		E81234550320 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -610,7 +610,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -643,7 +643,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

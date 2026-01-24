@@ -8,6 +8,7 @@ final class LeaderboardViewModel: ObservableObject {
     @Published var currentUserId: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var totalMovieCount: Int = 0
 
     private let supabase = SupabaseClientManager.shared.client
 
@@ -25,13 +26,22 @@ final class LeaderboardViewModel: ObservableObject {
                 currentUserId = userId
             }
 
-            // Call get_leaderboard RPC function
-            let response: [LeaderboardEntry] = try await supabase
+            // Fetch total movie count and leaderboard entries in parallel
+            async let movieCountTask: Int = supabase
+                .from("movies")
+                .select("id", head: true, count: .exact)
+                .execute()
+                .count ?? 0
+
+            async let leaderboardTask: [LeaderboardEntry] = supabase
                 .rpc("get_leaderboard")
                 .execute()
                 .value
 
-            entries = response
+            let (movieCount, leaderboardEntries) = try await (movieCountTask, leaderboardTask)
+
+            totalMovieCount = movieCount
+            entries = leaderboardEntries
             isLoading = false
         } catch {
             isLoading = false

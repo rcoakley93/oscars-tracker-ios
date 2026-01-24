@@ -132,7 +132,8 @@ struct DashboardPlaceholderView: View {
                     ProgressHeroView(
                         watchedCount: viewModel.watchedCount,
                         totalCount: viewModel.totalCount > 0 ? viewModel.totalCount : 42,
-                        oscarDate: viewModel.oscarDate
+                        oscarDate: viewModel.oscarDate,
+                        minutesRemaining: viewModel.minutesRemaining
                     )
                     .padding(.horizontal)
 

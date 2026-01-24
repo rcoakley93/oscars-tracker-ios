@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 /// Sheet for adding a movie to the watch plan with improved calendar UX.
 struct AddToPlanSheet: View {
@@ -182,15 +183,33 @@ struct AddToPlanSheet: View {
             }
         } label: {
             HStack(spacing: 12) {
-                // Poster placeholder
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.cardBackground)
-                    .frame(width: 40, height: 60)
-                    .overlay(
-                        Image(systemName: "film")
-                            .font(.system(size: 14))
-                            .foregroundStyle(Color.textMuted)
-                    )
+                // Movie poster
+                SwiftUI.Group {
+                    if let posterUrl = movie.posterUrl, let url = URL(string: posterUrl) {
+                        KFImage(url)
+                            .placeholder {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.cardBackground)
+                                    .overlay(
+                                        Image(systemName: "film")
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(Color.textMuted)
+                                    )
+                            }
+                            .resizable()
+                            .aspectRatio(2/3, contentMode: .fill)
+                    } else {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.cardBackground)
+                            .overlay(
+                                Image(systemName: "film")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Color.textMuted)
+                            )
+                    }
+                }
+                .frame(width: 40, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(movie.title)
@@ -250,14 +269,32 @@ struct AddToPlanSheet: View {
 
     private func selectedMovieHeader(_ movie: Movie) -> some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.cardBackground)
-                .frame(width: 50, height: 75)
-                .overlay(
-                    Image(systemName: "film")
-                        .font(.system(size: 18))
-                        .foregroundStyle(Color.textMuted)
-                )
+            SwiftUI.Group {
+                if let posterUrl = movie.posterUrl, let url = URL(string: posterUrl) {
+                    KFImage(url)
+                        .placeholder {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.cardBackground)
+                                .overlay(
+                                    Image(systemName: "film")
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(Color.textMuted)
+                                )
+                        }
+                        .resizable()
+                        .aspectRatio(2/3, contentMode: .fill)
+                } else {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.cardBackground)
+                        .overlay(
+                            Image(systemName: "film")
+                                .font(.system(size: 18))
+                                .foregroundStyle(Color.textMuted)
+                        )
+                }
+            }
+            .frame(width: 50, height: 75)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(movie.title)

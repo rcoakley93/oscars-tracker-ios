@@ -91,6 +91,14 @@ final class DashboardViewModel: ObservableObject {
         movies.count
     }
 
+    /// Total runtime in minutes for unwatched movies
+    var minutesRemaining: Int {
+        movies
+            .filter { !watchedMovieIds.contains($0.id) }
+            .compactMap { $0.runtimeMinutes }
+            .reduce(0, +)
+    }
+
     /// Initialize and load data
     init() {}
 

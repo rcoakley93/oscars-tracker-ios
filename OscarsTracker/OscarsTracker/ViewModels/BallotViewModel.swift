@@ -14,12 +14,12 @@ final class BallotViewModel: ObservableObject {
 
     private let supabase = SupabaseClientManager.shared.client
 
-    /// The date when the ballot locks (Oscars ceremony start - March 2, 2025 at 5:00 PM PT)
+    /// The date when the ballot locks (Oscars ceremony start - March 15, 2026 at 5:00 PM PT)
     let ballotLockDate: Date = {
         var components = DateComponents()
-        components.year = 2025
+        components.year = 2026
         components.month = 3
-        components.day = 2
+        components.day = 15
         components.hour = 17
         components.minute = 0
         components.timeZone = TimeZone(identifier: "America/Los_Angeles")

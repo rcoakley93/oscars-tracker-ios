@@ -5,6 +5,7 @@ struct ProgressHeroView: View {
     let watchedCount: Int
     let totalCount: Int
     let oscarDate: Date
+    let minutesRemaining: Int
 
     private var percentage: Double {
         guard totalCount > 0 else { return 0 }
@@ -40,6 +41,17 @@ struct ProgressHeroView: View {
         }
     }
 
+    private var formattedMinutesRemaining: String {
+        let hours = minutesRemaining / 60
+        let mins = minutesRemaining % 60
+        if hours == 0 {
+            return "\(mins)m"
+        } else if mins == 0 {
+            return "\(hours)h"
+        }
+        return "\(hours)h \(mins)m"
+    }
+
     var body: some View {
         VStack(spacing: 20) {
             // Progress section
@@ -64,7 +76,7 @@ struct ProgressHeroView: View {
                 .background(Color.borderColor)
 
             // Stats section
-            HStack(spacing: 24) {
+            HStack(spacing: 16) {
                 // Days remaining
                 VStack(spacing: 4) {
                     Text("\(daysRemaining)")
@@ -88,13 +100,27 @@ struct ProgressHeroView: View {
                         .font(.bodySmall)
                         .foregroundStyle(Color.textMuted)
                 }
+
+                Divider()
+                    .frame(height: 40)
+                    .background(Color.borderColor)
+
+                // Minutes remaining
+                VStack(spacing: 4) {
+                    Text(formattedMinutesRemaining)
+                        .font(.headingMedium)
+                        .foregroundStyle(Color.goldPrimary)
+                    Text("remaining")
+                        .font(.bodySmall)
+                        .foregroundStyle(Color.textMuted)
+                }
             }
         }
         .padding(.vertical, 24)
         .padding(.horizontal, 20)
         .glassCard()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Progress: \(watchedCount) of \(totalCount) movies watched, \(daysRemaining) days until Oscars")
+        .accessibilityLabel("Progress: \(watchedCount) of \(totalCount) movies watched, \(daysRemaining) days until Oscars, \(formattedMinutesRemaining) remaining")
     }
 }
 
@@ -125,7 +151,8 @@ struct ProgressBarView: View {
         ProgressHeroView(
             watchedCount: 15,
             totalCount: 42,
-            oscarDate: Calendar.current.date(byAdding: .day, value: 68, to: Date())!
+            oscarDate: Calendar.current.date(byAdding: .day, value: 68, to: Date())!,
+            minutesRemaining: 2970
         )
         .padding()
     }
