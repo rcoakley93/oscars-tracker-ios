@@ -113,3 +113,12 @@
 - Icon size: `.font(.system(size: 56))` with `.foregroundStyle(Color.goldPrimary)`
 - Title uses `.headingMedium`, subtitle uses `.bodyMedium` with `.textMuted`
 - Always check `data.isEmpty` after loading completes to show empty state
+
+### Actor Category Display Pattern
+- Use `CategoryNominee` struct to carry both `movie: Movie` and `detailText: String?`
+- `CategoryWithMovies.isActorCategory` computed property detects actor/actress categories
+- For actor categories, display actor name (from detailText) as primary headline
+- Display movie title with year (e.g., "Movie Title (2025)") as secondary subheadline
+- Sort actor categories by actor name, other categories by movie title
+- Use `Text(verbatim:)` for year display to prevent comma formatting (2,025 -> 2025)
+- Accessibility labels include "Actor Name in Movie Title" format for actor categories

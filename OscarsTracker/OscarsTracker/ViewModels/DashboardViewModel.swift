@@ -99,8 +99,8 @@ final class DashboardViewModel: ObservableObject {
             // Create a dictionary mapping movie IDs to movies for quick lookup
             let movieDict = Dictionary(uniqueKeysWithValues: movies.map { ($0.id, $0) })
 
-            // Group nominations by category and extract unique movies
-            var categoryMoviesDict: [Int: [Movie]] = [:]
+            // Group nominations by category, preserving detail text (actor names)
+            var categoryNomineesDict: [Int: [CategoryNominee]] = [:]
             for nomination in nominationsResponse {
                 guard let categoryId = nomination.categoryId,
                       let movieId = nomination.movieId else { continue }
@@ -115,25 +115,46 @@ final class DashboardViewModel: ObservableObject {
 
                 guard let validMovie = movie else { continue }
 
-                if categoryMoviesDict[categoryId] == nil {
-                    categoryMoviesDict[categoryId] = []
+                if categoryNomineesDict[categoryId] == nil {
+                    categoryNomineesDict[categoryId] = []
                 }
 
-                // Add movie if not already in the category (same movie can be nominated multiple times)
-                if !categoryMoviesDict[categoryId]!.contains(where: { $0.id == validMovie.id }) {
-                    categoryMoviesDict[categoryId]!.append(validMovie)
+                // Create CategoryNominee with movie and detail text (actor name)
+                let nominee = CategoryNominee(
+                    id: nomination.id,
+                    movie: validMovie,
+                    detailText: nomination.detailText
+                )
+
+                // Add nominee (for actor categories, same movie can have different actors)
+                // For non-actor categories, avoid duplicates by movie id
+                let isDuplicate = categoryNomineesDict[categoryId]!.contains { existing in
+                    existing.movie.id == validMovie.id && existing.detailText == nomination.detailText
+                }
+                if !isDuplicate {
+                    categoryNomineesDict[categoryId]!.append(nominee)
                 }
             }
 
             // Create CategoryWithMovies array
             categoriesWithMovies = categoriesResponse.compactMap { category in
-                guard let categoryMovies = categoryMoviesDict[category.id], !categoryMovies.isEmpty else {
+                guard let nominees = categoryNomineesDict[category.id], !nominees.isEmpty else {
                     return nil
                 }
+
+                // Sort by actor name for actor categories, by movie title otherwise
+                let sortedNominees: [CategoryNominee]
+                let isActorCategory = ["actor", "actress"].contains(where: { category.name.lowercased().contains($0) })
+                if isActorCategory {
+                    sortedNominees = nominees.sorted { ($0.detailText ?? "") < ($1.detailText ?? "") }
+                } else {
+                    sortedNominees = nominees.sorted { $0.movie.title < $1.movie.title }
+                }
+
                 return CategoryWithMovies(
                     id: category.id,
                     name: category.name,
-                    movies: categoryMovies.sorted { $0.title < $1.title }
+                    nominees: sortedNominees
                 )
             }
         } catch {

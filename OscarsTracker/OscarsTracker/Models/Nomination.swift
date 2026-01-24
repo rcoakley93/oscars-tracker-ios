@@ -28,9 +28,33 @@ struct CategoryWithNominations: Identifiable {
     let nominations: [Nomination]
 }
 
-/// Category with associated movies for dashboard category view
+/// A nominee in a category (movie + optional detail like actor name)
+struct CategoryNominee: Identifiable {
+    let id: Int  // nomination id
+    let movie: Movie
+    let detailText: String?  // Actor name for actor categories
+
+    /// Check if this category has actor/person as the primary subject
+    var hasActorDetail: Bool {
+        detailText != nil && !detailText!.isEmpty
+    }
+}
+
+/// Category with associated nominees for dashboard category view
 struct CategoryWithMovies: Identifiable {
     let id: Int
     let name: String
-    let movies: [Movie]
+    let nominees: [CategoryNominee]
+
+    /// Check if this is an actor/performer category
+    var isActorCategory: Bool {
+        let actorKeywords = ["actor", "actress", "supporting actor", "supporting actress"]
+        let lowercaseName = name.lowercased()
+        return actorKeywords.contains { lowercaseName.contains($0) }
+    }
+
+    /// Legacy accessor for backwards compatibility
+    var movies: [Movie] {
+        nominees.map { $0.movie }
+    }
 }

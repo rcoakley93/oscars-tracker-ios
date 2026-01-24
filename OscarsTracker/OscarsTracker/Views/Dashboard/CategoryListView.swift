@@ -58,12 +58,13 @@ struct CategoryListView: View {
     @ViewBuilder
     private func categoryMoviesGrid(for category: CategoryWithMovies) -> some View {
         VStack(spacing: 12) {
-            ForEach(category.movies) { movie in
+            ForEach(category.nominees) { nominee in
                 CategoryMovieRow(
-                    movie: movie,
-                    isWatched: watchedMovieIds.contains(movie.id),
+                    nominee: nominee,
+                    isActorCategory: category.isActorCategory,
+                    isWatched: watchedMovieIds.contains(nominee.movie.id),
                     onToggleWatched: {
-                        onToggleWatched(movie.id)
+                        onToggleWatched(nominee.movie.id)
                     }
                 )
             }
@@ -97,28 +98,65 @@ struct CategoryHeaderView: View {
 }
 
 /// A row displaying a movie with watch toggle in the category list.
+/// For actor categories, displays actor name as primary and movie title as secondary.
 struct CategoryMovieRow: View {
-    let movie: Movie
+    let nominee: CategoryNominee
+    let isActorCategory: Bool
     let isWatched: Bool
     let onToggleWatched: () -> Void
+
+    private var movie: Movie { nominee.movie }
+
+    /// Primary headline text - actor name for actor categories, movie title otherwise
+    private var headlineText: String {
+        if isActorCategory, let actorName = nominee.detailText, !actorName.isEmpty {
+            return actorName
+        }
+        return movie.title
+    }
+
+    /// Subheadline text - movie title (year) for actor categories, year/runtime otherwise
+    private var subheadlineText: String? {
+        if isActorCategory, let actorName = nominee.detailText, !actorName.isEmpty {
+            // Show "Movie Title (2025)" format
+            if let year = movie.releaseYear {
+                return "\(movie.title) (\(year))"
+            }
+            return movie.title
+        }
+        return nil  // Non-actor categories don't need this
+    }
 
     var body: some View {
         HStack(spacing: 12) {
             // Poster thumbnail
             posterThumbnail
 
-            // Movie info
+            // Movie/Actor info
             VStack(alignment: .leading, spacing: 4) {
-                Text(movie.title)
+                // Primary headline (actor name or movie title)
+                Text(headlineText)
                     .font(.bodyMedium)
                     .foregroundStyle(Color.textPrimary)
                     .lineLimit(2)
 
+                // Subheadline for actor categories (movie title with year)
+                if let subheadline = subheadlineText {
+                    Text(subheadline)
+                        .font(.caption)
+                        .foregroundStyle(Color.textMuted)
+                        .lineLimit(1)
+                }
+
+                // Runtime info (shown for all categories)
                 HStack(spacing: 8) {
-                    if let year = movie.releaseYear {
-                        Text(String(year))
-                            .font(.caption)
-                            .foregroundStyle(Color.textMuted)
+                    // For non-actor categories, show year here
+                    if !isActorCategory || subheadlineText == nil {
+                        if let year = movie.releaseYear {
+                            Text(verbatim: "\(year)")
+                                .font(.caption)
+                                .foregroundStyle(Color.textMuted)
+                        }
                     }
 
                     if !movie.formattedRuntime.isEmpty {
@@ -144,14 +182,21 @@ struct CategoryMovieRow: View {
                 .stroke(isWatched ? Color.goldPrimary.opacity(0.5) : Color.borderColor, lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(movie.title), \(isWatched ? "watched" : "not watched")")
+        .accessibilityLabel(accessibilityLabelText)
         .accessibilityHint("Double tap to toggle watched status")
+    }
+
+    private var accessibilityLabelText: String {
+        if isActorCategory, let actorName = nominee.detailText, !actorName.isEmpty {
+            return "\(actorName) in \(movie.title), \(isWatched ? "watched" : "not watched")"
+        }
+        return "\(movie.title), \(isWatched ? "watched" : "not watched")"
     }
 
     // MARK: - Subviews
 
     private var posterThumbnail: some View {
-        Group {
+        SwiftUI.Group {
             if let posterUrl = movie.posterUrl, let url = URL(string: posterUrl) {
                 KFImage(url)
                     .placeholder {
@@ -199,18 +244,19 @@ struct CategoryMovieRow: View {
                 CategoryWithMovies(
                     id: 1,
                     name: "Best Picture",
-                    movies: [
-                        Movie(id: 1, title: "The Brutalist", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 215, createdAt: nil),
-                        Movie(id: 2, title: "Anora", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 139, createdAt: nil),
-                        Movie(id: 3, title: "Conclave", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 120, createdAt: nil)
+                    nominees: [
+                        CategoryNominee(id: 1, movie: Movie(id: 1, title: "The Brutalist", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 215, createdAt: nil), detailText: nil),
+                        CategoryNominee(id: 2, movie: Movie(id: 2, title: "Anora", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 139, createdAt: nil), detailText: nil),
+                        CategoryNominee(id: 3, movie: Movie(id: 3, title: "Conclave", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 120, createdAt: nil), detailText: nil)
                     ]
                 ),
                 CategoryWithMovies(
                     id: 2,
-                    name: "Best Director",
-                    movies: [
-                        Movie(id: 1, title: "The Brutalist", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 215, createdAt: nil),
-                        Movie(id: 4, title: "Emilia Pérez", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 130, createdAt: nil)
+                    name: "Best Actor",
+                    nominees: [
+                        CategoryNominee(id: 4, movie: Movie(id: 1, title: "The Brutalist", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 215, createdAt: nil), detailText: "Adrien Brody"),
+                        CategoryNominee(id: 5, movie: Movie(id: 4, title: "A Complete Unknown", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 140, createdAt: nil), detailText: "Timothée Chalamet"),
+                        CategoryNominee(id: 6, movie: Movie(id: 5, title: "Sing Sing", posterUrl: nil, releaseYear: 2024, runtimeMinutes: 107, createdAt: nil), detailText: "Colman Domingo")
                     ]
                 )
             ],
