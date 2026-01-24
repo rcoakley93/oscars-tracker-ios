@@ -7,7 +7,7 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        Group {
+        SwiftUI.Group {
             if horizontalSizeClass == .regular {
                 // iPad: Use sidebar navigation
                 iPadNavigationView
@@ -60,33 +60,17 @@ struct ContentView: View {
     private var iPadNavigationView: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar
-            List(selection: $selectedTab) {
+            List {
                 Section {
-                    NavigationLink(value: Tab.dashboard) {
-                        Label("Dashboard", systemImage: "film.fill")
-                    }
-
-                    NavigationLink(value: Tab.watchPlan) {
-                        Label("Watch Plan", systemImage: "calendar")
-                    }
-
-                    NavigationLink(value: Tab.ballot) {
-                        Label("Ballot", systemImage: "checkmark.seal.fill")
-                    }
-
-                    NavigationLink(value: Tab.leaderboard) {
-                        Label("Leaderboard", systemImage: "trophy.fill")
-                    }
+                    sidebarButton(tab: .dashboard, label: "Dashboard", icon: "film.fill")
+                    sidebarButton(tab: .watchPlan, label: "Watch Plan", icon: "calendar")
+                    sidebarButton(tab: .ballot, label: "Ballot", icon: "checkmark.seal.fill")
+                    sidebarButton(tab: .leaderboard, label: "Leaderboard", icon: "trophy.fill")
                 }
 
                 Section("More") {
-                    NavigationLink(value: Tab.groups) {
-                        Label("Groups", systemImage: "person.3.fill")
-                    }
-
-                    NavigationLink(value: Tab.profile) {
-                        Label("Profile", systemImage: "person.circle.fill")
-                    }
+                    sidebarButton(tab: .groups, label: "Groups", icon: "person.3.fill")
+                    sidebarButton(tab: .profile, label: "Profile", icon: "person.circle.fill")
                 }
             }
             .navigationTitle("Oscars Tracker")
@@ -110,6 +94,17 @@ struct ContentView: View {
                 ProfilePlaceholderView()
             }
         }
+    }
+
+    // MARK: - Sidebar Button Helper
+
+    private func sidebarButton(tab: Tab, label: String, icon: String) -> some View {
+        Button {
+            selectedTab = tab
+        } label: {
+            Label(label, systemImage: icon)
+        }
+        .listRowBackground(selectedTab == tab ? Color.goldPrimary.opacity(0.2) : Color.clear)
     }
 }
 
@@ -190,13 +185,53 @@ struct DashboardPlaceholderView: View {
     // MARK: - View Mode Picker
 
     private var viewModePicker: some View {
-        Picker("View Mode", selection: $viewModel.viewMode) {
-            ForEach(DashboardViewMode.allCases, id: \.self) { mode in
-                Text(mode.rawValue).tag(mode)
+        VStack(spacing: 12) {
+            Picker("View Mode", selection: $viewModel.viewMode) {
+                ForEach(DashboardViewMode.allCases, id: \.self) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("View mode selector")
+
+            // Grid/List toggle for Master List mode
+            if viewModel.viewMode == .masterList {
+                displayModePicker
             }
         }
-        .pickerStyle(.segmented)
-        .accessibilityLabel("View mode selector")
+    }
+
+    // MARK: - Display Mode Picker (Grid/List)
+
+    private var displayModePicker: some View {
+        HStack(spacing: 8) {
+            ForEach(MasterListDisplayMode.allCases, id: \.self) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewModel.masterListDisplayMode = mode
+                    }
+                    HapticManager.selection()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: mode == .grid ? "square.grid.2x2" : "list.bullet")
+                            .font(.system(size: 14))
+                        Text(mode.rawValue)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(viewModel.masterListDisplayMode == mode ? Color.black : Color.textMuted)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(viewModel.masterListDisplayMode == mode ? Color.goldPrimary : Color.secondaryBackground)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(mode.rawValue) view")
+                .accessibilityAddTraits(viewModel.masterListDisplayMode == mode ? .isSelected : [])
+            }
+            Spacer()
+        }
     }
 
     // MARK: - Dashboard Content
@@ -205,16 +240,30 @@ struct DashboardPlaceholderView: View {
     private var dashboardContent: some View {
         switch viewModel.viewMode {
         case .masterList:
-            MovieGridView(
-                movies: viewModel.movies,
-                watchedMovieIds: viewModel.watchedMovieIds,
-                onToggleWatched: { movieId in
-                    Task {
-                        await viewModel.toggleWatched(movieId: movieId)
+            if viewModel.masterListDisplayMode == .grid {
+                MovieGridView(
+                    movies: viewModel.movies,
+                    watchedMovieIds: viewModel.watchedMovieIds,
+                    onToggleWatched: { movieId in
+                        Task {
+                            await viewModel.toggleWatched(movieId: movieId)
+                        }
                     }
-                }
-            )
-            .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+                )
+                .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+            } else {
+                // List mode - uses compact row view similar to Category view
+                MovieListView(
+                    movies: viewModel.movies,
+                    watchedMovieIds: viewModel.watchedMovieIds,
+                    onToggleWatched: { movieId in
+                        Task {
+                            await viewModel.toggleWatched(movieId: movieId)
+                        }
+                    }
+                )
+                .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+            }
 
         case .byCategory:
             if viewModel.categoriesWithMovies.isEmpty {

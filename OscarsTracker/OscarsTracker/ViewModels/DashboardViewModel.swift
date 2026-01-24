@@ -7,6 +7,12 @@ enum DashboardViewMode: String, CaseIterable {
     case byCategory = "By Category"
 }
 
+/// Display mode for master list (grid vs list)
+enum MasterListDisplayMode: String, CaseIterable {
+    case grid = "Grid"
+    case list = "List"
+}
+
 /// Manages dashboard state and movie data.
 @MainActor
 final class DashboardViewModel: ObservableObject {
@@ -15,6 +21,7 @@ final class DashboardViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var viewMode: DashboardViewMode = .masterList
+    @Published var masterListDisplayMode: MasterListDisplayMode = .grid
     @Published var categoriesWithMovies: [CategoryWithMovies] = []
 
     private let supabase = SupabaseClientManager.shared.client
