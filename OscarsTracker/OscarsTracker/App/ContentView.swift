@@ -173,6 +173,11 @@ struct DashboardPlaceholderView: View {
             }
             .background(Color.appBackground)
             .navigationTitle("Dashboard")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    sortMenu
+                }
+            }
             .refreshable {
                 await viewModel.loadData()
             }
@@ -199,6 +204,35 @@ struct DashboardPlaceholderView: View {
                 displayModePicker
             }
         }
+    }
+
+    // MARK: - Sort Menu
+
+    private var sortMenu: some View {
+        Menu {
+            ForEach(DashboardSortOption.allCases, id: \.self) { option in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewModel.sortOption = option
+                    }
+                    HapticManager.selection()
+                } label: {
+                    Label {
+                        Text(option.rawValue)
+                    } icon: {
+                        if viewModel.sortOption == option {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.system(size: 16))
+                .foregroundStyle(Color.goldPrimary)
+        }
+        .accessibilityLabel("Sort movies")
+        .accessibilityHint("Currently sorted by \(viewModel.sortOption.rawValue)")
     }
 
     // MARK: - Display Mode Picker (Grid/List)
@@ -242,7 +276,7 @@ struct DashboardPlaceholderView: View {
         case .masterList:
             if viewModel.masterListDisplayMode == .grid {
                 MovieGridView(
-                    movies: viewModel.movies,
+                    movies: viewModel.sortedMovies,
                     watchedMovieIds: viewModel.watchedMovieIds,
                     onToggleWatched: { movieId in
                         Task {
@@ -254,7 +288,7 @@ struct DashboardPlaceholderView: View {
             } else {
                 // List mode - uses compact row view similar to Category view
                 MovieListView(
-                    movies: viewModel.movies,
+                    movies: viewModel.sortedMovies,
                     watchedMovieIds: viewModel.watchedMovieIds,
                     onToggleWatched: { movieId in
                         Task {

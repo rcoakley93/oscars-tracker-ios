@@ -13,6 +13,23 @@ enum MasterListDisplayMode: String, CaseIterable {
     case list = "List"
 }
 
+/// Sort option for dashboard movies
+enum DashboardSortOption: String, CaseIterable {
+    case titleAZ = "Title (A-Z)"
+    case titleZA = "Title (Z-A)"
+    case runtimeAsc = "Runtime ↑"
+    case runtimeDesc = "Runtime ↓"
+
+    var systemImage: String {
+        switch self {
+        case .titleAZ: return "textformat.abc"
+        case .titleZA: return "textformat.abc"
+        case .runtimeAsc: return "clock"
+        case .runtimeDesc: return "clock.fill"
+        }
+    }
+}
+
 /// Manages dashboard state and movie data.
 @MainActor
 final class DashboardViewModel: ObservableObject {
@@ -22,7 +39,22 @@ final class DashboardViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var viewMode: DashboardViewMode = .masterList
     @Published var masterListDisplayMode: MasterListDisplayMode = .grid
+    @Published var sortOption: DashboardSortOption = .titleAZ
     @Published var categoriesWithMovies: [CategoryWithMovies] = []
+
+    /// Movies sorted according to current sort option
+    var sortedMovies: [Movie] {
+        switch sortOption {
+        case .titleAZ:
+            return movies.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .titleZA:
+            return movies.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        case .runtimeAsc:
+            return movies.sorted { ($0.runtimeMinutes ?? 0) < ($1.runtimeMinutes ?? 0) }
+        case .runtimeDesc:
+            return movies.sorted { ($0.runtimeMinutes ?? 0) > ($1.runtimeMinutes ?? 0) }
+        }
+    }
 
     private let supabase = SupabaseClientManager.shared.client
 
