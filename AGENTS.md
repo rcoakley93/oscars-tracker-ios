@@ -146,3 +146,11 @@
 - Helper function `applySortOption(to:)` applies current sort to any movie array
 - Concatenate sorted groups: `sortedUnwatched + sortedWatched`
 - Toggling watched status immediately moves movie due to optimistic UI updates
+
+### Splash Screen Pattern
+- Create SplashView with app branding (logo, name) and ProgressView
+- Add `@Published var isCheckingSession = true` to AuthViewModel
+- Set `isCheckingSession = true` at start of checkSession(), false when complete
+- OscarsTrackerApp shows SplashView while `isCheckingSession` is true
+- Use `.transition(.opacity)` and `.animation(.easeInOut)` for smooth transitions
+- Trophy icon with gold gradient for Oscar-themed branding

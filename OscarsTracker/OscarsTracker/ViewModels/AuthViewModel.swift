@@ -8,6 +8,7 @@ import UIKit
 final class AuthViewModel: ObservableObject {
     @Published var isAuthenticated = false
     @Published var isLoading = false
+    @Published var isCheckingSession = true
     @Published var errorMessage: String?
     @Published var currentUser: User?
     @Published var needsOnboarding = false
@@ -126,6 +127,8 @@ final class AuthViewModel: ObservableObject {
 
     /// Check if there's an existing session
     func checkSession() async {
+        isCheckingSession = true
+
         do {
             let session = try await supabase.auth.session
             currentUser = session.user
@@ -134,6 +137,8 @@ final class AuthViewModel: ObservableObject {
             isAuthenticated = false
             currentUser = nil
         }
+
+        isCheckingSession = false
     }
 
     /// Sign in with email and password

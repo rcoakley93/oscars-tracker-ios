@@ -57,6 +57,7 @@
 		E8123456002D /* AutoSchedulerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502D0 /* AutoSchedulerSheet.swift */; };
 		E8123456002E /* WhatCanIWatchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502E0 /* WhatCanIWatchSheet.swift */; };
 		E8123456002F /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502F0 /* AccessibilityManager.swift */; };
+		E81234560031 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550320 /* SplashView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -110,6 +111,7 @@
 		E812345502E0 /* WhatCanIWatchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatCanIWatchSheet.swift; sourceTree = "<group>"; };
 		E812345502F0 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
 		E81234550300 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E81234550320 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,6 +219,7 @@
 				E81234530010 /* Leaderboard */,
 				E81234530011 /* Profile */,
 				E81234530012 /* Groups */,
+				E81234530013 /* Splash */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -323,6 +326,14 @@
 				E81234550280 /* GroupsView.swift */,
 			);
 			path = Groups;
+			sourceTree = "<group>";
+		};
+		E81234530013 /* Splash */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550320 /* SplashView.swift */,
+			);
+			path = Splash;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -449,6 +460,7 @@
 				E8123456002D /* AutoSchedulerSheet.swift in Sources */,
 				E8123456002E /* WhatCanIWatchSheet.swift in Sources */,
 				E8123456002F /* AccessibilityManager.swift in Sources */,
+				E81234560031 /* SplashView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
