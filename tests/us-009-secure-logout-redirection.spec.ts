@@ -67,12 +67,13 @@ test.describe('US-009: Secure Logout Redirection', () => {
     expect(content).toContain('.environmentObject(authViewModel)');
   });
 
-  test('Navigation uses Group for conditional view switching', async () => {
+  test('Navigation uses ZStack for conditional view switching', async () => {
     const appPath = path.join(OSCARS_TRACKER_ROOT, 'App', 'OscarsTrackerApp.swift');
     const content = fs.readFileSync(appPath, 'utf-8');
 
-    // Check Group wrapper for view switching (not NavigationStack with state)
-    expect(content).toContain('Group {');
+    // Check ZStack wrapper for view switching (not NavigationStack with state)
+    // Using ZStack instead of Group to avoid naming conflict with Group model
+    expect(content).toContain('ZStack {');
   });
 
   test('Delete account resets auth state', async () => {

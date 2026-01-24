@@ -220,30 +220,29 @@ struct LeaderboardRowView: View {
         return "\(percentage)% complete"
     }
 
+    @ViewBuilder
     private var rankView: some View {
-        Group {
-            if let medal = medalType {
-                // Medal for top 3
-                ZStack {
-                    Circle()
-                        .fill(medalColor(medal))
-                        .frame(width: 44, height: 44)
+        if let medal = medalType {
+            // Medal for top 3
+            ZStack {
+                Circle()
+                    .fill(medalColor(medal))
+                    .frame(width: 44, height: 44)
 
-                    Text("\(entry.rank)")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(medal == .gold ? Color.appBackground : Color.white)
-                }
-            } else {
-                // Regular rank number
-                ZStack {
-                    Circle()
-                        .fill(Color.borderColor)
-                        .frame(width: 44, height: 44)
+                Text("\(entry.rank)")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(medal == .gold ? Color.appBackground : Color.white)
+            }
+        } else {
+            // Regular rank number
+            ZStack {
+                Circle()
+                    .fill(Color.borderColor)
+                    .frame(width: 44, height: 44)
 
-                    Text("\(entry.rank)")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.textPrimary)
-                }
+                Text("\(entry.rank)")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.textPrimary)
             }
         }
     }

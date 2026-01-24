@@ -6,7 +6,7 @@ struct OscarsTrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
+            ZStack {
                 if authViewModel.isCheckingSession {
                     // Show splash screen while checking authentication
                     SplashView()

@@ -218,12 +218,12 @@ struct ProfileSkeletonView: View {
 
             // Stats card
             HStack {
-                ForEach(0..<3, id: \.self) { _ in
+                ForEach(0..<3, id: \.self) { index in
                     VStack(spacing: 8) {
                         SkeletonView(width: 40, height: 24)
                         SkeletonView(width: 60, height: 12)
                     }
-                    if _ < 2 {
+                    if index < 2 {
                         Spacer()
                     }
                 }
