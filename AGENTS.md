@@ -154,3 +154,11 @@
 - OscarsTrackerApp shows SplashView while `isCheckingSession` is true
 - Use `.transition(.opacity)` and `.animation(.easeInOut)` for smooth transitions
 - Trophy icon with gold gradient for Oscar-themed branding
+
+### Secure Logout Pattern
+- Use `@EnvironmentObject` to access AuthViewModel from any view
+- Call `authViewModel.signOut()` which sets isAuthenticated = false
+- OscarsTrackerApp uses conditional Group (not NavigationStack) for view switching
+- When isAuthenticated becomes false, app shows LoginView automatically
+- Navigation stack is implicitly reset since views are conditionally rendered
+- After delete account, also reset: `authViewModel.isAuthenticated = false`

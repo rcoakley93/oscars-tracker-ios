@@ -3,6 +3,7 @@ import SwiftUI
 /// Profile view displaying user information and stats.
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
+    @EnvironmentObject private var authViewModel: AuthViewModel
     @State private var showSignOutConfirmation = false
     @State private var showDeleteAccountConfirmation = false
     @FocusState private var isUsernameFieldFocused: Bool
@@ -32,7 +33,7 @@ struct ProfileView: View {
                 Button("Cancel", role: .cancel) {}
                 Button("Sign Out", role: .destructive) {
                     Task {
-                        await viewModel.signOut()
+                        await authViewModel.signOut()
                     }
                 }
             } message: {
@@ -43,6 +44,9 @@ struct ProfileView: View {
                 Button("Delete Account", role: .destructive) {
                     Task {
                         await viewModel.deleteAccount()
+                        // Reset auth state to navigate to login
+                        authViewModel.isAuthenticated = false
+                        authViewModel.currentUser = nil
                     }
                 }
             } message: {
