@@ -138,3 +138,11 @@
 - Add sort menu to toolbar with Menu {} and ForEach over allCases
 - Show checkmark for currently selected option
 - Immediate update: Dashboard content uses sortedMovies instead of movies array
+
+### Unwatched-First Sorting Pattern
+- Always display unwatched movies above watched movies in Dashboard
+- Separate movies into two groups using watchedMovieIds.contains()
+- Apply secondary sorting (Title A-Z, Runtime, etc.) within each group independently
+- Helper function `applySortOption(to:)` applies current sort to any movie array
+- Concatenate sorted groups: `sortedUnwatched + sortedWatched`
+- Toggling watched status immediately moves movie due to optimistic UI updates
