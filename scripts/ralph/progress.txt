@@ -1373,3 +1373,99 @@
   - Computed property sortedMovies keeps original array unmodified
   - **Verified in simulator**: Sort menu opens, selecting Runtime ↓ reorders movies
 ---
+
+## 2026-01-24 - US-006 (v1.3-features)
+- What was implemented:
+  - Modified sortedMovies to separate unwatched and watched movies into distinct groups
+  - Created applySortOption(to:) helper function for applying secondary sort to any movie array
+  - Unwatched movies are sorted by the current sort option, then watched movies sorted the same way
+  - Concatenated result: sortedUnwatched + sortedWatched ensures unwatched always appear first
+  - Default sort option already set to .titleAZ (Title A-Z)
+  - Toggling watched status triggers immediate reordering due to optimistic UI updates
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift
+  - AGENTS.md (added Unwatched-First Sorting Pattern)
+  - tests/us-006-prioritize-unwatched-movies.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Separate movies using filter with watchedMovieIds.contains($0.id)
+  - Helper function pattern: extract sorting logic into reusable applySortOption(to:) method
+  - Computed property automatically recalculates when watchedMovieIds changes (optimistic update triggers reorder)
+  - No UI changes needed - sortedMovies is already used by Dashboard, so behavior automatically applies
+  - All sort options continue to work correctly within each group independently
+---
+
+## 2026-01-24 - US-008 (v1.3-features)
+- What was implemented:
+  - Created SplashView in Views/Splash/ with trophy icon and app name branding
+  - Added isCheckingSession @Published property to AuthViewModel
+  - checkSession() now sets isCheckingSession = true at start, false when complete
+  - OscarsTrackerApp shows SplashView while isCheckingSession is true
+  - Added smooth transitions (.transition(.opacity)) between splash, login, and dashboard
+  - Animation synced to isCheckingSession and isAuthenticated state changes
+  - Trophy icon uses gold gradient with glow effect for Oscar theme
+  - ProgressView with goldPrimary tint as loading indicator
+  - Animation on appear using @State isAnimating with withAnimation
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Splash/SplashView.swift (new)
+  - OscarsTracker/OscarsTracker/ViewModels/AuthViewModel.swift
+  - OscarsTracker/OscarsTracker/App/OscarsTrackerApp.swift
+  - OscarsTracker/OscarsTracker.xcodeproj/project.pbxproj
+  - AGENTS.md
+  - tests/us-008-launch-splash-screen.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Splash screen pattern: add isCheckingSession state to auth flow
+  - Set isCheckingSession = true at start of checkSession(), false when complete
+  - Use .transition(.opacity) on each conditional view for smooth fade transitions
+  - Animate state changes: .animation(.easeInOut, value: authViewModel.isCheckingSession)
+  - Trophy.fill with LinearGradient creates Oscar-themed branding
+  - Blur effect via Circle with opacity and blur for glow background
+---
+
+## 2026-01-24 - US-009 (v1.3-features)
+- What was implemented:
+  - ProfileView now uses @EnvironmentObject to access AuthViewModel
+  - Sign Out action calls authViewModel.signOut() instead of viewModel.signOut()
+  - authViewModel.signOut() sets isAuthenticated = false and currentUser = nil
+  - Delete Account action also resets authViewModel.isAuthenticated = false
+  - OscarsTrackerApp uses conditional Group (not NavigationStack with state)
+  - When isAuthenticated becomes false, LoginView is shown automatically
+  - Navigation stack is implicitly reset since views are conditionally rendered
+  - No back navigation possible because previous view hierarchy is destroyed
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Profile/ProfileView.swift
+  - AGENTS.md
+  - tests/us-009-secure-logout-redirection.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Use @EnvironmentObject for shared auth state across app
+  - Conditional view rendering (Group with if/else) provides natural navigation reset
+  - When parent view hierarchy changes, child navigation state is destroyed
+  - This pattern prevents "back button to authenticated view" security issue
+  - Both signOut and deleteAccount need to reset auth state for proper redirect
+---
+
+## 2026-01-24 - US-007 (v1.3-features)
+- What was implemented:
+  - Created LeaderboardTab enum with moviesWatched and correctPredictions cases
+  - Added @State selectedTab for tracking current tab
+  - Added segmented Picker with .pickerStyle(.segmented) for tab bar
+  - Switch statement routes to moviesWatchedContent or correctPredictionsContent
+  - Movies Watched tab shows existing leaderboard list with watched count as primary metric
+  - LeaderboardRowView updated to show watchedCount prominently with percentage text
+  - Correct Predictions tab shows "Coming Soon" placeholder with sparkles icon
+  - Explanatory message: "Prediction rankings will be available after the Academy Awards ceremony"
+  - Data fetching via viewModel.loadData() unchanged (uses get_leaderboard RPC)
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Leaderboard/LeaderboardView.swift
+  - AGENTS.md
+  - tests/us-007-leaderboard-tabs.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Use enum with raw values for tab display names
+  - Picker with .segmented style creates native iOS segmented control
+  - Switch on selectedTab to render different content views
+  - "Coming Soon" pattern: icon + displaySmall title + bodyMedium description + Spacers
+  - Keep existing data fetching logic; just change how data is displayed per tab
+---

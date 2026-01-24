@@ -42,17 +42,31 @@ final class DashboardViewModel: ObservableObject {
     @Published var sortOption: DashboardSortOption = .titleAZ
     @Published var categoriesWithMovies: [CategoryWithMovies] = []
 
-    /// Movies sorted according to current sort option
+    /// Movies sorted with unwatched first, then by current sort option within each group
     var sortedMovies: [Movie] {
+        // Separate into unwatched and watched groups
+        let unwatched = movies.filter { !watchedMovieIds.contains($0.id) }
+        let watched = movies.filter { watchedMovieIds.contains($0.id) }
+
+        // Apply secondary sort to each group
+        let sortedUnwatched = applySortOption(to: unwatched)
+        let sortedWatched = applySortOption(to: watched)
+
+        // Unwatched always appear above watched
+        return sortedUnwatched + sortedWatched
+    }
+
+    /// Apply the current sort option to a list of movies
+    private func applySortOption(to movieList: [Movie]) -> [Movie] {
         switch sortOption {
         case .titleAZ:
-            return movies.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+            return movieList.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
         case .titleZA:
-            return movies.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+            return movieList.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
         case .runtimeAsc:
-            return movies.sorted { ($0.runtimeMinutes ?? 0) < ($1.runtimeMinutes ?? 0) }
+            return movieList.sorted { ($0.runtimeMinutes ?? 0) < ($1.runtimeMinutes ?? 0) }
         case .runtimeDesc:
-            return movies.sorted { ($0.runtimeMinutes ?? 0) > ($1.runtimeMinutes ?? 0) }
+            return movieList.sorted { ($0.runtimeMinutes ?? 0) > ($1.runtimeMinutes ?? 0) }
         }
     }
 

@@ -138,3 +138,54 @@
 - Add sort menu to toolbar with Menu {} and ForEach over allCases
 - Show checkmark for currently selected option
 - Immediate update: Dashboard content uses sortedMovies instead of movies array
+
+### Unwatched-First Sorting Pattern
+- Always display unwatched movies above watched movies in Dashboard
+- Separate movies into two groups using watchedMovieIds.contains()
+- Apply secondary sorting (Title A-Z, Runtime, etc.) within each group independently
+- Helper function `applySortOption(to:)` applies current sort to any movie array
+- Concatenate sorted groups: `sortedUnwatched + sortedWatched`
+- Toggling watched status immediately moves movie due to optimistic UI updates
+
+### Splash Screen Pattern
+- Create SplashView with app branding (logo, name) and ProgressView
+- Add `@Published var isCheckingSession = true` to AuthViewModel
+- Set `isCheckingSession = true` at start of checkSession(), false when complete
+- OscarsTrackerApp shows SplashView while `isCheckingSession` is true
+- Use `.transition(.opacity)` and `.animation(.easeInOut)` for smooth transitions
+- Trophy icon with gold gradient for Oscar-themed branding
+
+### Secure Logout Pattern
+- Use `@EnvironmentObject` to access AuthViewModel from any view
+- Call `authViewModel.signOut()` which sets isAuthenticated = false
+- OscarsTrackerApp uses conditional ZStack (not NavigationStack) for view switching
+- When isAuthenticated becomes false, app shows LoginView automatically
+- Navigation stack is implicitly reset since views are conditionally rendered
+- After delete account, also reset: `authViewModel.isAuthenticated = false`
+
+### Tabbed Leaderboard Pattern
+- Use enum for tab options: `enum LeaderboardTab: String, CaseIterable`
+- Add `@State private var selectedTab` for tracking selected tab
+- Use `.pickerStyle(.segmented)` for tab bar appearance
+- Switch content based on selectedTab with `switch selectedTab`
+- "Coming Soon" placeholder: sparkles icon + displaySmall text + bodyMedium description
+- Row view focuses on primary metric (watched count) with percentage as secondary
+
+## Build Fixes & Gotchas
+
+### Group Model Naming Conflict
+- Project has a `Group` model which conflicts with SwiftUI's `Group` container
+- Use `ZStack` instead of `Group` in OscarsTrackerApp for conditional view switching
+- Use `@ViewBuilder` annotation instead of `Group {}` wrapper in computed properties
+
+### ForEach Underscore Pattern
+- `ForEach(0..<3, id: \.self) { _ in ... }` - cannot use `_` in conditions inside body
+- Use named parameter: `ForEach(0..<3, id: \.self) { index in ... }`
+
+### Supabase SDK API Changes
+- `apiError.message` is no longer optional in newer Supabase SDK
+- Change `if let message = apiError.message?.lowercased()` to `let message = apiError.message.lowercased()`
+
+### Model Conformances
+- Models used in `.onChange(of:)` must conform to `Equatable`
+- Add `Equatable` to protocol conformances: `struct Model: Codable, Identifiable, Equatable`

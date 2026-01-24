@@ -8,6 +8,7 @@ import UIKit
 final class AuthViewModel: ObservableObject {
     @Published var isAuthenticated = false
     @Published var isLoading = false
+    @Published var isCheckingSession = true
     @Published var errorMessage: String?
     @Published var currentUser: User?
     @Published var needsOnboarding = false
@@ -108,13 +109,12 @@ final class AuthViewModel: ObservableObject {
     private func mapGoogleAuthError(_ error: AuthError) -> String {
         switch error {
         case .api(let apiError):
-            if let message = apiError.message?.lowercased() {
-                if message.contains("cancelled") || message.contains("canceled") {
-                    return "Sign in was cancelled."
-                }
-                if message.contains("network") {
-                    return "Network error. Please check your connection."
-                }
+            let message = apiError.message.lowercased()
+            if message.contains("cancelled") || message.contains("canceled") {
+                return "Sign in was cancelled."
+            }
+            if message.contains("network") {
+                return "Network error. Please check your connection."
             }
             return "Failed to sign in with Google. Please try again."
         case .sessionNotFound:
@@ -126,6 +126,8 @@ final class AuthViewModel: ObservableObject {
 
     /// Check if there's an existing session
     func checkSession() async {
+        isCheckingSession = true
+
         do {
             let session = try await supabase.auth.session
             currentUser = session.user
@@ -134,6 +136,8 @@ final class AuthViewModel: ObservableObject {
             isAuthenticated = false
             currentUser = nil
         }
+
+        isCheckingSession = false
     }
 
     /// Sign in with email and password
@@ -285,16 +289,15 @@ final class AuthViewModel: ObservableObject {
     private func mapAuthError(_ error: AuthError) -> String {
         switch error {
         case .api(let apiError):
-            if let message = apiError.message?.lowercased() {
-                if message.contains("invalid") || message.contains("credentials") {
-                    return "Invalid email or password. Please try again."
-                }
-                if message.contains("not found") {
-                    return "No account found with this email."
-                }
-                if message.contains("too many") {
-                    return "Too many attempts. Please try again later."
-                }
+            let message = apiError.message.lowercased()
+            if message.contains("invalid") || message.contains("credentials") {
+                return "Invalid email or password. Please try again."
+            }
+            if message.contains("not found") {
+                return "No account found with this email."
+            }
+            if message.contains("too many") {
+                return "Too many attempts. Please try again later."
             }
             return "Authentication failed. Please check your credentials."
         default:
@@ -306,19 +309,18 @@ final class AuthViewModel: ObservableObject {
     private func mapSignUpError(_ error: AuthError) -> String {
         switch error {
         case .api(let apiError):
-            if let message = apiError.message?.lowercased() {
-                if message.contains("already registered") || message.contains("already exists") {
-                    return "An account with this email already exists."
-                }
-                if message.contains("password") && message.contains("weak") {
-                    return "Password is too weak. Please use a stronger password."
-                }
-                if message.contains("email") && message.contains("invalid") {
-                    return "Please enter a valid email address."
-                }
-                if message.contains("too many") {
-                    return "Too many attempts. Please try again later."
-                }
+            let message = apiError.message.lowercased()
+            if message.contains("already registered") || message.contains("already exists") {
+                return "An account with this email already exists."
+            }
+            if message.contains("password") && message.contains("weak") {
+                return "Password is too weak. Please use a stronger password."
+            }
+            if message.contains("email") && message.contains("invalid") {
+                return "Please enter a valid email address."
+            }
+            if message.contains("too many") {
+                return "Too many attempts. Please try again later."
             }
             return "Sign up failed. Please try again."
         default:
