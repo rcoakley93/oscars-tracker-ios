@@ -315,6 +315,13 @@ struct CategoryCard: View {
         viewModel.pointsEarned(for: category)
     }
 
+    /// Check if this is an actor/performer category
+    private var isActorCategory: Bool {
+        let actorKeywords = ["actor", "actress"]
+        let lowercaseName = category.name.lowercased()
+        return actorKeywords.contains { lowercaseName.contains($0) }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Category header (always visible)
@@ -413,6 +420,7 @@ struct CategoryCard: View {
                     NominationRow(
                         nomination: nomination,
                         movie: viewModel.movie(for: nomination),
+                        isActorCategory: isActorCategory,
                         isSelected: viewModel.isSelected(nomination: nomination),
                         isWinner: nomination.isWinner == true,
                         isUserCorrect: viewModel.isSelected(nomination: nomination) && nomination.isWinner == true,
@@ -432,9 +440,11 @@ struct CategoryCard: View {
 }
 
 /// Row view for a single nomination with radio button selection.
+/// For actor categories, displays actor name as primary and movie title as secondary.
 struct NominationRow: View {
     let nomination: Nomination
     let movie: Movie?
+    let isActorCategory: Bool
     let isSelected: Bool
     let isWinner: Bool
     let isUserCorrect: Bool
@@ -484,6 +494,27 @@ struct NominationRow: View {
         return Color.textPrimary
     }
 
+    /// Primary headline text - actor name for actor categories, movie title otherwise
+    private var primaryText: String {
+        if isActorCategory, let actorName = nomination.detailText, !actorName.isEmpty {
+            return actorName
+        }
+        return movie?.title ?? "Unknown Movie"
+    }
+
+    /// Secondary text - movie title for actor categories, detail text otherwise
+    private var secondaryText: String? {
+        if isActorCategory, let actorName = nomination.detailText, !actorName.isEmpty {
+            // For actor categories, show movie title as secondary
+            return movie?.title
+        }
+        // For non-actor categories, show detail text if available
+        if let detailText = nomination.detailText, !detailText.isEmpty {
+            return detailText
+        }
+        return nil
+    }
+
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
@@ -514,14 +545,16 @@ struct NominationRow: View {
                 posterView
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(movie?.title ?? "Unknown Movie")
+                    // Primary text: actor name for actor categories, movie title otherwise
+                    Text(primaryText)
                         .font(.bodySmall)
                         .fontWeight(.medium)
                         .foregroundStyle(titleColor)
                         .lineLimit(2)
 
-                    if let detailText = nomination.detailText, !detailText.isEmpty {
-                        Text(detailText)
+                    // Secondary text: movie title for actor categories, detail text otherwise
+                    if let secondary = secondaryText {
+                        Text(secondary)
                             .font(.caption)
                             .foregroundStyle(Color.textMuted)
                             .lineLimit(1)
@@ -550,8 +583,16 @@ struct NominationRow: View {
         .disabled(isLocked)
         .opacity(isLocked ? (isWinner ? 1.0 : 0.6) : 1.0)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")\(isWinner ? ", winner" : "")\(isUserCorrect ? ", correct prediction" : "")\(isUserIncorrect ? ", incorrect prediction" : "")")
+        .accessibilityLabel(accessibilityLabelText)
         .accessibilityHint(isLocked ? "Ballot is locked, selections cannot be changed" : "Double tap to \(isSelected ? "deselect" : "select") this prediction")
+    }
+
+    private var accessibilityLabelText: String {
+        let statusText = "\(isSelected ? "selected" : "not selected")\(isWinner ? ", winner" : "")\(isUserCorrect ? ", correct prediction" : "")\(isUserIncorrect ? ", incorrect prediction" : "")"
+        if isActorCategory, let actorName = nomination.detailText, !actorName.isEmpty {
+            return "\(actorName) in \(movie?.title ?? "Unknown Movie"), \(statusText)"
+        }
+        return "\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(statusText)"
     }
 
     // MARK: - Poster View

@@ -175,7 +175,9 @@ struct DashboardPlaceholderView: View {
             .navigationTitle("Dashboard")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    sortMenu
+                    if viewModel.viewMode == .masterList {
+                        sortMenu
+                    }
                 }
             }
             .refreshable {
