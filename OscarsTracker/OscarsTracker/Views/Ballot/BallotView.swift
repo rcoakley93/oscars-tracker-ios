@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 /// Ballot view showing all award categories with expandable nominations.
 struct BallotView: View {
@@ -509,15 +510,8 @@ struct NominationRow: View {
                     }
                 }
 
-                // Poster placeholder
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.cardBackground)
-                    .frame(width: 40, height: 60)
-                    .overlay(
-                        Image(systemName: "film")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.textMuted)
-                    )
+                // Movie poster with Kingfisher image loading
+                posterView
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(movie?.title ?? "Unknown Movie")
@@ -558,6 +552,41 @@ struct NominationRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(movie?.title ?? "Unknown Movie"), \(nomination.detailText ?? ""), \(isSelected ? "selected" : "not selected")\(isWinner ? ", winner" : "")\(isUserCorrect ? ", correct prediction" : "")\(isUserIncorrect ? ", incorrect prediction" : "")")
         .accessibilityHint(isLocked ? "Ballot is locked, selections cannot be changed" : "Double tap to \(isSelected ? "deselect" : "select") this prediction")
+    }
+
+    // MARK: - Poster View
+
+    /// Poster image with Kingfisher loading and fallback placeholder
+    private var posterView: some View {
+        SwiftUI.Group {
+            if let posterUrl = movie?.posterUrl, let url = URL(string: posterUrl) {
+                KFImage(url)
+                    .placeholder {
+                        posterPlaceholder
+                    }
+                    .resizable()
+                    .aspectRatio(2/3, contentMode: .fill)
+            } else {
+                posterPlaceholder
+            }
+        }
+        .frame(width: 40, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(isSelected ? Color.goldPrimary.opacity(0.5) : Color.borderColor.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    /// Fallback placeholder when poster URL is nil or image fails to load
+    private var posterPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(Color.cardBackground)
+            .overlay(
+                Image(systemName: "film")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.textMuted)
+            )
     }
 }
 
