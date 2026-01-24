@@ -1,0 +1,699 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		13502F312F0ED0740004D325 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E81234580001 /* Supabase */; };
+		13502F322F0ED0740004D325 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E81234580002 /* Kingfisher */; };
+		E81234560001 /* OscarsTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550001 /* OscarsTrackerApp.swift */; };
+		E81234560002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550002 /* ContentView.swift */; };
+		E81234560003 /* Movie.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550003 /* Movie.swift */; };
+		E81234560004 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550004 /* Category.swift */; };
+		E81234560005 /* Nomination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550005 /* Nomination.swift */; };
+		E81234560006 /* UserWatched.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550006 /* UserWatched.swift */; };
+		E81234560007 /* WatchPlanItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550007 /* WatchPlanItem.swift */; };
+		E81234560008 /* UserPrediction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550008 /* UserPrediction.swift */; };
+		E81234560009 /* Group.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550009 /* Group.swift */; };
+		E8123456000A /* GroupMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500A0 /* GroupMember.swift */; };
+		E8123456000B /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500B0 /* Profile.swift */; };
+		E8123456000C /* LeaderboardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500C0 /* LeaderboardEntry.swift */; };
+		E8123456000D /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500D0 /* SupabaseClient.swift */; };
+		E8123456000E /* Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500E0 /* Color+Extensions.swift */; };
+		E8123456000F /* Font+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345500F0 /* Font+Extensions.swift */; };
+		E81234560010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E81234550100 /* Assets.xcassets */; };
+		E81234560011 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550110 /* GlassCard.swift */; };
+		E81234560012 /* GoldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550120 /* GoldButtonStyle.swift */; };
+		E81234560013 /* GoldGlowModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550130 /* GoldGlowModifier.swift */; };
+		E81234560014 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550140 /* AuthViewModel.swift */; };
+		E81234560015 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550150 /* LoginView.swift */; };
+		E81234560016 /* SignUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550160 /* SignUpView.swift */; };
+		E81234560017 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550170 /* OnboardingView.swift */; };
+		E81234560018 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550180 /* OnboardingViewModel.swift */; };
+		E81234560019 /* ProgressHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550190 /* ProgressHeroView.swift */; };
+		E8123456001A /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501A0 /* DashboardViewModel.swift */; };
+		E8123456001B /* MovieCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501B0 /* MovieCardView.swift */; };
+		E8123456001C /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501C0 /* HapticManager.swift */; };
+		E8123456001D /* WatchPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501D0 /* WatchPlanView.swift */; };
+		E8123456001E /* WatchPlanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501E0 /* WatchPlanViewModel.swift */; };
+		E8123456001F /* AddToPlanSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345501F0 /* AddToPlanSheet.swift */; };
+		E81234560020 /* BallotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550200 /* BallotView.swift */; };
+		E81234560021 /* BallotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550210 /* BallotViewModel.swift */; };
+		E81234560022 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550220 /* LeaderboardView.swift */; };
+		E81234560023 /* LeaderboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550230 /* LeaderboardViewModel.swift */; };
+		E81234560024 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550240 /* ProfileView.swift */; };
+		E81234560025 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550250 /* ProfileViewModel.swift */; };
+		E81234560026 /* GoogleLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550260 /* GoogleLogoView.swift */; };
+		E81234560027 /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550270 /* CategoryListView.swift */; };
+		E81234560028 /* GroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550280 /* GroupsView.swift */; };
+		E81234560029 /* GroupsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550290 /* GroupsViewModel.swift */; };
+		E8123456002A /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502A0 /* LoadingView.swift */; };
+		E8123456002B /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502B0 /* ErrorView.swift */; };
+		E8123456002C /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502C0 /* EmptyStateView.swift */; };
+		E81234560030 /* PlanCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81234550310 /* PlanCalendarView.swift */; };
+		E8123456002D /* AutoSchedulerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502D0 /* AutoSchedulerSheet.swift */; };
+		E8123456002E /* WhatCanIWatchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502E0 /* WhatCanIWatchSheet.swift */; };
+		E8123456002F /* AccessibilityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812345502F0 /* AccessibilityManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E81234550000 /* OscarsTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OscarsTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E81234550001 /* OscarsTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OscarsTrackerApp.swift; sourceTree = "<group>"; };
+		E81234550002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E81234550003 /* Movie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Movie.swift; sourceTree = "<group>"; };
+		E81234550004 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
+		E81234550005 /* Nomination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nomination.swift; sourceTree = "<group>"; };
+		E81234550006 /* UserWatched.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWatched.swift; sourceTree = "<group>"; };
+		E81234550007 /* WatchPlanItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanItem.swift; sourceTree = "<group>"; };
+		E81234550008 /* UserPrediction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPrediction.swift; sourceTree = "<group>"; };
+		E81234550009 /* Group.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Group.swift; sourceTree = "<group>"; };
+		E812345500A0 /* GroupMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupMember.swift; sourceTree = "<group>"; };
+		E812345500B0 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
+		E812345500C0 /* LeaderboardEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardEntry.swift; sourceTree = "<group>"; };
+		E812345500D0 /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
+		E812345500E0 /* Color+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Extensions.swift"; sourceTree = "<group>"; };
+		E812345500F0 /* Font+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Extensions.swift"; sourceTree = "<group>"; };
+		E81234550100 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E81234550110 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		E81234550120 /* GoldButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldButtonStyle.swift; sourceTree = "<group>"; };
+		E81234550130 /* GoldGlowModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldGlowModifier.swift; sourceTree = "<group>"; };
+		E81234550140 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		E81234550150 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		E81234550160 /* SignUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpView.swift; sourceTree = "<group>"; };
+		E81234550170 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E81234550180 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		E81234550190 /* ProgressHeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressHeroView.swift; sourceTree = "<group>"; };
+		E812345501A0 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		E812345501B0 /* MovieCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieCardView.swift; sourceTree = "<group>"; };
+		E812345501C0 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		E812345501D0 /* WatchPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanView.swift; sourceTree = "<group>"; };
+		E812345501E0 /* WatchPlanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchPlanViewModel.swift; sourceTree = "<group>"; };
+		E812345501F0 /* AddToPlanSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlanSheet.swift; sourceTree = "<group>"; };
+		E81234550200 /* BallotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallotView.swift; sourceTree = "<group>"; };
+		E81234550210 /* BallotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallotViewModel.swift; sourceTree = "<group>"; };
+		E81234550220 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
+		E81234550230 /* LeaderboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewModel.swift; sourceTree = "<group>"; };
+		E81234550240 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		E81234550250 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		E81234550260 /* GoogleLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleLogoView.swift; sourceTree = "<group>"; };
+		E81234550270 /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
+		E81234550280 /* GroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsView.swift; sourceTree = "<group>"; };
+		E81234550290 /* GroupsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsViewModel.swift; sourceTree = "<group>"; };
+		E812345502A0 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		E812345502B0 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
+		E812345502C0 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		E81234550310 /* PlanCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanCalendarView.swift; sourceTree = "<group>"; };
+		E812345502D0 /* AutoSchedulerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSchedulerSheet.swift; sourceTree = "<group>"; };
+		E812345502E0 /* WhatCanIWatchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatCanIWatchSheet.swift; sourceTree = "<group>"; };
+		E812345502F0 /* AccessibilityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityManager.swift; sourceTree = "<group>"; };
+		E81234550300 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E81234540001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				13502F322F0ED0740004D325 /* Kingfisher in Frameworks */,
+				13502F312F0ED0740004D325 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E81234530000 = {
+			isa = PBXGroup;
+			children = (
+				E81234530001 /* OscarsTracker */,
+				E81234530002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E81234530001 /* OscarsTracker */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550300 /* Info.plist */,
+				E81234530003 /* App */,
+				E81234530004 /* Models */,
+				E81234530005 /* Services */,
+				E81234530006 /* ViewModels */,
+				E81234530007 /* Views */,
+				E81234530008 /* Components */,
+				E81234530009 /* Utilities */,
+				E8123453000A /* Resources */,
+			);
+			path = OscarsTracker;
+			sourceTree = "<group>";
+		};
+		E81234530002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550000 /* OscarsTracker.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E81234530003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550001 /* OscarsTrackerApp.swift */,
+				E81234550002 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E81234530004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550003 /* Movie.swift */,
+				E81234550004 /* Category.swift */,
+				E81234550005 /* Nomination.swift */,
+				E81234550006 /* UserWatched.swift */,
+				E81234550007 /* WatchPlanItem.swift */,
+				E81234550008 /* UserPrediction.swift */,
+				E81234550009 /* Group.swift */,
+				E812345500A0 /* GroupMember.swift */,
+				E812345500B0 /* Profile.swift */,
+				E812345500C0 /* LeaderboardEntry.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E81234530005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				E812345500D0 /* SupabaseClient.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E81234530006 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550140 /* AuthViewModel.swift */,
+				E81234550180 /* OnboardingViewModel.swift */,
+				E812345501A0 /* DashboardViewModel.swift */,
+				E812345501E0 /* WatchPlanViewModel.swift */,
+				E81234550210 /* BallotViewModel.swift */,
+				E81234550230 /* LeaderboardViewModel.swift */,
+				E81234550250 /* ProfileViewModel.swift */,
+				E81234550290 /* GroupsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		E81234530007 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E8123453000B /* Auth */,
+				E8123453000C /* Onboarding */,
+				E8123453000D /* Dashboard */,
+				E8123453000E /* WatchPlan */,
+				E8123453000F /* Ballot */,
+				E81234530010 /* Leaderboard */,
+				E81234530011 /* Profile */,
+				E81234530012 /* Groups */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E81234530008 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550110 /* GlassCard.swift */,
+				E81234550120 /* GoldButtonStyle.swift */,
+				E81234550130 /* GoldGlowModifier.swift */,
+				E81234550260 /* GoogleLogoView.swift */,
+				E812345502A0 /* LoadingView.swift */,
+				E812345502B0 /* ErrorView.swift */,
+				E812345502C0 /* EmptyStateView.swift */,
+				E81234550310 /* PlanCalendarView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E81234530009 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				E812345502F0 /* AccessibilityManager.swift */,
+				E812345500E0 /* Color+Extensions.swift */,
+				E812345500F0 /* Font+Extensions.swift */,
+				E812345501C0 /* HapticManager.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E8123453000A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550100 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		E8123453000B /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550150 /* LoginView.swift */,
+				E81234550160 /* SignUpView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		E8123453000C /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550170 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		E8123453000D /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550190 /* ProgressHeroView.swift */,
+				E812345501B0 /* MovieCardView.swift */,
+				E81234550270 /* CategoryListView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		E8123453000E /* WatchPlan */ = {
+			isa = PBXGroup;
+			children = (
+				E812345501D0 /* WatchPlanView.swift */,
+				E812345501F0 /* AddToPlanSheet.swift */,
+				E812345502D0 /* AutoSchedulerSheet.swift */,
+				E812345502E0 /* WhatCanIWatchSheet.swift */,
+			);
+			path = WatchPlan;
+			sourceTree = "<group>";
+		};
+		E8123453000F /* Ballot */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550200 /* BallotView.swift */,
+			);
+			path = Ballot;
+			sourceTree = "<group>";
+		};
+		E81234530010 /* Leaderboard */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550220 /* LeaderboardView.swift */,
+			);
+			path = Leaderboard;
+			sourceTree = "<group>";
+		};
+		E81234530011 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550240 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		E81234530012 /* Groups */ = {
+			isa = PBXGroup;
+			children = (
+				E81234550280 /* GroupsView.swift */,
+			);
+			path = Groups;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E81234520000 /* OscarsTracker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E81234510001 /* Build configuration list for PBXNativeTarget "OscarsTracker" */;
+			buildPhases = (
+				E81234540000 /* Sources */,
+				E81234540001 /* Frameworks */,
+				E81234540002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OscarsTracker;
+			packageProductDependencies = (
+				E81234580001 /* Supabase */,
+				E81234580002 /* Kingfisher */,
+			);
+			productName = OscarsTracker;
+			productReference = E81234550000 /* OscarsTracker.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E81234510000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					E81234520000 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = E81234510002 /* Build configuration list for PBXProject "OscarsTracker" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E81234530000;
+			packageReferences = (
+				E81234570001 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				E81234570002 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
+			productRefGroup = E81234530002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E81234520000 /* OscarsTracker */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E81234540002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E81234560010 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E81234540000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E81234560001 /* OscarsTrackerApp.swift in Sources */,
+				E81234560002 /* ContentView.swift in Sources */,
+				E81234560003 /* Movie.swift in Sources */,
+				E81234560004 /* Category.swift in Sources */,
+				E81234560005 /* Nomination.swift in Sources */,
+				E81234560006 /* UserWatched.swift in Sources */,
+				E81234560007 /* WatchPlanItem.swift in Sources */,
+				E81234560008 /* UserPrediction.swift in Sources */,
+				E81234560009 /* Group.swift in Sources */,
+				E8123456000A /* GroupMember.swift in Sources */,
+				E8123456000B /* Profile.swift in Sources */,
+				E8123456000C /* LeaderboardEntry.swift in Sources */,
+				E8123456000D /* SupabaseClient.swift in Sources */,
+				E8123456000E /* Color+Extensions.swift in Sources */,
+				E8123456000F /* Font+Extensions.swift in Sources */,
+				E81234560011 /* GlassCard.swift in Sources */,
+				E81234560012 /* GoldButtonStyle.swift in Sources */,
+				E81234560013 /* GoldGlowModifier.swift in Sources */,
+				E81234560014 /* AuthViewModel.swift in Sources */,
+				E81234560015 /* LoginView.swift in Sources */,
+				E81234560016 /* SignUpView.swift in Sources */,
+				E81234560017 /* OnboardingView.swift in Sources */,
+				E81234560018 /* OnboardingViewModel.swift in Sources */,
+				E81234560019 /* ProgressHeroView.swift in Sources */,
+				E8123456001A /* DashboardViewModel.swift in Sources */,
+				E8123456001B /* MovieCardView.swift in Sources */,
+				E8123456001C /* HapticManager.swift in Sources */,
+				E8123456001D /* WatchPlanView.swift in Sources */,
+				E8123456001E /* WatchPlanViewModel.swift in Sources */,
+				E8123456001F /* AddToPlanSheet.swift in Sources */,
+				E81234560020 /* BallotView.swift in Sources */,
+				E81234560021 /* BallotViewModel.swift in Sources */,
+				E81234560022 /* LeaderboardView.swift in Sources */,
+				E81234560023 /* LeaderboardViewModel.swift in Sources */,
+				E81234560024 /* ProfileView.swift in Sources */,
+				E81234560025 /* ProfileViewModel.swift in Sources */,
+				E81234560026 /* GoogleLogoView.swift in Sources */,
+				E81234560027 /* CategoryListView.swift in Sources */,
+				E81234560028 /* GroupsView.swift in Sources */,
+				E81234560029 /* GroupsViewModel.swift in Sources */,
+				E8123456002A /* LoadingView.swift in Sources */,
+				E8123456002B /* ErrorView.swift in Sources */,
+				E8123456002C /* EmptyStateView.swift in Sources */,
+				E81234560030 /* PlanCalendarView.swift in Sources */,
+				E8123456002D /* AutoSchedulerSheet.swift in Sources */,
+				E8123456002E /* WhatCanIWatchSheet.swift in Sources */,
+				E8123456002F /* AccessibilityManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E81234500001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		E81234500002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E81234500003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OscarsTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E81234500004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OscarsTracker/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E81234510001 /* Build configuration list for PBXNativeTarget "OscarsTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E81234500003 /* Debug */,
+				E81234500004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E81234510002 /* Build configuration list for PBXProject "OscarsTracker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E81234500001 /* Debug */,
+				E81234500002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E81234570001 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		E81234570002 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E81234580001 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E81234570001 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		E81234580002 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E81234570002 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E81234510000 /* Project object */;
+}

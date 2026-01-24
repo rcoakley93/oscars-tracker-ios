@@ -1,0 +1,38 @@
+# Test: Login Flow
+# Logs in with test credentials - run this first before other tests
+# Set environment variables: MAESTRO_TEST_EMAIL and MAESTRO_TEST_PASSWORD
+appId: com.oscars.tracker
+
+---
+- launchApp
+
+# Wait for login screen
+- extendedWaitUntil:
+    visible: "Oscars Tracker"
+    timeout: 10000
+
+- takeScreenshot: screenshots/00-login-screen
+
+# Tap email field and enter email
+- tapOn:
+    text: "Email"
+- inputText: ${MAESTRO_TEST_EMAIL}
+
+# Tap password field and enter password
+- tapOn:
+    text: "Password"
+- inputText: ${MAESTRO_TEST_PASSWORD}
+
+# Hide keyboard
+- hideKeyboard
+
+# Tap Sign In button (the gold button)
+- tapOn:
+    text: "Sign In"
+
+# Wait for main app to load
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 15000
+
+- takeScreenshot: screenshots/00-logged-in

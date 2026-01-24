@@ -1,0 +1,6 @@
+# Maestro Configuration for OscarsTracker iOS App
+appId: com.oscars.tracker
+
+# Environment settings
+env:
+  APP_NAME: OscarsTracker

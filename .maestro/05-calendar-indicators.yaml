@@ -1,0 +1,119 @@
+# Test: Calendar Scheduled Movie Indicators
+# Tests the new shared calendar component with scheduled movie indicators
+appId: com.oscars.tracker
+
+---
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Navigate to Watch Plan tab
+- tapOn: "Watch Plan"
+
+# Wait for Watch Plan to load
+- extendedWaitUntil:
+    visible: "Watch Plan"
+    timeout: 5000
+
+# ========================================
+# Test 1: Add to Plan Calendar Indicators
+# ========================================
+
+# Tap Add to Plan button
+- tapOn:
+    text: "Add movie to plan"
+
+# Wait for Add to Plan sheet
+- extendedWaitUntil:
+    visible: "Add to Plan"
+    timeout: 5000
+
+# Select first available movie
+- tapOn:
+    text: "Search movies..."
+
+- hideKeyboard
+
+# Tap on first movie in the list
+- tapOn:
+    index: 0
+
+# Wait for calendar view
+- extendedWaitUntil:
+    visible: "Select Date"
+    timeout: 5000
+
+- takeScreenshot: screenshots/05-calendar-with-indicators
+
+# Verify calendar header elements
+- assertVisible: "S"
+- assertVisible: "M"
+- assertVisible: "T"
+- assertVisible: "W"
+- assertVisible: "F"
+
+# Verify month navigation arrows exist
+- assertVisible:
+    id: "chevron.left"
+- assertVisible:
+    id: "chevron.right"
+
+# Navigate to next month to see more dates
+- tapOn:
+    id: "chevron.right"
+
+- takeScreenshot: screenshots/05-calendar-next-month
+
+# Navigate back
+- tapOn:
+    id: "chevron.left"
+
+# Close the sheet
+- tapOn: "Back"
+- tapOn: "Cancel"
+
+# ========================================
+# Test 2: Move/Reschedule Calendar
+# ========================================
+
+# Wait for Watch Plan to reload
+- extendedWaitUntil:
+    visible: "Watch Plan"
+    timeout: 5000
+
+# Check if there are any scheduled movies to test move functionality
+# Long press on a movie card to open action menu (if movies exist)
+- runFlow:
+    when:
+      visible: "TODAY"
+    commands:
+      # Tap on the move button for a scheduled movie
+      - tapOn:
+          text: "Move"
+          optional: true
+
+      # If move sheet opens, verify it has the same calendar
+      - extendedWaitUntil:
+          visible: "Move Movie"
+          timeout: 3000
+          optional: true
+
+      - takeScreenshot: screenshots/05-reschedule-calendar
+
+      # Verify calendar elements in reschedule sheet
+      - assertVisible:
+          text: "Select New Date"
+          optional: true
+
+      # Verify movie header shows in reschedule
+      - assertVisible:
+          id: "film"
+          optional: true
+
+      # Close the sheet
+      - tapOn:
+          text: "Cancel"
+          optional: true

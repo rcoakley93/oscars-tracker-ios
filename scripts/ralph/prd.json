@@ -1,0 +1,65 @@
+{
+  "branchName": "ryan/ios-app-v1.1-fixes",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix Actor Category Display Hierarchy",
+      "acceptanceCriteria": [
+        "List Row view for Actor categories fetches and displays 'Actor Name' in the primary headline slot",
+        "Movie Title is moved to the secondary sub-headline slot",
+        "Year remains visible and formatted correctly next to movie title (e.g., 'Movie Title (2025)')"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "UI/UX Improvement - Invert current hierarchy to prioritize Actor name"
+    },
+    {
+      "id": "US-002",
+      "title": "Implement Dashboard List View Toggle",
+      "acceptanceCriteria": [
+        "Dashboard includes a segmented control or toggle button to switch between 'Grid' and 'List' modes",
+        "State variable created to manage and persist the selected view preference",
+        "List mode renders using the compact 'ListRow' component (reused from Category view) for consistency"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "New Feature - Users need a compact view option"
+    },
+    {
+      "id": "US-003",
+      "title": "Add Dashboard Sorting Logic",
+      "acceptanceCriteria": [
+        "Sort Menu (Picker/Menu) added to the Dashboard navigation bar",
+        "Sorting function implemented for 'Title (A-Z)' and 'Title (Z-A)'",
+        "Sorting function implemented for 'Runtime (Ascending)' and 'Runtime (Descending)'",
+        "Selected sort order updates the movie list immediately"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "New Feature - Requires sort state management"
+    },
+    {
+      "id": "US-004",
+      "title": "Fix Ballot Menu Image Loading",
+      "acceptanceCriteria": [
+        "Ballot model correctly passes 'posterPath' or 'imageURL' to the image loader",
+        "Images render successfully within the Ballot View cells",
+        "Fallback placeholder image displays if the URL is nil or the load fails"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Bug Fix - High priority visual regression"
+    },
+    {
+      "id": "US-005",
+      "title": "Fix Year Number Formatting",
+      "acceptanceCriteria": [
+        "Text view displaying the release year uses Verbatim string interpolation or specific NumberFormatter",
+        "Years display as '2025' instead of '2,025' (commas removed)"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Bug Fix - Cosmetic number formatting issue (Fixed in US-001)"
+    }
+  ]
+}
