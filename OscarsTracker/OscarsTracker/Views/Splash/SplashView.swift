@@ -40,21 +40,17 @@ struct SplashView: View {
         ZStack {
             // Glow effect
             Circle()
-                .fill(Color.goldPrimary.opacity(0.2))
-                .frame(width: 140, height: 140)
-                .blur(radius: 20)
+                .fill(Color.goldPrimary.opacity(0.3))
+                .frame(width: 160, height: 160)
+                .blur(radius: 30)
 
-            // Trophy icon
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color.goldPrimary, Color.goldLight],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .shadow(color: Color.goldPrimary.opacity(0.5), radius: 8, x: 0, y: 4)
+            // App icon logo
+            Image("SplashLogo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 140, height: 140)
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+                .shadow(color: Color.goldPrimary.opacity(0.5), radius: 12, x: 0, y: 6)
         }
         .opacity(isAnimating ? 1 : 0)
         .scaleEffect(isAnimating ? 1 : 0.8)
