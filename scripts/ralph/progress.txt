@@ -1278,3 +1278,98 @@
   - DispatchQueue.main.asyncAfter for delayed transition after selection
   - isDateInToday and isDateInTomorrow for special date labels
 ---
+
+## 2026-01-23 - US-001 (v1.1-fixes)
+- What was implemented:
+  - Created CategoryNominee struct with movie and detailText (actor name) properties
+  - Added isActorCategory computed property to CategoryWithMovies
+  - Updated CategoryMovieRow to accept nominee and isActorCategory parameters
+  - For actor categories: actor name as primary headline, movie title (year) as subheadline
+  - Updated DashboardViewModel.loadCategoriesWithMovies to preserve detailText from nominations
+  - Actor categories now sort by actor name alphabetically
+  - Non-actor categories continue to sort by movie title
+  - Used Text(verbatim:) for year display to prevent comma formatting
+  - Updated accessibility labels to include "Actor Name in Movie Title" for actor categories
+- Files changed:
+  - OscarsTracker/OscarsTracker/Models/Nomination.swift
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift
+  - OscarsTracker/OscarsTracker/Views/Dashboard/CategoryListView.swift
+  - AGENTS.md
+  - tests/us-001-fix-actor-category-display.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - CategoryNominee struct allows carrying both movie and nomination-specific data (actor name)
+  - isActorCategory detection: check category name for "actor", "actress" keywords (case-insensitive)
+  - Computed properties headlineText and subheadlineText centralize display logic based on category type
+  - Text(verbatim:) prevents SwiftUI from applying locale-based number formatting
+  - nominations.detailText is where actor/performer names are stored in the database
+  - For duplicate detection: check both movie.id AND detailText to allow same movie with different actors
+  - Backwards compatibility: CategoryWithMovies.movies accessor maps nominees to their movies
+---
+
+## 2026-01-23 - US-004 (v1.1-fixes)
+- What was implemented:
+  - Added Kingfisher import to BallotView.swift
+  - Created posterView computed property in NominationRow struct
+  - posterView uses KFImage with movie?.posterUrl to load images
+  - posterPlaceholder provides fallback when URL is nil or load fails
+  - Frame set to 40x60 with aspect ratio 2/3 for proper poster proportions
+  - Added rounded corners (cornerRadius: 6) and border overlay
+  - Border color changes based on isSelected state
+- Files changed:
+  - OscarsTracker/OscarsTracker/Views/Ballot/BallotView.swift
+  - tests/us-004-fix-ballot-image-loading.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - NominationRow receives Movie? from viewModel.movie(for: nomination)
+  - Movie model has posterUrl property for TMDB poster path
+  - SwiftUI.Group wrapper needed when using conditional KFImage vs placeholder
+  - KFImage.placeholder {} closure provides loading state view
+  - Consistent poster styling: clipShape then overlay for border
+  - **Verified in simulator**: Ballot view shows posters loading for all nominations
+---
+
+## 2026-01-23 - US-002 (v1.1-fixes)
+- What was implemented:
+  - Created MasterListDisplayMode enum with grid and list cases
+  - Added masterListDisplayMode state variable to DashboardViewModel
+  - Created displayModePicker component with Grid/List toggle buttons
+  - Toggle only appears when in Master List view mode
+  - Created MovieListView and MovieListRow for compact list display
+  - MovieListRow has poster thumbnail, title, year, runtime, watch toggle
+  - Consistent styling with CategoryMovieRow
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - OscarsTracker/OscarsTracker/Views/Dashboard/MovieCardView.swift
+  - tests/us-002-dashboard-list-view-toggle.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - Conditional display of toggles: show only when relevant mode is active
+  - HapticManager.selection() for toggle feedback
+  - withAnimation for smooth transitions between display modes
+  - MovieListRow can be placed in same file as MovieCardView for related components
+  - **Verified in simulator**: Grid/List toggle works, list shows compact rows
+---
+
+## 2026-01-23 - US-003 (v1.1-fixes)
+- What was implemented:
+  - Created DashboardSortOption enum with titleAZ, titleZA, runtimeAsc, runtimeDesc
+  - Added sortOption state variable to DashboardViewModel
+  - Created sortedMovies computed property with switch-based sorting logic
+  - Added sortMenu to Dashboard toolbar with all options
+  - Menu shows checkmark for currently selected option
+  - Dashboard content uses sortedMovies instead of movies array
+- Files changed:
+  - OscarsTracker/OscarsTracker/ViewModels/DashboardViewModel.swift
+  - OscarsTracker/OscarsTracker/App/ContentView.swift
+  - tests/us-003-dashboard-sorting.spec.ts (new)
+  - scripts/ralph/prd.json
+- **Learnings:**
+  - localizedCaseInsensitiveCompare for proper title sorting
+  - .orderedAscending/.orderedDescending for comparison results
+  - Menu {} with ForEach for dynamic menu options
+  - Checkmark indicator using conditional Image in Label
+  - Computed property sortedMovies keeps original array unmodified
+  - **Verified in simulator**: Sort menu opens, selecting Runtime ↓ reorders movies
+---

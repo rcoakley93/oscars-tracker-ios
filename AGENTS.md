@@ -122,3 +122,19 @@
 - Sort actor categories by actor name, other categories by movie title
 - Use `Text(verbatim:)` for year display to prevent comma formatting (2,025 -> 2025)
 - Accessibility labels include "Actor Name in Movie Title" format for actor categories
+
+### Dashboard View Modes Pattern
+- Use enum `MasterListDisplayMode` for Grid/List toggle (separate from Master List/By Category)
+- Show Grid/List toggle only when in Master List mode
+- Create separate components: MovieGridView for grid, MovieListView for list
+- MovieListRow for compact row display (poster thumbnail, title, year, runtime, watch toggle)
+- HapticManager.selection() for toggle feedback
+- withAnimation for smooth transitions between display modes
+
+### Dashboard Sorting Pattern
+- Use enum `DashboardSortOption` for sort options (titleAZ, titleZA, runtimeAsc, runtimeDesc)
+- Create computed property `sortedMovies` that returns sorted array based on option
+- Use `localizedCaseInsensitiveCompare` for proper title sorting
+- Add sort menu to toolbar with Menu {} and ForEach over allCases
+- Show checkmark for currently selected option
+- Immediate update: Dashboard content uses sortedMovies instead of movies array
