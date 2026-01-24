@@ -158,7 +158,7 @@
 ### Secure Logout Pattern
 - Use `@EnvironmentObject` to access AuthViewModel from any view
 - Call `authViewModel.signOut()` which sets isAuthenticated = false
-- OscarsTrackerApp uses conditional Group (not NavigationStack) for view switching
+- OscarsTrackerApp uses conditional ZStack (not NavigationStack) for view switching
 - When isAuthenticated becomes false, app shows LoginView automatically
 - Navigation stack is implicitly reset since views are conditionally rendered
 - After delete account, also reset: `authViewModel.isAuthenticated = false`
@@ -170,3 +170,22 @@
 - Switch content based on selectedTab with `switch selectedTab`
 - "Coming Soon" placeholder: sparkles icon + displaySmall text + bodyMedium description
 - Row view focuses on primary metric (watched count) with percentage as secondary
+
+## Build Fixes & Gotchas
+
+### Group Model Naming Conflict
+- Project has a `Group` model which conflicts with SwiftUI's `Group` container
+- Use `ZStack` instead of `Group` in OscarsTrackerApp for conditional view switching
+- Use `@ViewBuilder` annotation instead of `Group {}` wrapper in computed properties
+
+### ForEach Underscore Pattern
+- `ForEach(0..<3, id: \.self) { _ in ... }` - cannot use `_` in conditions inside body
+- Use named parameter: `ForEach(0..<3, id: \.self) { index in ... }`
+
+### Supabase SDK API Changes
+- `apiError.message` is no longer optional in newer Supabase SDK
+- Change `if let message = apiError.message?.lowercased()` to `let message = apiError.message.lowercased()`
+
+### Model Conformances
+- Models used in `.onChange(of:)` must conform to `Equatable`
+- Add `Equatable` to protocol conformances: `struct Model: Codable, Identifiable, Equatable`
