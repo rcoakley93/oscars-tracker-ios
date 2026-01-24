@@ -162,3 +162,11 @@
 - When isAuthenticated becomes false, app shows LoginView automatically
 - Navigation stack is implicitly reset since views are conditionally rendered
 - After delete account, also reset: `authViewModel.isAuthenticated = false`
+
+### Tabbed Leaderboard Pattern
+- Use enum for tab options: `enum LeaderboardTab: String, CaseIterable`
+- Add `@State private var selectedTab` for tracking selected tab
+- Use `.pickerStyle(.segmented)` for tab bar appearance
+- Switch content based on selectedTab with `switch selectedTab`
+- "Coming Soon" placeholder: sparkles icon + displaySmall text + bodyMedium description
+- Row view focuses on primary metric (watched count) with percentage as secondary

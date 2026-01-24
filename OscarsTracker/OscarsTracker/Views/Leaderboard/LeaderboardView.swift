@@ -1,37 +1,95 @@
 import SwiftUI
 
+/// Leaderboard tab options
+enum LeaderboardTab: String, CaseIterable {
+    case moviesWatched = "Movies Watched"
+    case correctPredictions = "Correct Predictions"
+}
+
 /// Leaderboard view showing global user rankings.
 struct LeaderboardView: View {
     @StateObject private var viewModel = LeaderboardViewModel()
+    @State private var selectedTab: LeaderboardTab = .moviesWatched
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(spacing: 16) {
-                        if viewModel.isLoading && viewModel.entries.isEmpty {
-                            loadingView
-                        } else if viewModel.entries.isEmpty {
-                            emptyStateView
-                        } else {
-                            leaderboardList
-                        }
+            VStack(spacing: 0) {
+                // Tab picker
+                Picker("Leaderboard Tab", selection: $selectedTab) {
+                    ForEach(LeaderboardTab.allCases, id: \.self) { tab in
+                        Text(tab.rawValue).tag(tab)
                     }
-                    .padding()
                 }
-                .background(Color.appBackground)
-                .navigationTitle("Leaderboard")
-                .refreshable {
-                    await viewModel.loadData()
+                .pickerStyle(.segmented)
+                .padding()
+                .accessibilityLabel("Leaderboard category selector")
+
+                // Content based on selected tab
+                switch selectedTab {
+                case .moviesWatched:
+                    moviesWatchedContent
+                case .correctPredictions:
+                    correctPredictionsContent
                 }
-                .onChange(of: viewModel.entries) { _, _ in
-                    scrollToCurrentUser(proxy: proxy)
-                }
+            }
+            .background(Color.appBackground)
+            .navigationTitle("Leaderboard")
+            .refreshable {
+                await viewModel.loadData()
             }
         }
         .task {
             await viewModel.loadData()
         }
+    }
+
+    // MARK: - Movies Watched Tab Content
+
+    private var moviesWatchedContent: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 16) {
+                    if viewModel.isLoading && viewModel.entries.isEmpty {
+                        loadingView
+                    } else if viewModel.entries.isEmpty {
+                        emptyStateView
+                    } else {
+                        leaderboardList
+                    }
+                }
+                .padding()
+            }
+            .onChange(of: viewModel.entries) { _, _ in
+                scrollToCurrentUser(proxy: proxy)
+            }
+        }
+    }
+
+    // MARK: - Correct Predictions Tab Content
+
+    private var correctPredictionsContent: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "sparkles")
+                .font(.system(size: 64))
+                .foregroundStyle(Color.goldPrimary)
+
+            Text("Coming Soon")
+                .font(.displaySmall)
+                .fontWeight(.bold)
+                .foregroundStyle(Color.textPrimary)
+
+            Text("Prediction rankings will be available after the Academy Awards ceremony.")
+                .font(.bodyMedium)
+                .foregroundStyle(Color.textMuted)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+
+            Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Correct Predictions leaderboard coming soon after the Academy Awards ceremony")
     }
 
     // MARK: - Scroll to Current User
@@ -94,7 +152,7 @@ struct LeaderboardView: View {
     }
 }
 
-/// Row view for a single leaderboard entry.
+/// Row view for a single leaderboard entry on Movies Watched tab.
 struct LeaderboardRowView: View {
     let entry: LeaderboardEntry
     let isCurrentUser: Bool
@@ -120,28 +178,22 @@ struct LeaderboardRowView: View {
                     }
                 }
 
-                // Stats row
-                HStack(spacing: 12) {
-                    Label("\(entry.watchedCount) watched", systemImage: "eye.fill")
-                        .font(.caption)
-                        .foregroundStyle(Color.textMuted)
-
-                    Label("\(entry.predictionScore) correct", systemImage: "checkmark.circle.fill")
-                        .font(.caption)
-                        .foregroundStyle(Color.textMuted)
-                }
+                // Watched percentage (assuming total is stored or can be calculated)
+                Text(watchedPercentageText)
+                    .font(.caption)
+                    .foregroundStyle(Color.textMuted)
             }
 
             Spacer()
 
-            // Score
+            // Watched count as primary metric
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(entry.predictionScore)")
+                Text("\(entry.watchedCount)")
                     .font(.displaySmall)
                     .fontWeight(.bold)
                     .foregroundStyle(Color.goldPrimary)
 
-                Text("pts")
+                Text("watched")
                     .font(.caption)
                     .foregroundStyle(Color.textMuted)
             }
@@ -156,7 +208,16 @@ struct LeaderboardRowView: View {
                 .stroke(isCurrentUser ? Color.goldPrimary : Color.borderColor, lineWidth: isCurrentUser ? 2 : 1)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Rank \(entry.rank), \(entry.username), \(entry.predictionScore) points, \(entry.watchedCount) movies watched\(isCurrentUser ? ", this is you" : "")")
+        .accessibilityLabel("Rank \(entry.rank), \(entry.username), \(entry.watchedCount) movies watched\(isCurrentUser ? ", this is you" : "")")
+    }
+
+    /// Display watched percentage/count text
+    private var watchedPercentageText: String {
+        // Assuming a fixed total of nominated movies (e.g., 57 for typical Oscar year)
+        // In production, this would come from the backend
+        let totalMovies = 57
+        let percentage = min(100, (entry.watchedCount * 100) / totalMovies)
+        return "\(percentage)% complete"
     }
 
     private var rankView: some View {
