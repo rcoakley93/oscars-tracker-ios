@@ -87,10 +87,10 @@ struct LoginView: View {
                         if let errorMessage = authViewModel.errorMessage {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                                 Text(errorMessage)
                                     .font(.bodyMedium)
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 4)
@@ -161,7 +161,7 @@ struct LoginView: View {
                             showSignUp = true
                         }
                         .font(.headingMedium)
-                        .foregroundStyle(Color.goldPrimary)
+                        .foregroundStyle(Color.goldLight)
                     }
                     .padding(.top, 8)
 

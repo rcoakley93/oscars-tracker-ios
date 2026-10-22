@@ -83,7 +83,7 @@ struct ProgressHeroView: View {
                 VStack(spacing: 4) {
                     Text(moviesPerDayString)
                         .font(.headingMedium)
-                        .foregroundStyle(Color.goldPrimary)
+                        .foregroundStyle(Color.goldLight)
                     Text("to finish on time")
                         .font(.bodySmall)
                         .foregroundStyle(Color.textMuted)

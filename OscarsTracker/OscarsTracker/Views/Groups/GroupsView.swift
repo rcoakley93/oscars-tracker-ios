@@ -115,7 +115,7 @@ struct GroupsView: View {
             Text("\(count)")
                 .font(.caption)
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.goldPrimary)
+                .foregroundStyle(Color.goldLight)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color.goldPrimary.opacity(0.15))
@@ -186,7 +186,7 @@ struct GroupCard: View {
                         Text("Owner")
                             .font(.caption2)
                             .fontWeight(.semibold)
-                            .foregroundStyle(Color.goldPrimary)
+                            .foregroundStyle(Color.goldLight)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.goldPrimary.opacity(0.15))
@@ -328,7 +328,7 @@ struct CreateGroupSheet: View {
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundStyle(Color.destructive)
+                            .foregroundStyle(Color.destructiveLight)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }
@@ -462,7 +462,7 @@ struct JoinGroupSheet: View {
                     if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .font(.caption)
-                            .foregroundStyle(Color.destructive)
+                            .foregroundStyle(Color.destructiveLight)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }

@@ -81,7 +81,7 @@ struct CategoryHeaderView: View {
         HStack {
             Text(categoryName)
                 .font(.headingSmall)
-                .foregroundStyle(Color.goldPrimary)
+                .foregroundStyle(Color.goldLight)
 
             Spacer()
 

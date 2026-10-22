@@ -79,10 +79,10 @@ struct OnboardingView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: !viewModel.containsProfanity ? "checkmark.circle.fill" : "xmark.circle.fill")
                                     .font(.caption)
-                                    .foregroundStyle(!viewModel.containsProfanity ? Color.green : Color.destructive)
+                                    .foregroundStyle(!viewModel.containsProfanity ? Color.green : Color.destructiveLight)
                                 Text("No inappropriate content")
                                     .font(.caption)
-                                    .foregroundStyle(!viewModel.containsProfanity ? Color.textPrimary : Color.destructive)
+                                    .foregroundStyle(!viewModel.containsProfanity ? Color.textPrimary : Color.destructiveLight)
                             }
                         }
                         .padding(.top, 4)
@@ -92,10 +92,10 @@ struct OnboardingView: View {
                     if let errorMessage = viewModel.errorMessage {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(Color.destructive)
+                                .foregroundStyle(Color.destructiveLight)
                             Text(errorMessage)
                                 .font(.bodyMedium)
-                                .foregroundStyle(Color.destructive)
+                                .foregroundStyle(Color.destructiveLight)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 4)

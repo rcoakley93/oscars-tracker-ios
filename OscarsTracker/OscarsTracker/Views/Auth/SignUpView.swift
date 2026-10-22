@@ -124,10 +124,10 @@ struct SignUpView: View {
                             if !confirmPassword.isEmpty {
                                 HStack(spacing: 4) {
                                     Image(systemName: passwordsMatch ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                        .foregroundStyle(passwordsMatch ? Color.green : Color.destructive)
+                                        .foregroundStyle(passwordsMatch ? Color.green : Color.destructiveLight)
                                     Text(passwordsMatch ? "Passwords match" : "Passwords do not match")
                                         .font(.caption)
-                                        .foregroundStyle(passwordsMatch ? Color.green : Color.destructive)
+                                        .foregroundStyle(passwordsMatch ? Color.green : Color.destructiveLight)
                                 }
                             }
                         }
@@ -139,10 +139,10 @@ struct SignUpView: View {
                         if let errorMessage = authViewModel.errorMessage {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                                 Text(errorMessage)
                                     .font(.bodyMedium)
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 4)
@@ -213,7 +213,7 @@ struct SignUpView: View {
                             showSignUp = false
                         }
                         .font(.headingMedium)
-                        .foregroundStyle(Color.goldPrimary)
+                        .foregroundStyle(Color.goldLight)
                     }
                     .padding(.top, 8)
 
@@ -289,7 +289,7 @@ struct PasswordStrengthView: View {
         case .none:
             return Color.borderColor
         case .weak:
-            return index == 0 ? Color.destructive : Color.borderColor
+            return index == 0 ? Color.destructiveLight : Color.borderColor
         case .medium:
             return index <= 1 ? Color.goldPrimary : Color.borderColor
         case .strong:
@@ -302,7 +302,7 @@ struct PasswordStrengthView: View {
         case .none:
             return Color.textMuted
         case .weak:
-            return Color.destructive
+            return Color.destructiveLight
         case .medium:
             return Color.goldPrimary
         case .strong:

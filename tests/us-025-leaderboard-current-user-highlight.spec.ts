@@ -101,7 +101,7 @@ test.describe('US-025: Leaderboard - Current User Highlight', () => {
     const content = fs.readFileSync(leaderboardViewPath, 'utf-8');
 
     // Check for gold username
-    expect(content).toContain('isCurrentUser ? Color.goldPrimary : Color.textPrimary');
+    expect(content).toContain('isCurrentUser ? Color.goldLight : Color.textPrimary');
   });
 
   test('Scroll anchor is center', async () => {
