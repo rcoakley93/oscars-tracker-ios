@@ -1,0 +1,9 @@
+{
+  "id" : "5147cab9-22e0-4087-8457-5add3255a5fc",
+  "targets" : [
+    {
+      "id" : "3BB4E46E-EE8E-4704-BE86-3CCA273FFFF8",
+      "name" : "OscarsTracker"
+    }
+  ]
+}
