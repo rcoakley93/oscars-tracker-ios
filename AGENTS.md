@@ -17,7 +17,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -projec
 
 - Pick simulators by name and OS that exist on this Mac (`xcrun simctl list devices available`). There is an iPhone Duo simulator on the iOS 27.1 runtime.
 - Use the iOS Simulator tools to launch, screenshot and drive the app, and attach the live panel when the user wants to watch.
-- CI runs on Xcode Cloud (season plan P3-02). Wait for every check to pass, then merge with `gh pr merge <n> --merge`; never `--auto`, which merges at once (no required checks on this repo).
+- CI runs on Xcode Cloud (season plan P3-02), set up in App Store Connect for the `Oscars Tracker` app: **Tests** runs the unit tests on pull requests to `main` and on pushes to `main` (required to pass); **TestFlight** archives `main` and delivers it to TestFlight internal testing. Wait for every check to pass, then merge with `gh pr merge <n> --merge`; never `--auto`, which merges at once (no required checks on this repo).
 
 ## Swift settings
 - Swift 6 language mode, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, approachable concurrency and `MemberImportVisibility`.

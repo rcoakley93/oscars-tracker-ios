@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F3051D706F6E1003707735C5 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8E708AA264E4AD4E7E846E6B /* Supabase */; };
 		65FAFBE37DA22A2C79CDA017 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E18CC5C2C11C139D430B5E13 /* Kingfisher */; };
+		F3051D706F6E1003707735C5 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8E708AA264E4AD4E7E846E6B /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +32,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				OscarsTracker.entitlements,
 			);
 			target = E5DCFEC1E960F8FC5E436FAF /* OscarsTracker */;
 		};
@@ -74,14 +73,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		E2547FC0121CECAEE1B57F8B = {
+		8E1E64432B28A85D64364A58 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				DAF1A2DBC71AF75D677B86E9 /* Config */,
-				2733DDEAABAF95A6DC90ABA4 /* OscarsTracker */,
-				7F7C57E587E6337F23F19F15 /* OscarsTrackerTests */,
-				8E1E64432B28A85D64364A58 /* Products */,
+				3687A5FE000ED2FDFF18BB4F /* OscarsTracker.app */,
+				87F06CC8AA8030F8A6BFBE13 /* OscarsTrackerTests.xctest */,
 			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		DAF1A2DBC71AF75D677B86E9 /* Config */ = {
@@ -92,18 +90,42 @@
 			path = Config;
 			sourceTree = "<group>";
 		};
-		8E1E64432B28A85D64364A58 /* Products */ = {
+		E2547FC0121CECAEE1B57F8B = {
 			isa = PBXGroup;
 			children = (
-				3687A5FE000ED2FDFF18BB4F /* OscarsTracker.app */,
-				87F06CC8AA8030F8A6BFBE13 /* OscarsTrackerTests.xctest */,
+				DAF1A2DBC71AF75D677B86E9 /* Config */,
+				2733DDEAABAF95A6DC90ABA4 /* OscarsTracker */,
+				7F7C57E587E6337F23F19F15 /* OscarsTrackerTests */,
+				8E1E64432B28A85D64364A58 /* Products */,
 			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D047B623CA7BD96E8FE821D2 /* OscarsTrackerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA7CA12E7B2F3E62814A1E32 /* Build configuration list for PBXNativeTarget "OscarsTrackerTests" */;
+			buildPhases = (
+				3BB19FF360B2102FF0AE48A6 /* Sources */,
+				FC2BB9685361B0F764F199ED /* Frameworks */,
+				FB24264EC933B97BBFDCFDF0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8C5CF1CF153C1A07CF89B607 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7F7C57E587E6337F23F19F15 /* OscarsTrackerTests */,
+			);
+			name = OscarsTrackerTests;
+			packageProductDependencies = (
+			);
+			productName = OscarsTrackerTests;
+			productReference = 87F06CC8AA8030F8A6BFBE13 /* OscarsTrackerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		E5DCFEC1E960F8FC5E436FAF /* OscarsTracker */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4343A2E5CCBE5AE6473D9B5F /* Build configuration list for PBXNativeTarget "OscarsTracker" */;
@@ -128,29 +150,6 @@
 			productReference = 3687A5FE000ED2FDFF18BB4F /* OscarsTracker.app */;
 			productType = "com.apple.product-type.application";
 		};
-		D047B623CA7BD96E8FE821D2 /* OscarsTrackerTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = AA7CA12E7B2F3E62814A1E32 /* Build configuration list for PBXNativeTarget "OscarsTrackerTests" */;
-			buildPhases = (
-				3BB19FF360B2102FF0AE48A6 /* Sources */,
-				FC2BB9685361B0F764F199ED /* Frameworks */,
-				FB24264EC933B97BBFDCFDF0 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				8C5CF1CF153C1A07CF89B607 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				7F7C57E587E6337F23F19F15 /* OscarsTrackerTests */,
-			);
-			name = OscarsTrackerTests;
-			packageProductDependencies = (
-			);
-			productName = OscarsTrackerTests;
-			productReference = 87F06CC8AA8030F8A6BFBE13 /* OscarsTrackerTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -161,12 +160,12 @@
 				LastSwiftUpdateCheck = 2710;
 				LastUpgradeCheck = 2710;
 				TargetAttributes = {
-					E5DCFEC1E960F8FC5E436FAF = {
-						CreatedOnToolsVersion = 15.0;
-					};
 					D047B623CA7BD96E8FE821D2 = {
 						CreatedOnToolsVersion = 27.1;
 						TestTargetID = E5DCFEC1E960F8FC5E436FAF;
+					};
+					E5DCFEC1E960F8FC5E436FAF = {
+						CreatedOnToolsVersion = 15.0;
 					};
 				};
 			};
@@ -271,10 +270,18 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -283,24 +290,16 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_TESTABILITY = YES;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				ONLY_ACTIVE_ARCH = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -338,6 +337,8 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -350,19 +351,36 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
+		};
+		48CEFF9AD7FDF43E59D404FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OscarsTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OscarsTracker";
+			};
+			name = Debug;
 		};
 		55CF0ACABD70109B28C2BEF1 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -430,25 +448,6 @@
 			};
 			name = Release;
 		};
-		48CEFF9AD7FDF43E59D404FB /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = ZKXK2PNT5G;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.tests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OscarsTracker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OscarsTracker";
-			};
-			name = Debug;
-		};
 		B3774B241CD85AE54F147D95 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -501,20 +500,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		828A4313AF8003DB38862927 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/supabase-community/supabase-swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.39.0;
-			};
-		};
 		46BE55B8233A4B7251647F53 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 8.0.0;
+			};
+		};
+		828A4313AF8003DB38862927 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.39.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
