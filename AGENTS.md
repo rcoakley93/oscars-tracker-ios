@@ -12,17 +12,17 @@ This is the product: a native SwiftUI app for iPhone, iPhone Duo and iPad, iOS 2
 Run Xcode tools with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (xcode-select points at the Command Line Tools on this Mac).
 
 ```bash
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project OscarsTracker/OscarsTracker.xcodeproj -scheme OscarsTracker -destination 'platform=iOS Simulator,name=iPhone 18 Pro'
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project OscarsTracker/OscarsTracker.xcodeproj -scheme OscarsTracker -destination 'platform=iOS Simulator,name=iPhone Duo'
 ```
 
-- Pick simulators by name and OS that exist on this Mac (`xcrun simctl list devices available`). There is an iPhone Duo simulator on the iOS 27.1 runtime; Device Hub's fold buttons (hold Option for the hinge angle) drive its poses.
+- The deployment target is iOS 27.1. On this Mac the iOS 27.1 simulator runtime supports only the iPhone Duo, so the iPhone 18 Pro and iPad Pro 11" simulators (iOS 27.0) can't run the app until a full 27.1 runtime is installed; test and screenshot on the Duo meanwhile. Pick simulators by name and OS that exist (`xcrun simctl list devices available`). Device Hub's fold buttons (hold Option for the hinge angle) drive the Duo's poses.
 - Use the iOS Simulator tools to launch, screenshot and drive the app, and attach the live panel when the user wants to watch.
 - CI runs on Xcode Cloud (season plan P3-02), set up in App Store Connect for the `Oscars Tracker` app: **Tests** runs the unit tests on pull requests to `main` and on pushes to `main` (required to pass); **TestFlight** archives `main` and delivers it to TestFlight internal testing. Wait for every check to pass, then merge with `gh pr merge <n> --merge`; never `--auto`, which merges at once (no required checks on this repo).
 
 ## Swift settings
 - Swift 6 language mode, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, approachable concurrency and `MemberImportVisibility`.
 - So: code is main-actor isolated unless marked otherwise. Data types that decode from the network or cross actors are `nonisolated` (every `Codable` model is). Import every module whose members you use (`Combine` for `@Published`, `Auth` for Supabase user fields, and so on).
-- The test target is still Swift 5 mode with no default isolation, so the old XCTest suite compiles. New tests use Swift Testing (`import Testing`, `@Test`, `#expect`); move old tests over as their code is rewritten, and then switch the test target to Swift 6.
+- The test target has the same settings (P3-13). New tests use Swift Testing (`import Testing`, `@Test`, `#expect`). The old XCTest classes are `nonisolated` with `@MainActor` test methods and async `setUp`/`tearDown`; move them to Swift Testing as Phase 4 rewrites their code, or delete them with the view model they test.
 
 ## Architecture (P3-03)
 - `App/AppModel.swift`: the app's state, injected with `.environment(model)` and read with `@Environment(AppModel.self)`. It owns one `@Observable` store per area in `Stores/` (session, season, films, ballot, plan, groups, leaderboard, profile) and `AppNavigation`.

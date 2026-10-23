@@ -1,41 +1,47 @@
 import XCTest
 @testable import OscarsTracker
 
-@MainActor
-final class WatchPlanItemTests: XCTestCase {
+nonisolated final class WatchPlanItemTests: XCTestCase {
 
     // MARK: - isMissed Tests
 
+    @MainActor
     func testIsMissed_pastDate() {
         let item = WatchPlanItemFactory.make(plannedDate: .yesterdayString)
         XCTAssertTrue(item.isMissed)
     }
 
+    @MainActor
     func testIsMissed_todayDate() {
         let item = WatchPlanItemFactory.make(plannedDate: .todayString)
         XCTAssertFalse(item.isMissed)
     }
 
+    @MainActor
     func testIsMissed_futureDate() {
         let item = WatchPlanItemFactory.make(plannedDate: .tomorrowString)
         XCTAssertFalse(item.isMissed)
     }
 
+    @MainActor
     func testIsMissed_farPastDate() {
         let item = WatchPlanItemFactory.make(plannedDate: "2020-01-01")
         XCTAssertTrue(item.isMissed)
     }
 
+    @MainActor
     func testIsMissed_farFutureDate() {
         let item = WatchPlanItemFactory.make(plannedDate: "2030-12-31")
         XCTAssertFalse(item.isMissed)
     }
 
+    @MainActor
     func testIsMissed_invalidDateFormat() {
         let item = WatchPlanItemFactory.make(plannedDate: "invalid-date")
         XCTAssertFalse(item.isMissed) // Returns false when date can't be parsed
     }
 
+    @MainActor
     func testIsMissed_emptyDateString() {
         let item = WatchPlanItemFactory.make(plannedDate: "")
         XCTAssertFalse(item.isMissed)
@@ -43,6 +49,7 @@ final class WatchPlanItemTests: XCTestCase {
 
     // MARK: - Identifiable Tests
 
+    @MainActor
     func testIdentifiable() {
         let item1 = WatchPlanItemFactory.make(id: 1)
         let item2 = WatchPlanItemFactory.make(id: 2)
@@ -52,6 +59,7 @@ final class WatchPlanItemTests: XCTestCase {
 
     // MARK: - Movie Attachment Tests
 
+    @MainActor
     func testMovieAttachment() {
         let movie = MovieFactory.make(id: 5, title: "Attached Movie")
         var item = WatchPlanItemFactory.make(id: 1, movieId: 5)
@@ -62,6 +70,7 @@ final class WatchPlanItemTests: XCTestCase {
         XCTAssertEqual(item.movie?.title, "Attached Movie")
     }
 
+    @MainActor
     func testMovieAttachment_nil() {
         let item = WatchPlanItemFactory.make(id: 1)
 
@@ -70,6 +79,7 @@ final class WatchPlanItemTests: XCTestCase {
 
     // MARK: - Codable Tests
 
+    @MainActor
     func testDecodable() throws {
         let json = """
         {
@@ -90,6 +100,7 @@ final class WatchPlanItemTests: XCTestCase {
         XCTAssertEqual(item.createdAt, "2024-01-01T00:00:00Z")
     }
 
+    @MainActor
     func testDecodable_minimalFields() throws {
         let json = """
         {
@@ -106,6 +117,7 @@ final class WatchPlanItemTests: XCTestCase {
         XCTAssertNil(item.createdAt)
     }
 
+    @MainActor
     func testEncodable() throws {
         let item = WatchPlanItemFactory.make(
             id: 1,
@@ -126,6 +138,7 @@ final class WatchPlanItemTests: XCTestCase {
 
     // MARK: - Planned Date Mutation Tests
 
+    @MainActor
     func testPlannedDateMutation() {
         var item = WatchPlanItemFactory.make(plannedDate: "2024-01-15")
 
@@ -138,6 +151,7 @@ final class WatchPlanItemTests: XCTestCase {
 
     // MARK: - Initializer Tests
 
+    @MainActor
     func testInitializer() {
         let item = WatchPlanItem(
             id: 10,
@@ -155,6 +169,7 @@ final class WatchPlanItemTests: XCTestCase {
         XCTAssertNil(item.movie)
     }
 
+    @MainActor
     func testInitializer_nilCreatedAt() {
         let item = WatchPlanItem(
             id: 1,

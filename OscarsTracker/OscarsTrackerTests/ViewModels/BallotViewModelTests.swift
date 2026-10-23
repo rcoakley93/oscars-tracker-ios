@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for BallotViewModel scoring and prediction logic.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class BallotViewModelTests: XCTestCase {
+nonisolated final class BallotViewModelTests: XCTestCase {
 
     var viewModel: BallotViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = BallotViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { BallotViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Sorted Categories Tests
@@ -425,7 +423,7 @@ final class BallotViewModelTests: XCTestCase {
     @MainActor
     func testBallotLockDate_isCorrect() {
         let calendar = Calendar.current
-        var components = calendar.dateComponents(in: TimeZone(identifier: "America/Los_Angeles")!, from: viewModel.ballotLockDate)
+        let components = calendar.dateComponents(in: TimeZone(identifier: "America/Los_Angeles")!, from: viewModel.ballotLockDate)
 
         XCTAssertEqual(components.year, 2025)
         XCTAssertEqual(components.month, 3)

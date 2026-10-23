@@ -1,51 +1,59 @@
 import XCTest
 @testable import OscarsTracker
 
-@MainActor
-final class MovieTests: XCTestCase {
+nonisolated final class MovieTests: XCTestCase {
 
     // MARK: - formattedRuntime Tests
 
+    @MainActor
     func testFormattedRuntime_hoursAndMinutes() {
         let movie = MovieFactory.make(runtimeMinutes: 142)
         XCTAssertEqual(movie.formattedRuntime, "2h 22m")
     }
 
+    @MainActor
     func testFormattedRuntime_exactlyOneHour() {
         let movie = MovieFactory.make(runtimeMinutes: 60)
         XCTAssertEqual(movie.formattedRuntime, "1h")
     }
 
+    @MainActor
     func testFormattedRuntime_exactlyTwoHours() {
         let movie = MovieFactory.make(runtimeMinutes: 120)
         XCTAssertEqual(movie.formattedRuntime, "2h")
     }
 
+    @MainActor
     func testFormattedRuntime_lessThanOneHour() {
         let movie = MovieFactory.make(runtimeMinutes: 45)
         XCTAssertEqual(movie.formattedRuntime, "45m")
     }
 
+    @MainActor
     func testFormattedRuntime_zeroMinutes() {
         let movie = MovieFactory.make(runtimeMinutes: 0)
         XCTAssertEqual(movie.formattedRuntime, "0m")
     }
 
+    @MainActor
     func testFormattedRuntime_oneMinute() {
         let movie = MovieFactory.make(runtimeMinutes: 1)
         XCTAssertEqual(movie.formattedRuntime, "1m")
     }
 
+    @MainActor
     func testFormattedRuntime_nilRuntime() {
         let movie = MovieFactory.make(runtimeMinutes: nil)
         XCTAssertEqual(movie.formattedRuntime, "")
     }
 
+    @MainActor
     func testFormattedRuntime_longMovie() {
         let movie = MovieFactory.make(runtimeMinutes: 238) // Like LOTR
         XCTAssertEqual(movie.formattedRuntime, "3h 58m")
     }
 
+    @MainActor
     func testFormattedRuntime_oneHourOneMinute() {
         let movie = MovieFactory.make(runtimeMinutes: 61)
         XCTAssertEqual(movie.formattedRuntime, "1h 1m")
@@ -53,6 +61,7 @@ final class MovieTests: XCTestCase {
 
     // MARK: - Identifiable Tests
 
+    @MainActor
     func testMovieIdentifiable() {
         let movie1 = MovieFactory.make(id: 1)
         let movie2 = MovieFactory.make(id: 2)
@@ -64,6 +73,7 @@ final class MovieTests: XCTestCase {
 
     // MARK: - Hashable Tests
 
+    @MainActor
     func testMovieHashable() {
         let movie1 = MovieFactory.make(id: 1, title: "Movie A")
         let movie2 = MovieFactory.make(id: 1, title: "Movie A")
@@ -80,6 +90,7 @@ final class MovieTests: XCTestCase {
 
     // MARK: - Codable Tests
 
+    @MainActor
     func testMovieDecodable() throws {
         let json = """
         {
@@ -102,6 +113,7 @@ final class MovieTests: XCTestCase {
         XCTAssertEqual(movie.createdAt, "2024-01-01T00:00:00Z")
     }
 
+    @MainActor
     func testMovieDecodable_missingOptionalFields() throws {
         let json = """
         {
@@ -120,6 +132,7 @@ final class MovieTests: XCTestCase {
         XCTAssertNil(movie.createdAt)
     }
 
+    @MainActor
     func testMovieEncodable() throws {
         let movie = MovieFactory.make(
             id: 1,

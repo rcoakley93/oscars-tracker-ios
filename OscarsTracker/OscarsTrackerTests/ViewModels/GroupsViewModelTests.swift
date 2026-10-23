@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for GroupsViewModel validation and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class GroupsViewModelTests: XCTestCase {
+nonisolated final class GroupsViewModelTests: XCTestCase {
 
     var viewModel: GroupsViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = GroupsViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { GroupsViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Group Name Length Validation Tests
@@ -270,6 +268,7 @@ final class GroupsViewModelTests: XCTestCase {
 
     // MARK: - GroupWithMemberCount Tests
 
+    @MainActor
     func testGroupWithMemberCount_identifiable() {
         let group1 = GroupWithMemberCount(
             id: 1,
@@ -290,6 +289,7 @@ final class GroupsViewModelTests: XCTestCase {
         XCTAssertNotEqual(group1.id, group2.id)
     }
 
+    @MainActor
     func testGroupWithMemberCount_isOwner() {
         var group = GroupWithMemberCount(
             id: 1,
