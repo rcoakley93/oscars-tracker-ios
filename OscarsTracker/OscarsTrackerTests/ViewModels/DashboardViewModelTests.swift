@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for DashboardViewModel sorting and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class DashboardViewModelTests: XCTestCase {
 
     var viewModel: DashboardViewModel!

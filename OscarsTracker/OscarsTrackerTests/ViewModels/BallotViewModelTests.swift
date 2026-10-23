@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for BallotViewModel scoring and prediction logic.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class BallotViewModelTests: XCTestCase {
 
     var viewModel: BallotViewModel!

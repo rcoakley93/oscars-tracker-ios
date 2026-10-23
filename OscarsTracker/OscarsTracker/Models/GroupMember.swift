@@ -1,6 +1,6 @@
 import Foundation
 
-struct GroupMember: Codable, Identifiable {
+nonisolated struct GroupMember: Codable, Identifiable {
     let id: Int
     let groupId: Int?
     let userId: String?

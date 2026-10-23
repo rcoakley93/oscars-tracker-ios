@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for LeaderboardViewModel medal assignment and helper methods.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class LeaderboardViewModelTests: XCTestCase {
 
     var viewModel: LeaderboardViewModel!
@@ -88,10 +89,10 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testIsCurrentUser_matchingUserId() {
         viewModel.currentUserId = "user-123"
 
-        let entry = LeaderboardEntry(
+        let entry = LeaderboardEntry.make(
             userId: "user-123",
             username: "testuser",
-            totalPoints: 100,
+            predictionScore: 100,
             rank: 1
         )
 
@@ -102,10 +103,10 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testIsCurrentUser_differentUserId() {
         viewModel.currentUserId = "user-123"
 
-        let entry = LeaderboardEntry(
+        let entry = LeaderboardEntry.make(
             userId: "user-456",
             username: "otheruser",
-            totalPoints: 100,
+            predictionScore: 100,
             rank: 2
         )
 
@@ -116,10 +117,10 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testIsCurrentUser_nilCurrentUserId() {
         viewModel.currentUserId = nil
 
-        let entry = LeaderboardEntry(
+        let entry = LeaderboardEntry.make(
             userId: "user-123",
             username: "testuser",
-            totalPoints: 100,
+            predictionScore: 100,
             rank: 1
         )
 
@@ -132,9 +133,9 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testCurrentUserEntry_found() {
         viewModel.currentUserId = "user-123"
         viewModel.entries = [
-            LeaderboardEntry(userId: "user-456", username: "user1", predictionScore: 150, rank: 1),
-            LeaderboardEntry(userId: "user-123", username: "currentuser", predictionScore: 100, rank: 2),
-            LeaderboardEntry(userId: "user-789", username: "user2", predictionScore: 50, rank: 3)
+            LeaderboardEntry.make(userId: "user-456", username: "user1", predictionScore: 150, rank: 1),
+            LeaderboardEntry.make(userId: "user-123", username: "currentuser", predictionScore: 100, rank: 2),
+            LeaderboardEntry.make(userId: "user-789", username: "user2", predictionScore: 50, rank: 3)
         ]
 
         let entry = viewModel.currentUserEntry
@@ -148,8 +149,8 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testCurrentUserEntry_notFound() {
         viewModel.currentUserId = "user-999"
         viewModel.entries = [
-            LeaderboardEntry(userId: "user-456", username: "user1", predictionScore: 150, rank: 1),
-            LeaderboardEntry(userId: "user-123", username: "user2", predictionScore: 100, rank: 2)
+            LeaderboardEntry.make(userId: "user-456", username: "user1", predictionScore: 150, rank: 1),
+            LeaderboardEntry.make(userId: "user-123", username: "user2", predictionScore: 100, rank: 2)
         ]
 
         let entry = viewModel.currentUserEntry
@@ -161,7 +162,7 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testCurrentUserEntry_nilCurrentUserId() {
         viewModel.currentUserId = nil
         viewModel.entries = [
-            LeaderboardEntry(userId: "user-123", username: "user1", totalPoints: 100, rank: 1)
+            LeaderboardEntry.make(userId: "user-123", username: "user1", predictionScore: 100, rank: 1)
         ]
 
         let entry = viewModel.currentUserEntry
@@ -204,8 +205,8 @@ final class LeaderboardViewModelTests: XCTestCase {
     // MARK: - LeaderboardEntry Tests
 
     func testLeaderboardEntry_identifiable() {
-        let entry1 = LeaderboardEntry(userId: "user-1", username: "user1", predictionScore: 100, rank: 1)
-        let entry2 = LeaderboardEntry(userId: "user-2", username: "user2", predictionScore: 90, rank: 2)
+        let entry1 = LeaderboardEntry.make(userId: "user-1", username: "user1", predictionScore: 100, rank: 1)
+        let entry2 = LeaderboardEntry.make(userId: "user-2", username: "user2", predictionScore: 90, rank: 2)
 
         // userId is the identifier
         XCTAssertNotEqual(entry1.userId, entry2.userId)
@@ -224,7 +225,7 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testIsCurrentUser_emptyUserId() {
         viewModel.currentUserId = ""
 
-        let entry = LeaderboardEntry(
+        let entry = LeaderboardEntry.make(
             userId: "",
             username: "emptyuser",
             predictionScore: 100,
@@ -238,8 +239,8 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testCurrentUserEntry_firstInList() {
         viewModel.currentUserId = "user-123"
         viewModel.entries = [
-            LeaderboardEntry(userId: "user-123", username: "currentuser", predictionScore: 200, rank: 1),
-            LeaderboardEntry(userId: "user-456", username: "other", predictionScore: 100, rank: 2)
+            LeaderboardEntry.make(userId: "user-123", username: "currentuser", predictionScore: 200, rank: 1),
+            LeaderboardEntry.make(userId: "user-456", username: "other", predictionScore: 100, rank: 2)
         ]
 
         let entry = viewModel.currentUserEntry
@@ -252,9 +253,9 @@ final class LeaderboardViewModelTests: XCTestCase {
     func testCurrentUserEntry_lastInList() {
         viewModel.currentUserId = "user-123"
         viewModel.entries = [
-            LeaderboardEntry(userId: "user-456", username: "other1", predictionScore: 200, rank: 1),
-            LeaderboardEntry(userId: "user-789", username: "other2", predictionScore: 150, rank: 2),
-            LeaderboardEntry(userId: "user-123", username: "currentuser", predictionScore: 100, rank: 3)
+            LeaderboardEntry.make(userId: "user-456", username: "other1", predictionScore: 200, rank: 1),
+            LeaderboardEntry.make(userId: "user-789", username: "other2", predictionScore: 150, rank: 2),
+            LeaderboardEntry.make(userId: "user-123", username: "currentuser", predictionScore: 100, rank: 3)
         ]
 
         let entry = viewModel.currentUserEntry
@@ -276,7 +277,7 @@ enum LeaderboardEntryFactory {
         lastWatchedAt: String? = nil,
         rank: Int = 1
     ) -> LeaderboardEntry {
-        LeaderboardEntry(
+        LeaderboardEntry.make(
             userId: userId,
             username: username,
             avatarUrl: avatarUrl,
@@ -289,7 +290,8 @@ enum LeaderboardEntryFactory {
 }
 
 extension LeaderboardEntry {
-    init(
+    /// Test factory with defaults; the model's memberwise initializer has none.
+    static func make(
         userId: String,
         username: String,
         avatarUrl: String? = nil,
@@ -297,13 +299,15 @@ extension LeaderboardEntry {
         predictionScore: Int = 0,
         lastWatchedAt: String? = nil,
         rank: Int
-    ) {
-        self.userId = userId
-        self.username = username
-        self.avatarUrl = avatarUrl
-        self.watchedCount = watchedCount
-        self.predictionScore = predictionScore
-        self.lastWatchedAt = lastWatchedAt
-        self.rank = rank
+    ) -> LeaderboardEntry {
+        LeaderboardEntry(
+            userId: userId,
+            username: username,
+            avatarUrl: avatarUrl,
+            watchedCount: watchedCount,
+            predictionScore: predictionScore,
+            lastWatchedAt: lastWatchedAt,
+            rank: rank
+        )
     }
 }

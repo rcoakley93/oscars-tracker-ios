@@ -1,6 +1,7 @@
 import XCTest
 @testable import OscarsTracker
 
+@MainActor
 final class CategoryWithMoviesTests: XCTestCase {
 
     // MARK: - CategoryNominee Tests

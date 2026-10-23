@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for AuthViewModel validation and password strength logic.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class AuthViewModelTests: XCTestCase {
 
     var viewModel: AuthViewModel!

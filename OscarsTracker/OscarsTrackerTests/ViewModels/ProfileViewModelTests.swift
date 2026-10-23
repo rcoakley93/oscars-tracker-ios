@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for ProfileViewModel validation and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class ProfileViewModelTests: XCTestCase {
 
     var viewModel: ProfileViewModel!
@@ -511,12 +512,15 @@ final class ProfileViewModelTests: XCTestCase {
 // MARK: - Profile Model Extension for Tests
 
 extension Profile {
+    /// Test convenience without `updatedAt`. It must call the five-argument
+    /// memberwise initializer; calling itself recursed until the stack overflowed.
     init(id: String, username: String?, avatarUrl: String?, createdAt: String?) {
         self.init(
             id: id,
             username: username,
             avatarUrl: avatarUrl,
-            createdAt: createdAt
+            createdAt: createdAt,
+            updatedAt: nil
         )
     }
 }

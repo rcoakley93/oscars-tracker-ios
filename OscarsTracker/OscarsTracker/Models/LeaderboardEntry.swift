@@ -1,6 +1,6 @@
 import Foundation
 
-struct LeaderboardEntry: Codable, Identifiable, Equatable {
+nonisolated struct LeaderboardEntry: Codable, Identifiable, Equatable {
     var id: String { userId }
     let userId: String
     let username: String

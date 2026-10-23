@@ -23,7 +23,7 @@ extension Color {
     static let borderColor = Color(hue: 0, saturation: 0, brightness: 0.18)
 
     // Initialize from hex string
-    init(hex: String) {
+    nonisolated init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)

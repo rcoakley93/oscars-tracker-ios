@@ -343,7 +343,7 @@ struct WatchPlanView: View {
 }
 
 /// Transferable data for drag and drop of watch plan items.
-struct WatchPlanItemTransfer: Codable, Transferable {
+nonisolated struct WatchPlanItemTransfer: Codable, Transferable {
     let itemId: Int
     let movieId: Int
 

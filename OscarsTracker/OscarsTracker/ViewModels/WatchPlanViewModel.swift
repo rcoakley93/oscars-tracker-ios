@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import Supabase
 
@@ -364,7 +365,7 @@ final class WatchPlanViewModel: ObservableObject {
     // MARK: - AI Auto Scheduler
 
     /// Request body for the AI auto-scheduler edge function
-    struct AutoSchedulerRequest: Codable {
+    nonisolated struct AutoSchedulerRequest: Codable {
         let userPrompt: String
         let today: String
         let moviesPool: [MoviePoolItem]
@@ -377,7 +378,7 @@ final class WatchPlanViewModel: ObservableObject {
             case existingSchedule = "existing_schedule"
         }
 
-        struct MoviePoolItem: Codable {
+        nonisolated struct MoviePoolItem: Codable {
             let id: Int
             let title: String
             let runtimeMinutes: Int
@@ -389,7 +390,7 @@ final class WatchPlanViewModel: ObservableObject {
             }
         }
 
-        struct ExistingScheduleItem: Codable {
+        nonisolated struct ExistingScheduleItem: Codable {
             let movieId: Int
             let title: String
             let date: String
@@ -403,10 +404,10 @@ final class WatchPlanViewModel: ObservableObject {
     }
 
     /// Response from the AI auto-scheduler edge function
-    struct AutoSchedulerResponse: Codable {
+    nonisolated struct AutoSchedulerResponse: Codable {
         let plan: [ScheduledItem]
 
-        struct ScheduledItem: Codable {
+        nonisolated struct ScheduledItem: Codable {
             let movieId: Int
             let date: String
             let reason: String?

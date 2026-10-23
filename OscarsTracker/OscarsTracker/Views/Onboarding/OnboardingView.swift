@@ -1,3 +1,4 @@
+import Auth
 import SwiftUI
 
 /// Onboarding view for new users to set up their username.

@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for OnboardingViewModel validation and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class OnboardingViewModelTests: XCTestCase {
 
     var viewModel: OnboardingViewModel!

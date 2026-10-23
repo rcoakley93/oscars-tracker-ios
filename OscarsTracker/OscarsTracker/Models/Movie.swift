@@ -1,6 +1,6 @@
 import Foundation
 
-struct Movie: Codable, Identifiable, Hashable {
+nonisolated struct Movie: Codable, Identifiable, Hashable {
     let id: Int
     let title: String
     let posterUrl: String?
