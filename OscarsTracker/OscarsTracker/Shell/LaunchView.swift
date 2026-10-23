@@ -4,16 +4,13 @@ import SwiftUI
 struct LaunchView: View {
     var body: some View {
         VStack(spacing: Theme.Space.l) {
-            Image(systemName: "trophy.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(Theme.goldGradient)
-                .accessibilityHidden(true)
+            BrandMark(size: 72)
             Text("Oscars Tracker").displayFont(.title)
                 .foregroundStyle(.ink)
             ProgressView()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ground)
+        .background { AmbientBackground() }
     }
 }
 

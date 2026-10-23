@@ -13,10 +13,18 @@ struct UsernameView: View {
             Text("It's how your friends see you on the leaderboard.")
                 .foregroundStyle(.inkMuted)
                 .multilineTextAlignment(.center)
-            TextField("Username", text: $username)
-                .textFieldStyle(.roundedBorder)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
+            HStack(spacing: Theme.Space.xs) {
+                TextField("Username", text: $username)
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                Button("Suggest a username", systemImage: "dice") {
+                    username = ValidationService.suggestedUsername()
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.glass)
+                .frame(minWidth: 44, minHeight: 44)
+            }
             if let problem {
                 Text(problem).font(.footnote).foregroundStyle(.dangerText)
             } else if let error = model.profile.actionError {

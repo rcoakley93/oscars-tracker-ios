@@ -24,6 +24,14 @@ struct RootView: View {
         .animation(.smooth, value: model.profile.needsUsername)
         .tint(.goldOnGlass)
         .environment(\.copy, Copy.for(voice))
+        .onOpenURL { url in
+            Task {
+                if await model.session.open(url) { await model.refresh() }
+            }
+        }
+        .fullScreenCover(isPresented: .constant(model.session.isChoosingNewPassword)) {
+            NewPasswordView()
+        }
     }
 }
 

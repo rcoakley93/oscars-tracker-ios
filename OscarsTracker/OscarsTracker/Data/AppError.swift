@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Foundation
 import Supabase
 
@@ -16,6 +17,9 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case invalidCredentials
     case emailInUse
     case weakPassword
+    case linkExpired
+    /// The person closed the Apple or Google sheet: show nothing.
+    case cancelled
     case server(String)
 
     var message: String {
@@ -31,6 +35,8 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .invalidCredentials: "That email and password don't match."
         case .emailInUse: "There's already an account with that email. Try signing in."
         case .weakPassword: "Use at least 8 characters, with a lowercase letter, an uppercase letter and a number."
+        case .linkExpired: "That link has expired or was already used. Ask for a new one."
+        case .cancelled: ""
         case .server: "Something went wrong on our side. Please try again."
         }
     }
@@ -46,6 +52,14 @@ nonisolated enum AppError: Error, Equatable, Sendable {
             self = .offline
             return
         }
+        if let error = error as? ASAuthorizationError, error.code == .canceled {
+            self = .cancelled
+            return
+        }
+        if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
+            self = .cancelled
+            return
+        }
         if let error = error as? PostgrestError {
             self = AppError(serverMessage: error.message)
             return
@@ -55,6 +69,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
             if text.contains("invalid login") || text.contains("invalid_credentials") { self = .invalidCredentials; return }
             if text.contains("already registered") || text.contains("user_already_exists") { self = .emailInUse; return }
             if text.contains("weak_password") || text.contains("password should") { self = .weakPassword; return }
+            if text.contains("otp_expired") || text.contains("flow_state") || text.contains("code verifier") { self = .linkExpired; return }
             if text.contains("session") && text.contains("missing") { self = .notSignedIn; return }
             self = .server(String(describing: error))
             return

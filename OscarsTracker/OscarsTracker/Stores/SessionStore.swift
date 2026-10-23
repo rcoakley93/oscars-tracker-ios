@@ -1,8 +1,9 @@
+import CryptoKit
 import Foundation
 import Observation
 
-/// Who is signed in. Email and password for now; Sign in with Apple and
-/// Google arrive in P3-09.
+/// Who is signed in: Sign in with Apple, Google, or email and password,
+/// plus the forgot-password link.
 @Observable
 final class SessionStore {
     enum State: Equatable {
@@ -20,6 +21,9 @@ final class SessionStore {
     private(set) var state: State = .checking
     private(set) var isWorking = false
     private(set) var error: AppError?
+    /// Set after a reset-password link signs you in; the app asks for a new
+    /// password before anything else.
+    private(set) var isChoosingNewPassword = false
 
     private let data: any AppDataSource
 
@@ -60,9 +64,60 @@ final class SessionStore {
         return result
     }
 
+    @discardableResult
+    func signInWithApple(idToken: String, nonce: String) async -> Bool {
+        await perform {
+            state = .signedIn(userID: try await data.signInWithApple(idToken: idToken, nonce: nonce))
+        }
+    }
+
+    @discardableResult
+    func signInWithGoogle() async -> Bool {
+        await perform {
+            state = .signedIn(userID: try await data.signInWithGoogle())
+        }
+    }
+
+    /// Shows an Apple sign-in failure the same way as the others.
+    func appleSignInFailed(_ error: Error) {
+        let error = AppError(error)
+        self.error = error == .cancelled ? nil : error
+    }
+
+    @discardableResult
+    func sendPasswordReset(email: String) async -> Bool {
+        await perform {
+            try await data.sendPasswordReset(email: email.trimmingCharacters(in: .whitespaces))
+        }
+    }
+
+    /// Handles `oscarstracker://` links from auth emails and returns whether
+    /// it signed you in. A reset-password link then asks for a new password.
+    @discardableResult
+    func open(_ url: URL) async -> Bool {
+        guard url.scheme == "oscarstracker" else { return false }
+        let isReset = url.host() == "reset-password"
+        return await perform {
+            state = .signedIn(userID: try await data.openAuthLink(url))
+            isChoosingNewPassword = isReset
+        }
+    }
+
+    @discardableResult
+    func chooseNewPassword(_ password: String) async -> Bool {
+        guard PasswordRules.isValid(password) else {
+            error = .weakPassword
+            return false
+        }
+        let saved = await perform { try await data.updatePassword(password) }
+        if saved { isChoosingNewPassword = false }
+        return saved
+    }
+
     func signOut() async {
         try? await data.signOut()
         state = .signedOut
+        isChoosingNewPassword = false
     }
 
     /// After the account is deleted elsewhere (ProfileStore), the session is gone.
@@ -83,7 +138,8 @@ final class SessionStore {
             try await work()
             return true
         } catch {
-            self.error = AppError(error)
+            let error = AppError(error)
+            self.error = error == .cancelled ? nil : error
             return false
         }
     }
@@ -97,5 +153,19 @@ nonisolated enum PasswordRules {
             && password.contains(where: \.isLowercase)
             && password.contains(where: \.isUppercase)
             && password.contains(where: \.isNumber)
+    }
+}
+
+/// The nonce for Sign in with Apple: Apple gets its SHA-256, Supabase the
+/// raw value, so a stolen ID token can't be replayed.
+nonisolated enum AppleNonce {
+    static func make(length: Int = 32) -> String {
+        let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._")
+        var generator = SystemRandomNumberGenerator()
+        return String((0..<length).map { _ in characters.randomElement(using: &generator)! })
+    }
+
+    static func sha256(_ nonce: String) -> String {
+        SHA256.hash(data: Data(nonce.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }

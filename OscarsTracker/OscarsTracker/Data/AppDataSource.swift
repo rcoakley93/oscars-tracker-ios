@@ -30,6 +30,13 @@ protocol AppDataSource: AnyObject, Sendable {
     func signIn(email: String, password: String) async throws -> String
     func signUp(email: String, password: String) async throws -> String?
     func signOut() async throws
+    func signInWithApple(idToken: String, nonce: String) async throws -> String
+    func signInWithGoogle() async throws -> String
+    /// Emails a link that opens the app's "Choose a new password" screen.
+    func sendPasswordReset(email: String) async throws
+    /// Signs in from a link in an auth email; returns the user's id.
+    func openAuthLink(_ url: URL) async throws -> String
+    func updatePassword(_ password: String) async throws
 
     // Season
     func activeCeremony() async throws -> Ceremony?

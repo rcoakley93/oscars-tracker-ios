@@ -43,6 +43,45 @@ final class LiveDataSource: AppDataSource {
         try await run { try await client.auth.signOut() }
     }
 
+    /// Where auth emails and the Google sheet send people back to. Each must
+    /// be in the Supabase project's allowed redirect URLs.
+    static let googleRedirect = URL(string: "oscarstracker://auth-callback")!
+    static let resetRedirect = URL(string: "oscarstracker://reset-password")!
+
+    func signInWithApple(idToken: String, nonce: String) async throws -> String {
+        try await run {
+            try await client.auth.signInWithIdToken(credentials: .init(provider: .apple, idToken: idToken, nonce: nonce))
+                .user.id.uuidString.lowercased()
+        }
+    }
+
+    /// Supabase's Google OAuth in an `ASWebAuthenticationSession`, using the
+    /// Google provider the project already has, so accounts match the web's.
+    func signInWithGoogle() async throws -> String {
+        try await run {
+            try await client.auth.signInWithOAuth(provider: .google, redirectTo: Self.googleRedirect)
+                .user.id.uuidString.lowercased()
+        }
+    }
+
+    func sendPasswordReset(email: String) async throws {
+        try await run {
+            try await client.auth.resetPasswordForEmail(email, redirectTo: Self.resetRedirect)
+        }
+    }
+
+    func openAuthLink(_ url: URL) async throws -> String {
+        try await run {
+            try await client.auth.session(from: url).user.id.uuidString.lowercased()
+        }
+    }
+
+    func updatePassword(_ password: String) async throws {
+        try await run {
+            _ = try await client.auth.update(user: UserAttributes(password: password))
+        }
+    }
+
     // MARK: - Season
 
     func activeCeremony() async throws -> Ceremony? {

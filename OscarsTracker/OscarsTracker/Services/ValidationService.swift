@@ -2,23 +2,78 @@ import Foundation
 
 /// Shared validation service for common validation logic across the app.
 /// Extracts duplicated validation code from ViewModels for better testability and maintainability.
-struct ValidationService {
+nonisolated struct ValidationService {
 
     // MARK: - Profanity Filter
 
-    /// Common profanity words to filter
-    static let profanityList: Set<String> = [
-        "fuck", "shit", "ass", "bitch", "damn", "crap", "bastard",
-        "dick", "pussy", "cock", "cunt", "whore", "slut", "fag",
-        "nigger", "nigga", "retard", "nazi", "hitler"
+    /// Blocked anywhere, even inside another word ("whatthefuck").
+    static let blockedAnywhere: Set<String> = [
+        "fuck", "shit", "bitch", "bastard", "pussy", "cunt", "whore", "slut",
+        "nigger", "nigga", "retard", "hitler"
     ]
+
+    /// Blocked only as a whole word, because they hide inside real words:
+    /// "ass" in Glass and Classic, "cock" in Hitchcock, "dick" in Dickens.
+    static let blockedAsWord: Set<String> = [
+        "ass", "damn", "crap", "dick", "cock", "fag", "nazi"
+    ]
+
+    /// Common profanity words to filter
+    static var profanityList: Set<String> { blockedAnywhere.union(blockedAsWord) }
 
     /// Check if text contains profanity
     static func containsProfanity(_ text: String) -> Bool {
         let lowercased = text.lowercased()
-        return profanityList.contains { profanity in
-            lowercased.contains(profanity)
+        if blockedAnywhere.contains(where: lowercased.contains) { return true }
+        return !blockedAsWord.isDisjoint(with: words(in: text))
+    }
+
+    /// Lowercased words, split on anything that isn't a letter and at
+    /// camelCase boundaries: "Big_Glass2Fan" and "bigGlassFan" give big, glass, fan.
+    static func words(in text: String) -> Set<String> {
+        var words: Set<String> = []
+        var current = ""
+        var previous: Character?
+        for character in text {
+            if !character.isLetter {
+                if !current.isEmpty { words.insert(current.lowercased()) }
+                current = ""
+            } else {
+                if character.isUppercase, let previous, previous.isLowercase, !current.isEmpty {
+                    words.insert(current.lowercased())
+                    current = ""
+                }
+                current.append(character)
+            }
+            previous = character
         }
+        if !current.isEmpty { words.insert(current.lowercased()) }
+        return words
+    }
+
+    // MARK: - Username Suggestions
+
+    private static let suggestionFirst = [
+        "Golden", "Velvet", "Silver", "Midnight", "Scarlet", "Opening", "Final",
+        "Matinee", "Encore", "Starlit", "Classic", "Indie", "Spotlight", "Glass"
+    ]
+    private static let suggestionSecond = [
+        "Critic", "Reel", "Usher", "Director", "Envelope", "Popcorn", "Premiere",
+        "Ticket", "Projector", "Marquee", "Cinephile", "Screen", "Frame", "Curtain"
+    ]
+
+    /// A random film-flavoured username that always passes `validateUsername`,
+    /// such as "VelvetUsher42".
+    static func suggestedUsername<G: RandomNumberGenerator>(using generator: inout G) -> String {
+        let first = suggestionFirst.randomElement(using: &generator)!
+        let second = suggestionSecond.randomElement(using: &generator)!
+        let number = Int.random(in: 10...99, using: &generator)
+        return "\(first)\(second)\(number)"
+    }
+
+    static func suggestedUsername() -> String {
+        var generator = SystemRandomNumberGenerator()
+        return suggestedUsername(using: &generator)
     }
 
     // MARK: - Username Validation

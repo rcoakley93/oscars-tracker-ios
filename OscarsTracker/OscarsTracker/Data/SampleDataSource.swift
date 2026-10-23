@@ -76,6 +76,38 @@ final class SampleDataSource: AppDataSource {
 
     func signOut() async throws { signedIn = false }
 
+    func signInWithApple(idToken: String, nonce: String) async throws -> String {
+        try check()
+        signedIn = true
+        return Self.userID
+    }
+
+    func signInWithGoogle() async throws -> String {
+        try check()
+        signedIn = true
+        return Self.userID
+    }
+
+    var resetEmails: [String] = []
+
+    func sendPasswordReset(email: String) async throws {
+        try check()
+        resetEmails.append(email)
+    }
+
+    func openAuthLink(_ url: URL) async throws -> String {
+        try check()
+        signedIn = true
+        return Self.userID
+    }
+
+    var newPassword: String?
+
+    func updatePassword(_ password: String) async throws {
+        _ = try requireUser()
+        newPassword = password
+    }
+
     // MARK: - Season
 
     func activeCeremony() async throws -> Ceremony? {
