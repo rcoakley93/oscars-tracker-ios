@@ -34,6 +34,10 @@ struct LoadStateView<Content: View>: View {
 struct FilmsPlaceholder: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
+    /// The last film marked watched, and a counter that tears its stub. The
+    /// stub is drawn over the list, because the row moves to Watched at once.
+    @State private var stubTitle = ""
+    @State private var tears = 0
 
     var body: some View {
         let films = model.films
@@ -51,11 +55,14 @@ struct FilmsPlaceholder: View {
                     }
                 }
                 Section(copy.toWatchHeading) {
-                    ForEach(films.toWatch) { FilmRow(movie: $0) }
+                    ForEach(films.toWatch) { FilmRow(movie: $0) { stubTitle = $0; tears += 1 } }
                 }
                 Section(copy.watchedHeading) {
-                    ForEach(films.watched) { FilmRow(movie: $0) }
+                    ForEach(films.watched) { FilmRow(movie: $0) { _ in } }
                 }
+            }
+            .overlay(alignment: .bottom) {
+                TicketStub(title: stubTitle, trigger: tears).padding(.bottom, 120)
             }
         }
     }
@@ -64,6 +71,7 @@ struct FilmsPlaceholder: View {
 private struct FilmRow: View {
     @Environment(AppModel.self) private var model
     let movie: Movie
+    var onWatched: (String) -> Void
 
     var body: some View {
         let watched = model.films.isWatched(movie.id)
@@ -76,6 +84,7 @@ private struct FilmRow: View {
             Spacer()
             Button {
                 guard let userID = model.session.userID else { return }
+                if !watched { onWatched(movie.title) }
                 Task { await model.films.toggleWatched(movie.id, userID: userID) }
             } label: {
                 Image(systemName: watched ? "checkmark.circle.fill" : "circle")
@@ -85,7 +94,7 @@ private struct FilmRow: View {
             .buttonStyle(.plain)
             .accessibilityLabel("\(movie.title), watched")
             .accessibilityValue(watched ? "Yes" : "No")
-            .sensoryFeedback(.selection, trigger: watched)
+            .moment(watched ? .watched : .unwatched, trigger: watched)
         }
     }
 }

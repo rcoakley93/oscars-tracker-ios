@@ -25,6 +25,7 @@ struct ProfileSheet: View {
                         }
                     }
                     .pickerStyle(.inline)
+                    .labelsHidden()
                 } header: {
                     Text("Voice")
                 } footer: {
@@ -43,6 +44,12 @@ struct ProfileSheet: View {
                 } footer: {
                     Text("Deletes your account, picks, watched films, plan and groups you created. This can't be undone.")
                 }
+                #if DEBUG
+                Section("Debug") {
+                    NavigationLink("Moments") { MomentsGallery() }
+                    NavigationLink("Design tokens") { TokensGallery() }
+                }
+                #endif
                 if let error = model.profile.actionError {
                     Section { Text(error.message).foregroundStyle(.dangerText) }
                 }
