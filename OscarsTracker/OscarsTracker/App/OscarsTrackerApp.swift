@@ -2,30 +2,24 @@ import SwiftUI
 
 @main
 struct OscarsTrackerApp: App {
-    @StateObject private var authViewModel = AuthViewModel()
+    @State private var model = AppModel(data: Self.dataSource())
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                if authViewModel.isCheckingSession {
-                    // Show splash screen while checking authentication
-                    SplashView()
-                        .transition(.opacity)
-                } else if authViewModel.isAuthenticated {
-                    ContentView()
-                        .sheet(isPresented: $authViewModel.needsOnboarding) {
-                            OnboardingView(authViewModel: authViewModel)
-                        }
-                        .transition(.opacity)
-                } else {
-                    LoginView(authViewModel: authViewModel)
-                        .transition(.opacity)
-                }
-            }
-            .animation(.easeInOut(duration: 0.3), value: authViewModel.isCheckingSession)
-            .animation(.easeInOut(duration: 0.3), value: authViewModel.isAuthenticated)
-            .preferredColorScheme(.dark)
-            .environmentObject(authViewModel)
+            RootView()
+                .environment(model)
+                .task { await model.start() }
         }
+    }
+
+    /// The live backend, or (debug builds only) the sample season when launched
+    /// with `-sample-data`, for screenshots and demos without an account.
+    private static func dataSource() -> any AppDataSource {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-sample-data") {
+            return SampleDataSource()
+        }
+        #endif
+        return LiveDataSource()
     }
 }
