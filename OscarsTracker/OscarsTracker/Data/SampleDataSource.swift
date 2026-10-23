@@ -231,8 +231,22 @@ nonisolated enum SampleData {
         movie(10, "Train Dreams", 2025, 102),
     ]
 
+    /// TMDB poster paths for the sample films (from the live `movies` table).
+    static let posterPaths: [String: String] = [
+        "Hamnet": "61xMzN4h8iLk0hq6oUzr9Ts6GE9",
+        "Frankenstein": "g4JtvGlQO7DByTI6frUobqvSL3R",
+        "KPop Demon Hunters": "zT7Lhw3BhJbMkRqm9Zlx2YGMsY0",
+        "Sinners": "lOfjeJMKS7cOaaTn6q3J0y2ypiA",
+        "Sentimental Value": "24JALfUQsIgfNqMD7vTbqEVfsqf",
+        "Bugonia": "oxgsAQDAAxA92mFGYCZllgWkH9J",
+        "It Was Just an Accident": "eNYGj2DG3n8OrVPTfYunpPW9uas",
+        "Marty Supreme": "firAhZA0uQvRL2slp7v3AnOj0ZX",
+        "Train Dreams": "wfzYOVdafdbD1d3SxNqiBtV2Yhx",
+    ]
+
     static func movie(_ id: Int, _ title: String, _ year: Int, _ runtime: Int) -> Movie {
-        Movie(id: id, title: title, posterUrl: nil, releaseYear: year, runtimeMinutes: runtime, createdAt: nil)
+        let poster = posterPaths[title].map { "https://image.tmdb.org/t/p/w342/\($0).jpg" }
+        return Movie(id: id, title: title, posterUrl: poster, releaseYear: year, runtimeMinutes: runtime, createdAt: nil)
     }
 
     static func film(_ id: Int) -> Movie? { movies.first { $0.id == id } }

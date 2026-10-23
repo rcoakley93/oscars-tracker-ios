@@ -12,7 +12,7 @@ struct AppShell: View {
 
         TabView(selection: $navigation.tab) {
             SwiftUI.Tab("Films", systemImage: "film", value: AppNavigation.Tab.films) {
-                TabStack(title: "Films") { FilmsPlaceholder() }
+                TabStack(title: "Films", posters: model.films.movies.compactMap(\.posterUrl)) { FilmsPlaceholder() }
             }
             SwiftUI.Tab("Plan", systemImage: "calendar", value: AppNavigation.Tab.plan) {
                 TabStack(title: "Watch plan") { PlanPlaceholder() }
@@ -45,6 +45,8 @@ struct AppShell: View {
 private struct TabStack<Content: View>: View {
     @Environment(AppModel.self) private var model
     let title: String
+    /// Posters that light the ambient backdrop; none gives the theatre gradient.
+    var posters: [String] = []
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -60,7 +62,7 @@ private struct TabStack<Content: View>: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .background(.ground)
+                .background { AmbientBackground(posters: posters) }
                 .refreshable { await model.refresh() }
         }
     }
