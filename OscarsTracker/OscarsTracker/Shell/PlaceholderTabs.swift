@@ -33,6 +33,7 @@ struct LoadStateView<Content: View>: View {
 
 struct FilmsPlaceholder: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
 
     var body: some View {
         let films = model.films
@@ -44,14 +45,15 @@ struct FilmsPlaceholder: View {
                             .foregroundStyle(Theme.goldGradient)
                         Text("of \(films.movies.count) films").font(.title3.bold()).fontDesign(.rounded)
                     }
+                    Text(films.toWatch.isEmpty ? copy.allWatched : copy.progressSummary(films.watchedCount, films.movies.count))
                     if let days = model.season.daysToCeremony() {
                         Text("\(days) days to the ceremony").foregroundStyle(.inkMuted)
                     }
                 }
-                Section("Still to watch") {
+                Section(copy.toWatchHeading) {
                     ForEach(films.toWatch) { FilmRow(movie: $0) }
                 }
-                Section("Watched") {
+                Section(copy.watchedHeading) {
                     ForEach(films.watched) { FilmRow(movie: $0) }
                 }
             }
