@@ -202,6 +202,48 @@ struct StoreTests {
         #expect(!data.signedIn)
     }
 
+    @Test func appleAndGoogleSignYouIn() async {
+        let data = SampleDataSource(signedIn: false)
+        let session = SessionStore(data: data)
+        #expect(await session.signInWithApple(idToken: "token", nonce: "nonce"))
+        #expect(session.userID == user)
+        await session.signOut()
+        #expect(await session.signInWithGoogle())
+        #expect(session.userID == user)
+    }
+
+    @Test func closingTheSignInSheetShowsNoError() async {
+        let data = SampleDataSource(signedIn: false)
+        data.failure = .cancelled
+        let session = SessionStore(data: data)
+        #expect(await !session.signInWithGoogle())
+        #expect(session.error == nil)
+        #expect(session.state != .signedIn(userID: user))
+    }
+
+    @Test func aResetLinkAsksForANewPassword() async throws {
+        let data = SampleDataSource(signedIn: false)
+        let session = SessionStore(data: data)
+        #expect(await session.sendPasswordReset(email: " a@b.co "))
+        #expect(data.resetEmails == ["a@b.co"])
+
+        #expect(await !session.open(try #require(URL(string: "https://example.com/reset-password"))))
+        #expect(await session.open(try #require(URL(string: "oscarstracker://reset-password?code=abc"))))
+        #expect(session.isChoosingNewPassword)
+        #expect(await !session.chooseNewPassword("weak"))
+        #expect(session.error == .weakPassword)
+        #expect(await session.chooseNewPassword("Oscars2027"))
+        #expect(!session.isChoosingNewPassword)
+        #expect(data.newPassword == "Oscars2027")
+    }
+
+    @Test func appleNoncesAreRandomAndHashed() {
+        let nonce = AppleNonce.make()
+        #expect(nonce.count == 32)
+        #expect(nonce != AppleNonce.make())
+        #expect(AppleNonce.sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    }
+
     @Test func aFailedAccountDeletionKeepsYouSignedIn() async {
         let data = SampleDataSource()
         let model = AppModel(data: data)
