@@ -1,6 +1,7 @@
 import Foundation
 
-nonisolated struct Group: Codable, Identifiable {
+/// A group of friends competing together (named so it doesn't clash with SwiftUI's `Group`).
+nonisolated struct PoolGroup: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     let createdBy: String

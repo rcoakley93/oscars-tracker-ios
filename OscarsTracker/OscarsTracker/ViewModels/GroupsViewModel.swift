@@ -103,7 +103,7 @@ final class GroupsViewModel: ObservableObject {
             currentUserId = userId
 
             // Load all groups
-            let allGroups: [Group] = try await supabase
+            let allGroups: [PoolGroup] = try await supabase
                 .from("groups")
                 .select()
                 .execute()
@@ -202,7 +202,7 @@ final class GroupsViewModel: ObservableObject {
                 "invite_code": .string(inviteCode)
             ]
 
-            let createdGroup: Group = try await supabase
+            let createdGroup: PoolGroup = try await supabase
                 .from("groups")
                 .insert(newGroupData)
                 .select()
@@ -276,7 +276,7 @@ final class GroupsViewModel: ObservableObject {
 
         do {
             // Look up group by invite code
-            let groups: [Group] = try await supabase
+            let groups: [PoolGroup] = try await supabase
                 .from("groups")
                 .select()
                 .eq("invite_code", value: code)
