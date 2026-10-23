@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for AuthViewModel validation and password strength logic.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class AuthViewModelTests: XCTestCase {
+nonisolated final class AuthViewModelTests: XCTestCase {
 
     var viewModel: AuthViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = AuthViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { AuthViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Email Validation Tests
@@ -228,6 +226,7 @@ final class AuthViewModelTests: XCTestCase {
 
     // MARK: - PasswordStrength Enum Tests
 
+    @MainActor
     func testPasswordStrengthColor() {
         XCTAssertEqual(PasswordStrength.none.color, "textMuted")
         XCTAssertEqual(PasswordStrength.weak.color, "destructive")
@@ -235,6 +234,7 @@ final class AuthViewModelTests: XCTestCase {
         XCTAssertEqual(PasswordStrength.strong.color, "green")
     }
 
+    @MainActor
     func testPasswordStrengthLabel() {
         XCTAssertEqual(PasswordStrength.none.label, "")
         XCTAssertEqual(PasswordStrength.weak.label, "Weak")

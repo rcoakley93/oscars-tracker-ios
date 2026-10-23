@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for DashboardViewModel sorting and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class DashboardViewModelTests: XCTestCase {
+nonisolated final class DashboardViewModelTests: XCTestCase {
 
     var viewModel: DashboardViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = DashboardViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { DashboardViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Sort Option Tests
@@ -274,6 +272,7 @@ final class DashboardViewModelTests: XCTestCase {
 
     // MARK: - Sort Option Enum Tests
 
+    @MainActor
     func testSortOptionRawValues() {
         XCTAssertEqual(DashboardSortOption.titleAZ.rawValue, "Title (A-Z)")
         XCTAssertEqual(DashboardSortOption.titleZA.rawValue, "Title (Z-A)")
@@ -281,6 +280,7 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertEqual(DashboardSortOption.runtimeDesc.rawValue, "Runtime ↓")
     }
 
+    @MainActor
     func testSortOptionSystemImage() {
         XCTAssertEqual(DashboardSortOption.titleAZ.systemImage, "textformat.abc")
         XCTAssertEqual(DashboardSortOption.titleZA.systemImage, "textformat.abc")
@@ -288,28 +288,33 @@ final class DashboardViewModelTests: XCTestCase {
         XCTAssertEqual(DashboardSortOption.runtimeDesc.systemImage, "clock.fill")
     }
 
+    @MainActor
     func testSortOptionAllCases() {
         XCTAssertEqual(DashboardSortOption.allCases.count, 4)
     }
 
     // MARK: - View Mode Enum Tests
 
+    @MainActor
     func testDashboardViewModeRawValues() {
         XCTAssertEqual(DashboardViewMode.masterList.rawValue, "Master List")
         XCTAssertEqual(DashboardViewMode.byCategory.rawValue, "By Category")
     }
 
+    @MainActor
     func testDashboardViewModeAllCases() {
         XCTAssertEqual(DashboardViewMode.allCases.count, 2)
     }
 
     // MARK: - Display Mode Enum Tests
 
+    @MainActor
     func testMasterListDisplayModeRawValues() {
         XCTAssertEqual(MasterListDisplayMode.grid.rawValue, "Grid")
         XCTAssertEqual(MasterListDisplayMode.list.rawValue, "List")
     }
 
+    @MainActor
     func testMasterListDisplayModeAllCases() {
         XCTAssertEqual(MasterListDisplayMode.allCases.count, 2)
     }

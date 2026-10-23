@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for OnboardingViewModel validation and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class OnboardingViewModelTests: XCTestCase {
+nonisolated final class OnboardingViewModelTests: XCTestCase {
 
     var viewModel: OnboardingViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = OnboardingViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { OnboardingViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Username Length Validation Tests

@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for LeaderboardViewModel medal assignment and helper methods.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class LeaderboardViewModelTests: XCTestCase {
+nonisolated final class LeaderboardViewModelTests: XCTestCase {
 
     var viewModel: LeaderboardViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = LeaderboardViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { LeaderboardViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Medal Type Tests
@@ -65,18 +63,22 @@ final class LeaderboardViewModelTests: XCTestCase {
 
     // MARK: - Medal Type Enum Tests
 
+    @MainActor
     func testMedalType_goldColor() {
         XCTAssertEqual(MedalType.gold.color, "goldPrimary")
     }
 
+    @MainActor
     func testMedalType_silverColor() {
         XCTAssertEqual(MedalType.silver.color, "silver")
     }
 
+    @MainActor
     func testMedalType_bronzeColor() {
         XCTAssertEqual(MedalType.bronze.color, "bronze")
     }
 
+    @MainActor
     func testMedalType_icon() {
         XCTAssertEqual(MedalType.gold.icon, "medal.fill")
         XCTAssertEqual(MedalType.silver.icon, "medal.fill")
@@ -204,6 +206,7 @@ final class LeaderboardViewModelTests: XCTestCase {
 
     // MARK: - LeaderboardEntry Tests
 
+    @MainActor
     func testLeaderboardEntry_identifiable() {
         let entry1 = LeaderboardEntry.make(userId: "user-1", username: "user1", predictionScore: 100, rank: 1)
         let entry2 = LeaderboardEntry.make(userId: "user-2", username: "user2", predictionScore: 90, rank: 2)

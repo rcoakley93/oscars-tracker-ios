@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for ProfileViewModel validation and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class ProfileViewModelTests: XCTestCase {
+nonisolated final class ProfileViewModelTests: XCTestCase {
 
     var viewModel: ProfileViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = ProfileViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { ProfileViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Username Length Validation Tests

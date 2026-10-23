@@ -393,9 +393,3 @@ struct MoreMenuView: View {
     ContentView()
         .preferredColorScheme(.dark)
 }
-
-#Preview("iPad") {
-    ContentView()
-        .preferredColorScheme(.dark)
-        .previewDevice("iPad Pro (11-inch) (4th generation)")
-}

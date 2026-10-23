@@ -3,20 +3,18 @@ import XCTest
 
 /// Tests for WatchPlanViewModel date grouping and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
-@MainActor
-final class WatchPlanViewModelTests: XCTestCase {
+nonisolated final class WatchPlanViewModelTests: XCTestCase {
 
     var viewModel: WatchPlanViewModel!
 
-    @MainActor
-    override func setUp() {
-        super.setUp()
-        viewModel = WatchPlanViewModel()
+    override func setUp() async throws {
+        try await super.setUp()
+        viewModel = await MainActor.run { WatchPlanViewModel() }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         viewModel = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Grouped Items Tests
@@ -310,6 +308,7 @@ final class WatchPlanViewModelTests: XCTestCase {
 
     // MARK: - Auto Scheduler Request/Response Codable Tests
 
+    @MainActor
     func testAutoSchedulerRequestCodable() throws {
         let request = WatchPlanViewModel.AutoSchedulerRequest(
             userPrompt: "Schedule movies for the weekend",
@@ -332,6 +331,7 @@ final class WatchPlanViewModelTests: XCTestCase {
         XCTAssertEqual(decoded.existingSchedule.count, 1)
     }
 
+    @MainActor
     func testAutoSchedulerResponseCodable() throws {
         let json = """
         {
