@@ -1,6 +1,6 @@
 import Foundation
 
-struct Nomination: Codable, Identifiable {
+nonisolated struct Nomination: Codable, Identifiable {
     let id: Int
     let categoryId: Int?
     let movieId: Int?
@@ -21,7 +21,7 @@ struct Nomination: Codable, Identifiable {
     }
 }
 
-struct CategoryWithNominations: Identifiable {
+nonisolated struct CategoryWithNominations: Identifiable {
     let id: Int
     let name: String
     let pointsValue: Int?
@@ -29,7 +29,7 @@ struct CategoryWithNominations: Identifiable {
 }
 
 /// A nominee in a category (movie + optional detail like actor name)
-struct CategoryNominee: Identifiable {
+nonisolated struct CategoryNominee: Identifiable {
     let id: Int  // nomination id
     let movie: Movie
     let detailText: String?  // Actor name for actor categories
@@ -41,7 +41,7 @@ struct CategoryNominee: Identifiable {
 }
 
 /// Category with associated nominees for dashboard category view
-struct CategoryWithMovies: Identifiable {
+nonisolated struct CategoryWithMovies: Identifiable {
     let id: Int
     let name: String
     let nominees: [CategoryNominee]

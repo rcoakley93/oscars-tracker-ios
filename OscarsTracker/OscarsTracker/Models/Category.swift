@@ -1,6 +1,6 @@
 import Foundation
 
-struct Category: Codable, Identifiable {
+nonisolated struct Category: Codable, Identifiable {
     let id: Int
     let name: String
     let pointsValue: Int?

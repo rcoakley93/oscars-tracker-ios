@@ -1,191 +1,34 @@
-# Agent Guidelines for OscarsTracker iOS
+# Agent guidelines: Oscars Tracker for iOS
 
-## Project Structure
-- Xcode project: `OscarsTracker/OscarsTracker.xcodeproj`
-- Source files: `OscarsTracker/OscarsTracker/`
-- Tests: `tests/` (Playwright for validating file structure)
+This is the product: a native SwiftUI app for iPhone, iPhone Duo and iPad, iOS 26 and later. The season plan, the database and the website live in the backend repo, `~/Documents/Projects/oscars-tracker` (`rcoakley93/oscars-tracker`). Read its `docs/season-2027/README.md` before starting a phase, and `docs/design/brand.md` and `voice.md` before touching the UI.
 
-## Folder Organization
-- `App/` - Main app entry point and ContentView
-- `Models/` - Data models (Codable + Identifiable)
-- `Services/` - API clients (SupabaseClient singleton)
-- `Components/` - Reusable SwiftUI components
-- `Utilities/` - Extensions (Color, Font, etc.)
-- `Views/` - Screen views
-- `ViewModels/` - @Observable view models
-- `Resources/` - Assets, images
+## Project layout
+- `OscarsTracker/OscarsTracker.xcodeproj`: one app target (`OscarsTracker`) and one unit-test target (`OscarsTrackerTests`), and a shared scheme.
+- **Groups are folder-synced.** Any file in `OscarsTracker/OscarsTracker/` belongs to the app and any file in `OscarsTracker/OscarsTrackerTests/` to the tests. Never edit `project.pbxproj` to add a file. `Info.plist` is excluded from the app's resources by an exception set in the project.
+- `OscarsTracker/Config/Shared.xcconfig`: the public Supabase host and anon key, read through `Info.plist` (`SupabaseHost`, `SupabaseAnonKey`) by `Services/SupabaseClient.swift`. Never put the service role key, the APNs key or the TMDB key in this repo.
+- `docs/brand/`: the app icon's source image. `docs/archive/`: the 2025–26 product notes and screenshots.
 
-## Key Patterns
+## Build and test
+Run Xcode tools with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (xcode-select points at the Command Line Tools on this Mac).
 
-### Adding New Swift Files
-1. Create the `.swift` file in the appropriate folder
-2. Add to `project.pbxproj`:
-   - PBXFileReference section
-   - PBXGroup (parent folder's children array)
-   - PBXBuildFile section
-   - PBXSourcesBuildPhase files array
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -project OscarsTracker/OscarsTracker.xcodeproj -scheme OscarsTracker -destination 'platform=iOS Simulator,name=iPhone 18 Pro'
+```
 
-### SwiftUI Components
-- ViewModifiers: Implement `ViewModifier` protocol, add extension on `View`
-- ButtonStyles: Implement `ButtonStyle` with `makeBody(configuration:)`
-- Card effects: Layer backgrounds with opacity, use RadialGradient for depth
+- Pick simulators by name and OS that exist on this Mac (`xcrun simctl list devices available`). There is an iPhone Duo simulator on the iOS 27.1 runtime.
+- Use the iOS Simulator tools to launch, screenshot and drive the app, and attach the live panel when the user wants to watch.
+- CI runs on Xcode Cloud (season plan P3-02). Wait for every check to pass, then merge with `gh pr merge <n> --merge`; never `--auto`, which merges at once (no required checks on this repo).
 
-### Testing
-- Playwright tests validate file existence and content
-- Run `./scripts/validate.sh` to run all tests
-- Tests check project structure, not runtime behavior
+## Swift settings
+- Swift 6 language mode, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, approachable concurrency and `MemberImportVisibility`.
+- So: code is main-actor isolated unless marked otherwise. Data types that decode from the network or cross actors are `nonisolated` (every `Codable` model is). Import every module whose members you use (`Combine` for `@Published`, `Auth` for Supabase user fields, and so on).
+- The test target is still Swift 5 mode with no default isolation, so the old XCTest suite compiles. New tests use Swift Testing (`import Testing`, `@Test`, `#expect`); move old tests over as their code is rewritten, and then switch the test target to Swift 6.
 
-## Dependencies
-- supabase-swift: Database and auth
-- Kingfisher: Async image loading
-
-## Design System
-- Colors: Use `Color.goldPrimary`, `Color.appBackground`, etc.
-- Fonts: Use `Font.displayLarge`, `Font.bodyMedium`, etc.
-- Cards: Use `.glassCard()` modifier or `GlassCard { }` wrapper
-- Buttons: Use `.buttonStyle(.gold)` or `.buttonStyle(.goldOutline)`
-- Glow: Use `.goldGlow()` modifier
-
-## Data Operations
-
-### Supabase Insert Pattern
-- Use `AnyJSON` enum for dynamic insert data: `[String: AnyJSON]`
-- Values: `.string()`, `.integer()`, `.bool()`, etc.
-- Chain `.insert()`, `.select()`, `.execute()` for insert with return
-
-### Sheet Pattern
-- Use `@State private var showSheet = false` in parent
-- Pass `viewModel` via `@ObservedObject` to share state
-- Use `@Environment(\.dismiss)` for sheet dismissal
-- Disable with `.disabled()` and show `ProgressView` during async ops
-
-### Floating Action Button (FAB)
-- Use ZStack with `.bottomTrailing` alignment
-- Gold circular button with shadow: `.shadow(color: Color.goldPrimary.opacity(0.4), radius: 8)`
-- Add bottom padding to ScrollView content to avoid overlap
-
-### Supabase Auth Update Pattern
-- Verify current password by attempting `supabase.auth.signIn()` first
-- Update password with `supabase.auth.update(user: UserAttributes(password: newPassword))`
-- Requires existing session to be active
-- Use `try? await supabase.auth.session.user.email` to get current user email
-
-### Change Password Form Pattern
-- Create separate computed properties for each password requirement
-- Use `PasswordStrength` enum from AuthViewModel for strength indicator
-- Show password match indicator only when confirm field is not empty
-- Use `.interactiveDismissDisabled()` during async operations to prevent accidental dismiss
-- Clear error message on any field change with `.onChange(of:)` modifiers
-
-### Haptic Feedback Pattern
-- Use `HapticManager` enum with static functions for all haptic feedback
-- Light impact: `.light()` for toggles, selections, minor interactions
-- Medium impact: `.medium()` for drag start, significant actions
-- Heavy impact: `.heavy()` for major actions
-- Success: `.success()` after successful API operations
-- Error: `.error()` after failed API operations
-- Selection: `.selection()` for button taps, picker changes
-- Call haptics immediately before async operations start (optimistic feedback)
-
-### Loading States Pattern
-- Use `LoadingView` component for standardized loading spinner with message
-- Use `SkeletonView` for pulse-animated placeholder elements
-- Screen-specific skeleton views: `MovieCardSkeletonView`, `ListRowSkeletonView`, etc.
-- Check `viewModel.isLoading && data.isEmpty` before showing loading state
-- Skeleton animations: `Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)`
-- Hide skeleton views from accessibility tree with `.accessibilityHidden(true)`
-- Use `Color.borderColor` as fill color for skeleton views
-
-### Error Handling Pattern
-- Use `ErrorView` for full-screen error states with retry button
-- Use `NetworkErrorView` for network-specific errors (wifi.slash icon)
-- Use `ToastView` with `.toast()` modifier for transient error messages
-- Use `ErrorBanner` for inline form validation errors
-- Use `PartialErrorView` for graceful degradation on partial failures
-- ToastData: `.error()`, `.success()`, `.warning()`, `.info()` static constructors
-- Toast auto-dismisses after `duration` seconds when `autoDismiss: true`
-- ViewModels use `@Published var errorMessage: String?` with try/catch
-
-### Empty States Pattern
-- Use `EmptyStateView` for reusable empty states with icon, title, subtitle
-- Optional `actionTitle` and `action` closure for call-to-action button
-- Screen-specific empty states: `WatchPlanEmptyState`, `GroupsEmptyState`, etc.
-- Icon size: `.font(.system(size: 56))` with `.foregroundStyle(Color.goldPrimary)`
-- Title uses `.headingMedium`, subtitle uses `.bodyMedium` with `.textMuted`
-- Always check `data.isEmpty` after loading completes to show empty state
-
-### Actor Category Display Pattern
-- Use `CategoryNominee` struct to carry both `movie: Movie` and `detailText: String?`
-- `CategoryWithMovies.isActorCategory` computed property detects actor/actress categories
-- For actor categories, display actor name (from detailText) as primary headline
-- Display movie title with year (e.g., "Movie Title (2025)") as secondary subheadline
-- Sort actor categories by actor name, other categories by movie title
-- Use `Text(verbatim:)` for year display to prevent comma formatting (2,025 -> 2025)
-- Accessibility labels include "Actor Name in Movie Title" format for actor categories
-
-### Dashboard View Modes Pattern
-- Use enum `MasterListDisplayMode` for Grid/List toggle (separate from Master List/By Category)
-- Show Grid/List toggle only when in Master List mode
-- Create separate components: MovieGridView for grid, MovieListView for list
-- MovieListRow for compact row display (poster thumbnail, title, year, runtime, watch toggle)
-- HapticManager.selection() for toggle feedback
-- withAnimation for smooth transitions between display modes
-
-### Dashboard Sorting Pattern
-- Use enum `DashboardSortOption` for sort options (titleAZ, titleZA, runtimeAsc, runtimeDesc)
-- Create computed property `sortedMovies` that returns sorted array based on option
-- Use `localizedCaseInsensitiveCompare` for proper title sorting
-- Add sort menu to toolbar with Menu {} and ForEach over allCases
-- Show checkmark for currently selected option
-- Immediate update: Dashboard content uses sortedMovies instead of movies array
-
-### Unwatched-First Sorting Pattern
-- Always display unwatched movies above watched movies in Dashboard
-- Separate movies into two groups using watchedMovieIds.contains()
-- Apply secondary sorting (Title A-Z, Runtime, etc.) within each group independently
-- Helper function `applySortOption(to:)` applies current sort to any movie array
-- Concatenate sorted groups: `sortedUnwatched + sortedWatched`
-- Toggling watched status immediately moves movie due to optimistic UI updates
-
-### Splash Screen Pattern
-- Create SplashView with app branding (logo, name) and ProgressView
-- Add `@Published var isCheckingSession = true` to AuthViewModel
-- Set `isCheckingSession = true` at start of checkSession(), false when complete
-- OscarsTrackerApp shows SplashView while `isCheckingSession` is true
-- Use `.transition(.opacity)` and `.animation(.easeInOut)` for smooth transitions
-- Trophy icon with gold gradient for Oscar-themed branding
-
-### Secure Logout Pattern
-- Use `@EnvironmentObject` to access AuthViewModel from any view
-- Call `authViewModel.signOut()` which sets isAuthenticated = false
-- OscarsTrackerApp uses conditional ZStack (not NavigationStack) for view switching
-- When isAuthenticated becomes false, app shows LoginView automatically
-- Navigation stack is implicitly reset since views are conditionally rendered
-- After delete account, also reset: `authViewModel.isAuthenticated = false`
-
-### Tabbed Leaderboard Pattern
-- Use enum for tab options: `enum LeaderboardTab: String, CaseIterable`
-- Add `@State private var selectedTab` for tracking selected tab
-- Use `.pickerStyle(.segmented)` for tab bar appearance
-- Switch content based on selectedTab with `switch selectedTab`
-- "Coming Soon" placeholder: sparkles icon + displaySmall text + bodyMedium description
-- Row view focuses on primary metric (watched count) with percentage as secondary
-
-## Build Fixes & Gotchas
-
-### Group Model Naming Conflict
-- Project has a `Group` model which conflicts with SwiftUI's `Group` container
-- Use `ZStack` instead of `Group` in OscarsTrackerApp for conditional view switching
-- Use `@ViewBuilder` annotation instead of `Group {}` wrapper in computed properties
-
-### ForEach Underscore Pattern
-- `ForEach(0..<3, id: \.self) { _ in ... }` - cannot use `_` in conditions inside body
-- Use named parameter: `ForEach(0..<3, id: \.self) { index in ... }`
-
-### Supabase SDK API Changes
-- `apiError.message` is no longer optional in newer Supabase SDK
-- Change `if let message = apiError.message?.lowercased()` to `let message = apiError.message.lowercased()`
-
-### Model Conformances
-- Models used in `.onChange(of:)` must conform to `Equatable`
-- Add `Equatable` to protocol conformances: `struct Model: Codable, Identifiable, Equatable`
+## Conventions
+- Prefer system components and their iOS 26 behaviour: `TabView` with `Tab`, `NavigationStack` and `NavigationSplitView`, toolbars, sheets with detents, `Menu`, `.buttonStyle(.glass)` and `.glassProminent`, SF Symbols. `glassEffect` only for custom floating elements, never on list content.
+- System text styles, so Dynamic Type works. `@ScaledMetric` for any size that must grow with text.
+- `@Observable` models injected through the environment (the old `ObservableObject` view models are replaced in P3-03).
+- Every screen has previews with sample data, no network, in dark, light and a large text size.
+- Gold is earned: it marks progress, your picks and wins, nothing decorative.
+- The `Group` model clashes with SwiftUI's `Group`; it is being renamed in P3-03. Until then, don't use SwiftUI's `Group` in files that see the model.
+- Acting categories lead with the person (`detail_text`) and show the film underneath. Show years with `Text(verbatim:)` so 2025 doesn't become "2,025".

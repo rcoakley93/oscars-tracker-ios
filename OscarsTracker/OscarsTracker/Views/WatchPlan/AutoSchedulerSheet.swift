@@ -303,7 +303,7 @@ struct AutoSchedulerSheet: View {
                 Text(value)
                     .font(.headingMedium)
             }
-            .foregroundStyle(isWarning ? Color.destructive : Color.goldPrimary)
+            .foregroundStyle(isWarning ? Color.destructiveLight : Color.goldLight)
 
             Text(label)
                 .font(.caption)
@@ -417,7 +417,7 @@ struct AutoSchedulerSheet: View {
                         .foregroundStyle(Color.textMuted)
                     Text(dayNumber(date))
                         .font(.headingMedium)
-                        .foregroundStyle(Color.goldPrimary)
+                        .foregroundStyle(Color.goldLight)
                     Text(monthAbbrev(date))
                         .font(.caption2)
                         .fontWeight(.medium)

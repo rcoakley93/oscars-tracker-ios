@@ -42,7 +42,7 @@ enum CategoryFactory {
         pointsValue: Int? = 10,
         year: Int? = 2024,
         createdAt: String? = nil
-    ) -> Category {
+    ) -> OscarsTracker.Category {
         Category(
             id: id,
             name: name,

@@ -1,6 +1,6 @@
 import Foundation
 
-struct UserPrediction: Codable, Identifiable {
+nonisolated struct UserPrediction: Codable, Identifiable {
     let id: Int
     let userId: String
     let categoryId: Int

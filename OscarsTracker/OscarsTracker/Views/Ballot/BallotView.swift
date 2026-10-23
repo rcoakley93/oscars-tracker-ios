@@ -207,7 +207,7 @@ struct CountdownTimerView: View {
             HStack {
                 Image(systemName: isLocked ? "lock.fill" : "clock.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(isLocked ? Color.destructive : Color.goldPrimary)
+                    .foregroundStyle(isLocked ? Color.destructiveLight : Color.goldPrimary)
 
                 Text(isLocked ? "Ballot Locked" : "Time Remaining")
                     .font(.headingSmall)
@@ -221,7 +221,7 @@ struct CountdownTimerView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 24))
-                        .foregroundStyle(Color.destructive)
+                        .foregroundStyle(Color.destructiveLight)
 
                     Text("Predictions are now locked")
                         .font(.bodyMedium)
@@ -370,7 +370,7 @@ struct CategoryCard: View {
                             } else if isPredictionIncorrect {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 16))
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                             }
                         }
                     }
@@ -385,7 +385,7 @@ struct CategoryCard: View {
                         } else {
                             Text("\(category.pointsValue ?? 0) pts")
                                 .font(.caption)
-                                .foregroundStyle(Color.goldPrimary)
+                                .foregroundStyle(Color.goldLight)
                         }
 
                         Text("•")
@@ -485,7 +485,7 @@ struct NominationRow: View {
         if isUserCorrect {
             return Color.success
         } else if isUserIncorrect {
-            return Color.destructive
+            return Color.destructiveLight
         } else if isWinner {
             return Color.goldPrimary
         } else if isSelected {
@@ -527,7 +527,7 @@ struct NominationRow: View {
                     } else if isUserIncorrect {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 22))
-                            .foregroundStyle(Color.destructive)
+                            .foregroundStyle(Color.destructiveLight)
                     } else {
                         Circle()
                             .stroke(isSelected ? Color.goldPrimary : Color.borderColor, lineWidth: 2)

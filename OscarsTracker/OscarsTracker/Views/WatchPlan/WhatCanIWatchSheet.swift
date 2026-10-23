@@ -159,7 +159,7 @@ struct WhatCanIWatchSheet: View {
                     if count > 0 {
                         Text("\(count) movie\(count == 1 ? "" : "s")")
                             .font(.caption)
-                            .foregroundStyle(Color.goldPrimary)
+                            .foregroundStyle(Color.goldLight)
                     } else {
                         Text("None available")
                             .font(.caption)
@@ -196,7 +196,7 @@ struct WhatCanIWatchSheet: View {
             VStack(spacing: 4) {
                 Text("\(availableMovies.count)")
                     .font(.headingMedium)
-                    .foregroundStyle(Color.goldPrimary)
+                    .foregroundStyle(Color.goldLight)
                 Text("Unwatched")
                     .font(.caption)
                     .foregroundStyle(Color.textMuted)
@@ -208,7 +208,7 @@ struct WhatCanIWatchSheet: View {
             VStack(spacing: 4) {
                 Text("\(viewModel.watchPlanItems.count)")
                     .font(.headingMedium)
-                    .foregroundStyle(Color.goldPrimary)
+                    .foregroundStyle(Color.goldLight)
                 Text("Planned")
                     .font(.caption)
                     .foregroundStyle(Color.textMuted)
@@ -407,7 +407,7 @@ struct WhatCanIWatchSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(Color.cardBackground)
-            .foregroundStyle(Color.goldPrimary)
+            .foregroundStyle(Color.goldLight)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -423,9 +423,9 @@ struct WhatCanIWatchSheet: View {
     private func runtimeColor(for movie: Movie) -> Color {
         guard let runtime = movie.runtimeMinutes else { return Color.textMuted }
         if runtime < 40 { return Color.success }
-        if runtime < 90 { return Color.goldPrimary }
-        if runtime <= 120 { return Color.goldPrimary }
-        return Color.destructive.opacity(0.8)
+        if runtime < 90 { return Color.goldLight }
+        if runtime <= 120 { return Color.goldLight }
+        return Color.destructiveLight
     }
 
     // MARK: - Actions

@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for GroupsViewModel validation and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class GroupsViewModelTests: XCTestCase {
 
     var viewModel: GroupsViewModel!

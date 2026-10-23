@@ -169,7 +169,7 @@ struct LeaderboardRowView: View {
                     Text(entry.username)
                         .font(.bodyMedium)
                         .fontWeight(.semibold)
-                        .foregroundStyle(isCurrentUser ? Color.goldPrimary : Color.textPrimary)
+                        .foregroundStyle(isCurrentUser ? Color.goldLight : Color.textPrimary)
 
                     if isCurrentUser {
                         Image(systemName: "star.fill")

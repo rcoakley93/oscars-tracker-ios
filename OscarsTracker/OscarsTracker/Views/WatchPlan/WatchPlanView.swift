@@ -289,7 +289,7 @@ struct WatchPlanView: View {
         HStack {
             Text(label)
                 .font(.headingSmall)
-                .foregroundStyle(isOverdue ? Color.destructive : (isHighlighted ? Color.goldPrimary : Color.textPrimary))
+                .foregroundStyle(isOverdue ? Color.destructiveLight : (isHighlighted ? Color.goldLight : Color.textPrimary))
             Spacer()
             if isHighlighted && !isOverdue {
                 HStack(spacing: 4) {
@@ -299,7 +299,7 @@ struct WatchPlanView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                 }
-                .foregroundStyle(Color.goldPrimary)
+                .foregroundStyle(Color.goldLight)
                 .transition(.scale.combined(with: .opacity))
             }
         }
@@ -343,7 +343,7 @@ struct WatchPlanView: View {
 }
 
 /// Transferable data for drag and drop of watch plan items.
-struct WatchPlanItemTransfer: Codable, Transferable {
+nonisolated struct WatchPlanItemTransfer: Codable, Transferable {
     let itemId: Int
     let movieId: Int
 
@@ -504,7 +504,7 @@ struct WatchPlanRowView: View {
                         Label("Move", systemImage: "calendar.badge.clock")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundStyle(Color.goldPrimary)
+                            .foregroundStyle(Color.goldLight)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(Color.goldPrimary.opacity(0.15))
@@ -677,7 +677,7 @@ struct RescheduleSheet: View {
             Text(formattedCurrentDate)
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundStyle(Color.goldPrimary)
+                .foregroundStyle(Color.goldLight)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)

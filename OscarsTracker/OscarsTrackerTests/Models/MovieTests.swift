@@ -1,6 +1,7 @@
 import XCTest
 @testable import OscarsTracker
 
+@MainActor
 final class MovieTests: XCTestCase {
 
     // MARK: - formattedRuntime Tests

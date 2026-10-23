@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+OscarsTracker/build/
+OscarsTracker/.build/
+OscarsTracker/.swiftpm/
+
+# Local Claude Code settings (preview servers, permissions)
+.claude/

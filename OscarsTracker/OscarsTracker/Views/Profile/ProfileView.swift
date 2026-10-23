@@ -174,7 +174,7 @@ struct ProfileView: View {
             if let error = viewModel.errorMessage {
                 Text(error)
                     .font(.caption)
-                    .foregroundStyle(Color.destructive)
+                    .foregroundStyle(Color.destructiveLight)
                     .multilineTextAlignment(.center)
             }
 
@@ -492,10 +492,10 @@ struct ChangePasswordSheet: View {
                             if !viewModel.confirmNewPassword.isEmpty {
                                 HStack(spacing: 4) {
                                     Image(systemName: viewModel.passwordsMatch ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                        .foregroundStyle(viewModel.passwordsMatch ? Color.success : Color.destructive)
+                                        .foregroundStyle(viewModel.passwordsMatch ? Color.success : Color.destructiveLight)
                                     Text(viewModel.passwordsMatch ? "Passwords match" : "Passwords do not match")
                                         .font(.caption)
-                                        .foregroundStyle(viewModel.passwordsMatch ? Color.success : Color.destructive)
+                                        .foregroundStyle(viewModel.passwordsMatch ? Color.success : Color.destructiveLight)
                                 }
                             }
                         }
@@ -507,10 +507,10 @@ struct ChangePasswordSheet: View {
                         if let errorMessage = viewModel.errorMessage {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                                 Text(errorMessage)
                                     .font(.bodyMedium)
-                                    .foregroundStyle(Color.destructive)
+                                    .foregroundStyle(Color.destructiveLight)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 4)
@@ -550,7 +550,7 @@ struct ChangePasswordSheet: View {
                     Button("Cancel") {
                         viewModel.cancelChangePassword()
                     }
-                    .foregroundStyle(Color.goldPrimary)
+                    .foregroundStyle(Color.goldLight)
                 }
             }
             .interactiveDismissDisabled(viewModel.isChangingPassword)
@@ -610,7 +610,7 @@ struct ChangePasswordStrengthView: View {
         case .none:
             return Color.borderColor
         case .weak:
-            return index == 0 ? Color.destructive : Color.borderColor
+            return index == 0 ? Color.destructiveLight : Color.borderColor
         case .medium:
             return index <= 1 ? Color.goldPrimary : Color.borderColor
         case .strong:
@@ -623,7 +623,7 @@ struct ChangePasswordStrengthView: View {
         case .none:
             return Color.textMuted
         case .weak:
-            return Color.destructive
+            return Color.destructiveLight
         case .medium:
             return Color.goldPrimary
         case .strong:

@@ -1,0 +1,10 @@
+// Build settings shared by every configuration of the app.
+//
+// The Supabase URL and anon key are public (they ship in every client and
+// RLS protects the data). The service role key, the APNs key and the TMDB
+// key never go here or anywhere in this repo.
+//
+// xcconfig treats "//" as a comment, so the host is stored without a scheme
+// and AppConfig builds the URL.
+SUPABASE_HOST = mukucjdrafjndtlxvbsj.supabase.co
+SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11a3VjamRyYWZqbmR0bHh2YnNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1OTQzMDcsImV4cCI6MjA4MTE3MDMwN30.eH4itWcYDWM1qGdYrIpZ8Xrpq4Dumm9WBkEb9FY_YKI

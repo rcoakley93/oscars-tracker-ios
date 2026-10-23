@@ -1,6 +1,6 @@
 import Foundation
 
-struct WatchPlanItem: Codable, Identifiable {
+nonisolated struct WatchPlanItem: Codable, Identifiable {
     let id: Int
     let userId: String
     let movieId: Int
@@ -26,8 +26,15 @@ struct WatchPlanItem: Codable, Identifiable {
         self.createdAt = createdAt
     }
 
+    /// A plan is for a calendar day in the viewer's own time zone, so it's missed
+    /// only once that local day has passed (not at UTC midnight).
     var isMissed: Bool {
-        guard let date = ISO8601DateFormatter().date(from: plannedDate + "T00:00:00Z") else {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: plannedDate) else {
             return false
         }
         return date < Calendar.current.startOfDay(for: Date())

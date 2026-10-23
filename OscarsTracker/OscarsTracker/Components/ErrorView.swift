@@ -23,7 +23,7 @@ struct ErrorView: View {
         VStack(spacing: 20) {
             Image(systemName: icon)
                 .font(.system(size: 48))
-                .foregroundStyle(Color.destructive)
+                .foregroundStyle(Color.destructiveLight)
 
             Text(title)
                 .font(.headingMedium)
@@ -89,7 +89,7 @@ struct ToastView: View {
 
         var color: Color {
             switch self {
-            case .error: return .destructive
+            case .error: return .destructiveLight
             case .success: return .success
             case .warning: return .goldPrimary
             case .info: return .textPrimary
@@ -234,11 +234,11 @@ struct ErrorBanner: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.circle.fill")
-                .foregroundStyle(Color.destructive)
+                .foregroundStyle(Color.destructiveLight)
 
             Text(message)
                 .font(.bodySmall)
-                .foregroundStyle(Color.destructive)
+                .foregroundStyle(Color.destructiveLight)
 
             Spacer()
         }

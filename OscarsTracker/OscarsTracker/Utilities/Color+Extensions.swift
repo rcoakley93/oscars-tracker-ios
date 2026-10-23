@@ -17,11 +17,13 @@ extension Color {
 
     // Semantic
     static let destructive = Color(hue: 0, saturation: 0.62, brightness: 0.50)
+    /// Red for text and icons on dark surfaces (4.5:1+); `destructive` is for fills only
+    static let destructiveLight = Color(hue: 0, saturation: 0.55, brightness: 0.90)
     static let success = Color(hue: 142/360, saturation: 0.71, brightness: 0.45)
     static let borderColor = Color(hue: 0, saturation: 0, brightness: 0.18)
 
     // Initialize from hex string
-    init(hex: String) {
+    nonisolated init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)

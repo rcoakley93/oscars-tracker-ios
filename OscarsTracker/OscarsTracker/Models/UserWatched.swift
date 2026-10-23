@@ -1,6 +1,6 @@
 import Foundation
 
-struct UserWatched: Codable, Identifiable {
+nonisolated struct UserWatched: Codable, Identifiable {
     let id: Int
     let userId: String
     let movieId: Int

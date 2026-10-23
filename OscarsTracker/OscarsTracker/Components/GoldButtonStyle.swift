@@ -36,7 +36,7 @@ struct GoldOutlineButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headingMedium)
-            .foregroundStyle(Color.goldPrimary)
+            .foregroundStyle(Color.goldLight)
             .padding(.horizontal, 24)
             .padding(.vertical, 14)
             .frame(maxWidth: isFullWidth ? .infinity : nil)

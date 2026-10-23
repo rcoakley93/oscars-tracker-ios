@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests for WatchPlanViewModel date grouping and computed properties.
 /// Note: Tests focus on pure functions that don't require Supabase connection.
+@MainActor
 final class WatchPlanViewModelTests: XCTestCase {
 
     var viewModel: WatchPlanViewModel!

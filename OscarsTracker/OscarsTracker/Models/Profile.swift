@@ -1,6 +1,6 @@
 import Foundation
 
-struct Profile: Codable, Identifiable {
+nonisolated struct Profile: Codable, Identifiable {
     let id: String
     var username: String?
     var avatarUrl: String?
