@@ -6,12 +6,29 @@ struct ProfileSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var confirmDelete = false
+    @AppStorage(Voice.storageKey) private var voice: Voice = .host
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     LabeledContent("Username", value: model.profile.profile?.username ?? "—")
+                }
+                Section {
+                    Picker("Voice", selection: $voice) {
+                        ForEach(Voice.allCases) { option in
+                            VStack(alignment: .leading) {
+                                Text(Copy.for(option).label)
+                                Text(Copy.for(option).sample).font(.footnote).foregroundStyle(.inkMuted)
+                            }
+                            .tag(option)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                } header: {
+                    Text("Voice")
+                } footer: {
+                    Text("How the app talks to you. Errors are always plain.")
                 }
                 Section {
                     Button("Sign out") {

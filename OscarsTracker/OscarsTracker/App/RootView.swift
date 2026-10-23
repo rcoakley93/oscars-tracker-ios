@@ -3,6 +3,7 @@ import SwiftUI
 /// Launch, sign-in, onboarding or the app, from the session's state.
 struct RootView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(Voice.storageKey) private var voice: Voice = .host
 
     var body: some View {
         ZStack {
@@ -22,6 +23,7 @@ struct RootView: View {
         .animation(.smooth, value: model.session.state)
         .animation(.smooth, value: model.profile.needsUsername)
         .tint(.goldOnGlass)
+        .environment(\.copy, Copy.for(voice))
     }
 }
 
