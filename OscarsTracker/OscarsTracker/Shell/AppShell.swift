@@ -1,9 +1,15 @@
 import SwiftUI
 
-/// The app's chrome (P3-05): a tab view with the system's Liquid Glass tab
-/// bar, which minimizes on scroll and becomes a sidebar on regular widths
-/// (iPhone Duo inner screen, iPad). Each tab has its own navigation stack
-/// with a large title and a profile button.
+/// The app's chrome (P3-05, P3-10): a tab view with the system's Liquid Glass
+/// tab bar, which minimises on scroll and becomes a sidebar on regular widths
+/// (iPhone Duo inner screen, iPad), the search tab, and the season ticker
+/// above the bar.
+///
+/// Films, Ballot, Board and Groups are master and detail, so they're split
+/// views: one column on compact widths (iPhone, the Duo's outer screen), two
+/// on regular. Plan is two views with no navigation between them, so it's an
+/// arrangement. Every selection lives in `AppNavigation`, so folding or
+/// unfolding a Duo keeps it.
 struct AppShell: View {
     @Environment(AppModel.self) private var model
 
@@ -12,23 +18,29 @@ struct AppShell: View {
 
         TabView(selection: $navigation.tab) {
             SwiftUI.Tab("Films", systemImage: "film", value: AppNavigation.Tab.films) {
-                TabStack(title: "Films", posters: model.films.movies.compactMap(\.posterUrl)) { FilmsPlaceholder() }
+                FilmsTab()
             }
             SwiftUI.Tab("Plan", systemImage: "calendar", value: AppNavigation.Tab.plan) {
-                TabStack(title: "Watch plan") { PlanPlaceholder() }
+                PlanTab()
             }
             SwiftUI.Tab("Ballot", systemImage: "checkmark.seal", value: AppNavigation.Tab.ballot) {
-                TabStack(title: "Ballot") { BallotPlaceholder() }
+                BallotTab()
             }
             SwiftUI.Tab("Board", systemImage: "trophy", value: AppNavigation.Tab.board) {
-                TabStack(title: "Leaderboard") { BoardPlaceholder() }
+                BoardTab()
             }
             SwiftUI.Tab("Groups", systemImage: "person.3", value: AppNavigation.Tab.groups) {
-                TabStack(title: "Groups") { GroupsPlaceholder() }
+                GroupsTab()
+            }
+            SwiftUI.Tab(value: AppNavigation.Tab.search, role: .search) {
+                SearchTab()
             }
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .tabViewBottomAccessory(isEnabled: model.season.ticker(filmsLeft: model.films.toWatch.count) != .none) {
+            SeasonTicker()
+        }
         .sheet(item: $navigation.sheet) { sheet in
             switch sheet {
             case .profile:
@@ -40,31 +52,49 @@ struct AppShell: View {
     }
 }
 
-/// One tab's navigation stack: a large title over the ground, with the
-/// season's name above it and a profile button in the toolbar.
-private struct TabStack<Content: View>: View {
+// MARK: - Bars
+
+extension View {
+    /// The title, the season under it, the profile button and the ambient
+    /// light for a tab's first column. Each tab adds its own items.
+    func tabChrome(_ title: String, posters: [String] = []) -> some View {
+        modifier(TabChrome(title: title, posters: posters))
+    }
+}
+
+private struct TabChrome: ViewModifier {
     @Environment(AppModel.self) private var model
     let title: String
-    /// Posters that light the ambient backdrop; none gives the theatre gradient.
-    var posters: [String] = []
-    @ViewBuilder var content: Content
+    var posters: [String]
 
-    var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle(title)
-                .navigationSubtitle(model.season.ceremony?.name ?? "")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Profile", systemImage: "person.crop.circle") {
-                            model.navigation.sheet = .profile
-                        }
+    func body(content: Content) -> some View {
+        content
+            .navigationTitle(title)
+            .navigationSubtitle(model.season.ceremony?.name ?? "")
+            .toolbar {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button("Profile", systemImage: "person.crop.circle") {
+                        model.navigation.sheet = .profile
                     }
                 }
-                .scrollContentBackground(.hidden)
-                .background { AmbientBackground(posters: posters) }
-                .refreshable { await model.refresh() }
-        }
+                .visibilityPriority(.automatic)
+            }
+            .scrollContentBackground(.hidden)
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .background { AmbientBackground(posters: posters) }
+            .refreshable { await model.refresh() }
+    }
+}
+
+/// The detail column when nothing is selected yet.
+struct NothingSelected: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        ContentUnavailableView(title, systemImage: systemImage)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(.ground)
     }
 }
 
@@ -75,12 +105,28 @@ private struct ComingSoonSheet: View {
     var body: some View {
         NavigationStack {
             ContentUnavailableView("Coming in Phase 4", systemImage: "hammer", description: Text("This sheet is part of the next build."))
-                .toolbar { Button("Done") { dismiss() } }
+                .toolbar {
+                    ToolbarItemGroup(placement: .confirmationAction) {
+                        Button("Done", systemImage: "checkmark") { dismiss() }
+                    }
+                }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
     }
 }
 
-#Preview("iPhone") {
-    AppShell().environment(AppModel.preview())
+#Preview("Dark") {
+    AppShell().environment(AppModel.preview()).preferredColorScheme(.dark)
+}
+
+#Preview("Light") {
+    AppShell().environment(AppModel.preview()).preferredColorScheme(.light)
+}
+
+#Preview("Large text") {
+    AppShell().environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
+
+#Preview("Error") {
+    AppShell().environment(AppModel.preview { $0.failure = .offline }).preferredColorScheme(.dark)
 }

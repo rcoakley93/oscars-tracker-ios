@@ -58,12 +58,24 @@ struct Copy {
     let groupBoardEmpty: String
     let boardEmpty: String
 
+    // Season ticker (screens.md, section 2)
+    let tickerSeason: (_ days: Int, _ filmsLeft: Int) -> String
+    /// The last seven days.
+    let tickerFinalWeek: (_ days: Int, _ filmsLeft: Int) -> String
+    /// `left` is already formatted ("3 hours", "40 minutes").
+    let tickerLockDay: (_ left: String) -> String
+
     // The setting itself
     let label: String
     let sample: String
 }
 
 extension Copy {
+    /// "1 day", "33 days".
+    nonisolated static func days(_ days: Int) -> String {
+        days == 1 ? "1 day" : "\(days) days"
+    }
+
     static func `for`(_ voice: Voice) -> Copy {
         voice == .host ? host : classic
     }
@@ -94,9 +106,17 @@ extension Copy {
         groupsEmpty: Empty(title: "No groups yet", body: "Create a group, or join one with an invite code, to compete with friends."),
         groupBoardEmpty: "No members yet. Share the invite code to add people.",
         boardEmpty: "No one is on the board yet.",
+        tickerSeason: classicCountdown,
+        tickerFinalWeek: classicCountdown,
+        tickerLockDay: { left in "Ballot locks in \(left)." },
         label: "Classic",
         sample: "12 of 50 films watched."
     )
+
+    /// "33 days to the ceremony · 38 films left", the same in the final week.
+    private nonisolated static func classicCountdown(_ days: Int, _ left: Int) -> String {
+        "\(Copy.days(days)) to the ceremony · " + (left == 0 ? "All films watched" : "\(left) \(left == 1 ? "film" : "films") left")
+    }
 
     private static let hostPickLines = [
         "Noted. The envelope will decide.",
@@ -139,6 +159,19 @@ extension Copy {
         groupsEmpty: Empty(title: "Flying solo?", body: "Start a group, or join one with an invite code. Awards season is better with rivals."),
         groupBoardEmpty: "Nobody here yet. Share the invite code and fill the seats.",
         boardEmpty: "The red carpet's empty. Be the first to arrive.",
+        tickerSeason: { days, left in
+            left == 0
+                ? "\(Copy.days(days)). Every film watched. Smug is allowed."
+                : "\(Copy.days(days)). \(left) \(left == 1 ? "film" : "films"). Do the math, or don't."
+        },
+        tickerFinalWeek: { days, _ in
+            switch days {
+            case 7: "One week. Time to become a morning person."
+            case 1: "Tomorrow night. Iron something."
+            default: "\(days) days. Time to become a morning person."
+            }
+        },
+        tickerLockDay: { left in "Pens down in \(left)." },
         label: "Host",
         sample: "12 down, 38 to go. The Academy watched all of these. Allegedly."
     )

@@ -44,6 +44,11 @@ final class PlanStore {
         }
     }
 
+    /// The films planned for one day.
+    func items(on day: PlanDay) -> [WatchPlanItem] {
+        items.filter { PlanDay($0.plannedDate) == day }
+    }
+
     private func days(where include: (PlanDay) -> Bool) -> [Day] {
         let byDay = Dictionary(grouping: items.compactMap { item in PlanDay(item.plannedDate).map { ($0, item) } }, by: \.0)
         return byDay.keys.filter(include).sorted().map { Day(day: $0, items: byDay[$0]!.map(\.1)) }

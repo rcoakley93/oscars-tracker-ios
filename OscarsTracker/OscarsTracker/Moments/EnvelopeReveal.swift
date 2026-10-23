@@ -37,6 +37,7 @@ struct EnvelopeReveal: View {
                     .controlSize(.large)
             }
             .padding(Theme.Space.l)
+            .centeredBesideFold()
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(category): \(winner)")
