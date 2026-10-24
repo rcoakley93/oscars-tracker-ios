@@ -21,6 +21,13 @@ struct InviteLinkTests {
         #expect(InviteLink.url(code: "OSCAR9", host: nil) == nil)
     }
 
+    /// The app's own host, from SITE_HOST: the one its applinks entitlement claims.
+    @Test func opensTheSitesInviteLinks() {
+        #expect(InviteLink.siteHost == "oscarstracker.com")
+        #expect(InviteLink.code(in: URL(string: "https://oscarstracker.com/join/OSCAR9")!) == "OSCAR9")
+        #expect(InviteLink.url(code: "OSCAR9")?.absoluteString == "https://oscarstracker.com/join/OSCAR9")
+    }
+
     @Test func normalizesTypedCodes() {
         #expect(InviteLink.normalized(" os-car 9x ") == "OSCAR9")
         #expect(InviteLink.isValid("OSCAR9"))

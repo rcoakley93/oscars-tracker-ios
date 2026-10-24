@@ -1,7 +1,7 @@
 import Foundation
 
-/// Group invites (screens.md, 3.7): `https://<site>/join/<code>` once the
-/// website exists (P5-03), and `oscarstracker://join/<code>` meanwhile.
+/// Group invites (screens.md, 3.7): `https://<site>/join/<code>`, a universal
+/// link (P5-03), and the older `oscarstracker://join/<code>`, still accepted.
 /// Codes are six characters from `LiveDataSource.newInviteCode()`'s alphabet.
 nonisolated enum InviteLink {
     /// The website's host from Info.plist (`SITE_HOST`), or nil until it's chosen.

@@ -10,7 +10,7 @@ SUPABASE_HOST = mukucjdrafjndtlxvbsj.supabase.co
 SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11a3VjamRyYWZqbmR0bHh2YnNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1OTQzMDcsImV4cCI6MjA4MTE3MDMwN30.eH4itWcYDWM1qGdYrIpZ8Xrpq4Dumm9WBkEb9FY_YKI
 
 // The website's host (Phase 5), for invite links: https://$(SITE_HOST)/join/<code>.
-// Empty until the store name and domain are chosen (P5-00); invites share
-// the code alone until then. When it's set, also add applinks:<host> to
-// com.apple.developer.associated-domains in OscarsTracker.entitlements.
-SITE_HOST =
+// Chosen in P5-00. It must match applinks:<host> in
+// com.apple.developer.associated-domains in OscarsTracker.entitlements, and
+// the site serves /.well-known/apple-app-site-association for it (P5-03).
+SITE_HOST = oscarstracker.com
