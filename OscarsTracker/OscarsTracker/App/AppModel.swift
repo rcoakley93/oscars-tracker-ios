@@ -16,6 +16,7 @@ final class AppModel {
     let groups: GroupsStore
     let leaderboard: LeaderboardStore
     let profile: ProfileStore
+    let push: PushStore
     let navigation = AppNavigation()
 
     init(data: any AppDataSource) {
@@ -27,12 +28,14 @@ final class AppModel {
         groups = GroupsStore(data: data)
         leaderboard = LeaderboardStore(data: data)
         profile = ProfileStore(data: data)
+        push = PushStore(data: data)
     }
 
     /// At launch: restore the session, then load the season and everything for the user.
     func start() async {
         await session.restore()
         await refresh()
+        await push.refresh()
     }
 
     /// Loads (or reloads) everything at once, for launch, sign-in and pull to refresh.
@@ -45,7 +48,8 @@ final class AppModel {
             async let plan: Void = plan.load(userID: userID)
             async let groups: Void = groups.load(userID: userID)
             async let profile: Void = profile.load(userID: userID)
-            _ = await (plan, groups, profile)
+            async let push: Void = push.signedIn()
+            _ = await (plan, groups, profile, push)
         }
         _ = await (season, films, ballot)
     }
@@ -58,6 +62,7 @@ final class AppModel {
     }
 
     func signOut() async {
+        await push.signingOut()
         await session.signOut()
         clearUserData()
     }

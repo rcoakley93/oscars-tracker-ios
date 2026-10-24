@@ -3,16 +3,22 @@ import SwiftUI
 @main
 struct OscarsTrackerApp: App {
     @State private var model = AppModel(data: Self.dataSource())
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
                 .task {
+                    delegate.model = model
                     await model.start()
                     #if DEBUG
                     Self.openScreenshotRoute(in: model)
                     #endif
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active { Task { await model.push.refresh() } }
                 }
         }
     }

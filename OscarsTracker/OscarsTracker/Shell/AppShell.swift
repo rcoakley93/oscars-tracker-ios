@@ -41,6 +41,11 @@ struct AppShell: View {
         .tabViewBottomAccessory(isEnabled: model.season.ticker(filmsLeft: model.films.toWatch.count) != .none) {
             SeasonTicker()
         }
+        // Notifications are asked about after the first saved pick or
+        // watched film, when they make sense, never at launch.
+        .onChange(of: model.films.saves + model.ballot.saves) { _, saves in
+            if saves > 0 { Task { await model.push.askAfterFirstSave() } }
+        }
         // An invite link opened before sign-in (or before the app was
         // installed and signed up) opens the join sheet once you're in.
         .onChange(of: model.session.pendingInviteCode, initial: true) {

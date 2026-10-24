@@ -76,6 +76,12 @@ protocol AppDataSource: AnyObject, Sendable {
     /// and, after the lock, their picks.
     func boardPerson(ceremonyID: Int, userID: String) async throws -> BoardPerson
 
+    // Push (P4-09)
+    /// Saves this device's APNs token for you; a token from another account moves to you.
+    func registerDevice(token: String, environment: PushEnvironment) async throws
+    /// Forgets this device, at sign-out.
+    func removeDevice(token: String) async throws
+
     // Profile
     func profile(userID: String) async throws -> Profile?
     func updateUsername(_ username: String, userID: String) async throws

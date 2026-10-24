@@ -15,6 +15,8 @@ final class BallotStore {
     /// Counts the saves that picked the last category, for the gold dust. It
     /// changes only once the save succeeds, so a rolled-back pick never celebrates.
     private(set) var completions = 0
+    /// Counts saved picks, for asking about notifications after the first.
+    private(set) var saves = 0
     var actionError: AppError?
 
     private let data: any AppDataSource
@@ -76,6 +78,7 @@ final class BallotStore {
         picks[categoryID] = nominationID
         do {
             try await data.savePick(categoryID: categoryID, nominationID: nominationID, userID: userID)
+            saves += 1
             if previous == nil, isComplete { completions += 1 }
         } catch {
             picks[categoryID] = previous

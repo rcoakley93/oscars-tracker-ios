@@ -56,6 +56,27 @@ final class AppNavigation {
     var debugGallery: String?
     #endif
 
+    /// Opens an in-app route from a notification (send-push's `path`):
+    /// "/ballot", "/movie/12", "/category/3", "/group/4". Unknown routes open
+    /// the app as it was.
+    func open(path: String) {
+        let parts = path.split(separator: "/").map(String.init)
+        guard let first = parts.first else { return }
+        let id = parts.dropFirst().first.flatMap { Int($0) }
+        switch (first, id) {
+        case ("movie", let id?):
+            sheet = .movie(id)
+        case ("category", let id?):
+            tab = .ballot
+            selectedCategoryID = id
+        case ("group", let id?):
+            tab = .groups
+            selectedGroupID = id
+        default:
+            if let tab = Tab(rawValue: first), tab != .search { self.tab = tab }
+        }
+    }
+
     func reset() {
         tab = .films
         selectedMovieID = nil
