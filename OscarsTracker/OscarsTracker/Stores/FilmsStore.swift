@@ -15,6 +15,8 @@ final class FilmsStore {
     /// Counts the saves that watched the last nominee, for the gold dust. It
     /// changes only once the save succeeds, so a rolled-back write never celebrates.
     private(set) var completions = 0
+    /// Counts films marked watched and saved, for asking about notifications after the first.
+    private(set) var saves = 0
     /// The last write that failed, for a toast. Cleared by the view.
     var actionError: AppError?
 
@@ -72,6 +74,7 @@ final class FilmsStore {
         if nowWatched { watchedIDs.insert(movieID) } else { watchedIDs.remove(movieID) }
         do {
             try await data.setWatched(nowWatched, movieID: movieID, userID: userID)
+            if nowWatched { saves += 1 }
             if nowWatched, !movies.isEmpty, watchedCount == movies.count { completions += 1 }
         } catch {
             if nowWatched { watchedIDs.remove(movieID) } else { watchedIDs.insert(movieID) }

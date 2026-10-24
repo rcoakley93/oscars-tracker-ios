@@ -371,6 +371,25 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    // MARK: - Push
+
+    private nonisolated struct DeviceParams: Encodable {
+        let p_token: String
+        let p_environment: String
+    }
+
+    func registerDevice(token: String, environment: PushEnvironment) async throws {
+        try await run {
+            try await client.rpc("register_device", params: DeviceParams(p_token: token, p_environment: environment.rawValue)).execute()
+        }
+    }
+
+    func removeDevice(token: String) async throws {
+        try await run {
+            try await client.from("devices").delete().eq("token", value: token).execute()
+        }
+    }
+
     // MARK: - Profile
 
     func profile(userID: String) async throws -> Profile? {

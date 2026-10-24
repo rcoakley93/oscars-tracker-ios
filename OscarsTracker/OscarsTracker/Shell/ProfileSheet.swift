@@ -55,6 +55,14 @@ struct ProfileSheet: View {
                         .padding(.top, Theme.Space.xs)
                 }
 
+                Section {
+                    NotificationsRow()
+                } header: {
+                    Text("Notifications")
+                } footer: {
+                    Text("Ballot lock reminders and the winners as they're announced.")
+                }
+
                 if !pastSeasons.isEmpty {
                     Section("Past seasons") {
                         ForEach(pastSeasons) { SeasonRow(season: $0) }
@@ -116,6 +124,28 @@ struct ProfileSheet: View {
     /// Seasons before this one.
     private var pastSeasons: [SeasonResult] {
         model.profile.history.filter { $0.ceremonyId != model.season.ceremony?.id }
+    }
+}
+
+/// Whether notifications are on, with the way to turn them on. Settings
+/// per kind of push come in P6-04.
+private struct NotificationsRow: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        switch model.push.status {
+        case .notDetermined:
+            Button("Turn on notifications", systemImage: "bell") {
+                Task { await model.push.ask() }
+            }
+        case .denied:
+            Button("Turn on in Settings", systemImage: "gear") {
+                if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+            }
+        default:
+            LabeledContent("Notifications", value: "On")
+        }
     }
 }
 

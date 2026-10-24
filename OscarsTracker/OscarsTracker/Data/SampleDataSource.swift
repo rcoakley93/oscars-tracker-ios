@@ -253,6 +253,19 @@ final class SampleDataSource: AppDataSource {
         return BoardPerson(watchedMovieIDs: films, picks: picks)
     }
 
+    // MARK: - Push
+
+    var devices: [String: PushEnvironment] = [:]
+
+    func registerDevice(token: String, environment: PushEnvironment) async throws {
+        _ = try requireUser()
+        devices[token] = environment
+    }
+
+    func removeDevice(token: String) async throws {
+        devices[token] = nil
+    }
+
     // MARK: - Account
 
     var accountProvider: Account.Provider = .email
