@@ -31,6 +31,19 @@ struct ProfileSheet: View {
                 } footer: {
                     Text("How the app talks to you. Errors are always plain.")
                 }
+                Section("About") {
+                    LabeledContent("Version", value: Bundle.main.versionLine)
+                    VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                        Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")
+                        Link("themoviedb.org", destination: URL(string: "https://www.themoviedb.org")!)
+                    }
+                    .font(.footnote)
+                    VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                        Text("Where-to-watch data from JustWatch.")
+                        Link("justwatch.com", destination: URL(string: "https://www.justwatch.com/us")!)
+                    }
+                    .font(.footnote)
+                }
                 Section {
                     Button("Sign out") {
                         Task {
@@ -67,6 +80,15 @@ struct ProfileSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+    }
+}
+
+extension Bundle {
+    /// "1.4 (27)".
+    var versionLine: String {
+        let version = infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "\(version) (\(build))"
     }
 }
 

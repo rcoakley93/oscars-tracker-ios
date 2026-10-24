@@ -115,6 +115,23 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    func offers(movieID: Int) async throws -> [WatchOffer] {
+        try await run {
+            try await client.from("movie_provider_availability")
+                .select("id, availability_type, providers(name, logo_path)")
+                .eq("movie_id", value: movieID)
+                .eq("region", value: "US")
+                .execute()
+                .value
+        }
+    }
+
+    func seenInGroups(movieID: Int) async throws -> [GroupSeen] {
+        try await run {
+            try await client.rpc("get_movie_seen_in_groups", params: ["p_movie_id": movieID]).execute().value
+        }
+    }
+
     private nonisolated struct WatchedInsert: Encodable {
         let user_id: String
         let movie_id: Int

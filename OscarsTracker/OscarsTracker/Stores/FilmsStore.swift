@@ -7,6 +7,11 @@ final class FilmsStore {
     private(set) var movies: [Movie] = []
     private(set) var watchedIDs: Set<Int> = []
     private(set) var state: LoadState = .idle
+    /// Where to watch each film opened so far, by movie id. Missing until
+    /// loaded; an empty list means no offers.
+    private(set) var offers: [Int: [WatchOffer]] = [:]
+    /// How many in each of your groups have seen each film opened so far.
+    private(set) var seen: [Int: [GroupSeen]] = [:]
     /// Counts the saves that watched the last nominee, for the gold dust. It
     /// changes only once the save succeeds, so a rolled-back write never celebrates.
     private(set) var completions = 0
@@ -31,6 +36,21 @@ final class FilmsStore {
         } catch {
             state = .failed(AppError(error))
         }
+    }
+
+    /// Loads where to watch a film, sorted stream first. Fails quietly: the
+    /// sheet then offers JustWatch.
+    func loadOffers(for movieID: Int) async {
+        guard let loaded = try? await data.offers(movieID: movieID) else {
+            if offers[movieID] == nil { offers[movieID] = [] }
+            return
+        }
+        offers[movieID] = WatchOffer.sorted(loaded)
+    }
+
+    /// Loads your groups' counts for a film; the row stays hidden if it fails.
+    func loadSeen(for movieID: Int) async {
+        if let loaded = try? await data.seenInGroups(movieID: movieID) { seen[movieID] = loaded }
     }
 
     func isWatched(_ movieID: Int) -> Bool {
@@ -62,6 +82,8 @@ final class FilmsStore {
     func reset() {
         movies = []
         watchedIDs = []
+        offers = [:]
+        seen = [:]
         state = .idle
     }
 }

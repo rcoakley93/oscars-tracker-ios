@@ -17,6 +17,8 @@ struct MovieDetail: View {
     @ScaledMetric(relativeTo: .title) private var sheetPoster: CGFloat = 112
     @ScaledMetric(relativeTo: .title) private var columnPoster: CGFloat = 160
     @State private var tears = 0
+    /// Opens at medium, or large once more than three offers load (sheet 3.2).
+    @State private var detent: PresentationDetent = .medium
 
     var body: some View {
         NavigationStack {
@@ -34,6 +36,7 @@ struct MovieDetail: View {
                             plan
                         }
                     }
+                    groupsSeen
                 }
                 .padding(Theme.Space.m)
                 .frame(maxWidth: 760, alignment: .leading)
@@ -47,7 +50,7 @@ struct MovieDetail: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
-                    ShareLink("Share", item: movie.title)
+                    ShareLink("Share", item: movie.shareLine)
                 }
                 .visibilityPriority(.automatic)
                 if layout == .sheet {
@@ -58,9 +61,18 @@ struct MovieDetail: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
         .presentationContentInteraction(.scrolls)
+        .task(id: movie.id) {
+            await model.films.loadOffers(for: movie.id)
+            if (model.films.offers[movie.id]?.count ?? 0) > 3 {
+                withAnimation(.smooth) { detent = .large }
+            }
+        }
+        .task(id: model.films.isWatched(movie.id)) {
+            await model.films.loadSeen(for: movie.id)
+        }
     }
 
     private var header: some View {
@@ -122,17 +134,53 @@ struct MovieDetail: View {
     }
 
     private var whereToWatch: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s) {
+        let offers = model.films.offers[movie.id]
+        return VStack(alignment: .leading, spacing: Theme.Space.s) {
             Text("Where to watch").font(.headline).foregroundStyle(.ink).accessibilityAddTraits(.isHeader)
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                Text(copy.noProviders).font(.subheadline).foregroundStyle(.ink)
-                if let url = URL(string: "https://www.justwatch.com/us/search?q=\(movie.title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
-                    Link("Check JustWatch", destination: url).font(.subheadline.weight(.semibold))
+            VStack(alignment: .leading, spacing: 0) {
+                if let offers, offers.isEmpty {
+                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                        Text(copy.noProviders).font(.subheadline).foregroundStyle(.ink)
+                        Link("Check JustWatch", destination: justWatchURL).font(.subheadline.weight(.semibold))
+                    }
+                    .padding(Theme.Space.m)
+                } else {
+                    let rows = offers ?? WatchOffer.placeholders
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { index, offer in
+                        if index > 0 { Divider().padding(.leading, Theme.Space.m + 32 + Theme.Space.s) }
+                        OfferRow(offer: offer)
+                    }
+                    .redacted(reason: offers == nil ? .placeholder : [])
+                    .accessibilityHidden(offers == nil)
                 }
             }
-            .padding(Theme.Space.m)
             .frame(maxWidth: .infinity, alignment: .leading)
             .solidSurface(radius: Theme.Radius.row)
+            if let offers, !offers.isEmpty {
+                Link(destination: justWatchURL) {
+                    Text("Data from JustWatch").font(.caption).foregroundStyle(.inkMuted)
+                }
+            }
+        }
+    }
+
+    private var justWatchURL: URL {
+        let query = movie.title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return URL(string: "https://www.justwatch.com/us/search?q=\(query)")!
+    }
+
+    /// "4 of 6 in Movies LLC have seen it", one line per group.
+    @ViewBuilder
+    private var groupsSeen: some View {
+        if let seen = model.films.seen[movie.id], !seen.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                ForEach(seen) { group in
+                    Label(copy.groupSeen(group.seenCount, group.memberCount, group.groupName), systemImage: "person.3")
+                        .font(.subheadline)
+                        .foregroundStyle(.inkMuted)
+                        .contentTransition(.numericText())
+                }
+            }
         }
     }
 
@@ -159,6 +207,50 @@ struct MovieDetail: View {
     }
 }
 
+/// A provider's logo and name, what the offer is, and its kind in gold.
+private struct OfferRow: View {
+    let offer: WatchOffer
+    @ScaledMetric(relativeTo: .body) private var logo: CGFloat = 32
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            AsyncImage(url: offer.logoURL) { phase in
+                if let image = phase.image {
+                    image.resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    Text(offer.provider.name.prefix(1))
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.inkMuted)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(.surface)
+                }
+            }
+            .frame(width: logo, height: logo)
+            .clipShape(Theme.shape(Theme.Radius.thumbnail))
+            .accessibilityHidden(true)
+            VStack(alignment: .leading) {
+                Text(offer.provider.name).font(.body).foregroundStyle(.ink)
+                Text(offer.kind.detail).font(.footnote).foregroundStyle(.inkMuted)
+            }
+            Spacer(minLength: Theme.Space.xs)
+            Text(offer.kind.label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.goldText)
+        }
+        .padding(.horizontal, Theme.Space.m)
+        .padding(.vertical, Theme.Space.s)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(offer.provider.name), \(offer.kind.label.lowercased()), \(offer.kind.detail.lowercased())")
+    }
+}
+
+extension WatchOffer {
+    /// Stand-ins for the redacted rows while offers load.
+    static let placeholders: [WatchOffer] = (1...2).map {
+        WatchOffer(id: -$0, availabilityType: "streaming", provider: .init(name: "Streaming service", logoPath: nil))
+    }
+}
+
 #Preview("Dark") {
     Color.ground.sheet(isPresented: .constant(true)) {
         MovieDetail(movie: SampleData.movies[1], layout: .sheet)
@@ -178,6 +270,20 @@ struct MovieDetail: View {
         MovieDetail(movie: SampleData.movies[1], layout: .sheet)
     }
     .environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
+
+#Preview("No offers") {
+    Color.ground.sheet(isPresented: .constant(true)) {
+        MovieDetail(movie: SampleData.movies[6], layout: .sheet)
+    }
+    .environment(AppModel.preview()).preferredColorScheme(.dark)
+}
+
+#Preview("Many offers") {
+    Color.ground.sheet(isPresented: .constant(true)) {
+        MovieDetail(movie: SampleData.movies[0], layout: .sheet)
+    }
+    .environment(AppModel.preview()).preferredColorScheme(.dark)
 }
 
 #Preview("Column, watched") {
