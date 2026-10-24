@@ -9,7 +9,6 @@ import SwiftUI
 struct SearchSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @FocusState private var isSearching: Bool
 
     var body: some View {
@@ -82,15 +81,12 @@ struct SearchSheet: View {
         }
     }
 
-    /// A sheet of its own on compact widths; the Films detail column on regular ones.
+    /// Through Films' selection, so Films shows it as a sheet or in the detail
+    /// column for the size class, and keeps it across a fold.
     private func open(_ movie: Movie) {
-        if sizeClass == .compact {
-            model.navigation.sheet = .movie(movie.id)
-        } else {
-            model.navigation.sheet = nil
-            model.navigation.tab = .films
-            model.navigation.selectedMovieID = movie.id
-        }
+        model.navigation.sheet = nil
+        model.navigation.tab = .films
+        model.navigation.selectedMovieID = movie.id
     }
 
     private func openBallot(at categoryID: Int) {
