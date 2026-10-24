@@ -7,7 +7,7 @@ import Observation
 @Observable
 final class AppNavigation {
     enum Tab: String, CaseIterable, Identifiable {
-        case films, plan, ballot, board, groups
+        case films, plan, ballot, board, groups, search
         var id: String { rawValue }
     }
 
@@ -35,7 +35,11 @@ final class AppNavigation {
     var selectedCategoryID: Int?
     var selectedDay: PlanDay?
     var selectedGroupID: Int?
+    /// The person whose picks or watched films the Board shows on wide layouts.
+    var selectedPersonID: String?
     var sheet: Sheet?
+    /// The search tab's query, kept across a fold like everything else here.
+    var searchText = ""
 
     func reset() {
         tab = .films
@@ -43,6 +47,8 @@ final class AppNavigation {
         selectedCategoryID = nil
         selectedDay = nil
         selectedGroupID = nil
+        selectedPersonID = nil
         sheet = nil
+        searchText = ""
     }
 }

@@ -19,6 +19,11 @@ struct EnvelopeReveal: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var stage = 0  // 0 sealed, 1 open, 2 card, 3 verdict
     @State private var burst = 0
+    /// How far a partly open iPhone Duo is unfolded (0 closed, 1 flat), while
+    /// the envelope is still sealed: the flap follows it, and opening the
+    /// phone past three quarters breaks the seal. nil with no hinge.
+    @State private var hingeOpen: Double?
+    @State private var tapped = false
 
     var body: some View {
         ZStack {
@@ -30,6 +35,7 @@ struct EnvelopeReveal: View {
                 Text(category).eyebrowStyle()
                 envelope
                     .padding(.top, 110)
+                    .onTapGesture { tapped = true }
                 verdict
                     .goldDust(trigger: burst)
                 Button("Continue", action: onDone)
@@ -37,15 +43,29 @@ struct EnvelopeReveal: View {
                     .controlSize(.large)
             }
             .padding(Theme.Space.l)
+            .centeredBesideFold()
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(category): \(winner)")
         .moment(.envelopeOpen, trigger: stage == 1)
         .moment(outcome == .wrong ? .wrong : .correct, trigger: stage == 3 && outcome != nil)
+        .onHingeChange(isEnabled: !reduceMotion) { _, context in
+            guard stage == 0, let hinge = context.hinge, hinge.status == .partiallyOpen else {
+                hingeOpen = nil
+                return
+            }
+            withAnimation(.smooth(duration: 0.2)) {
+                hingeOpen = min(max(hinge.angle.degrees / 180, 0), 1)
+            }
+        }
         .task {
             if reduceMotion {
                 stage = 3
             } else {
+                // Held shut while a Duo is part open, until it opens further or the envelope is tapped.
+                while let open = hingeOpen, open < 0.75, !tapped {
+                    try? await Task.sleep(for: .milliseconds(100))
+                }
                 for (next, delay) in [(1, 450), (2, 550), (3, 900)] {
                     try? await Task.sleep(for: .milliseconds(delay))
                     withAnimation(.smooth(duration: next == 2 ? 0.8 : 0.55)) { stage = next }
@@ -69,7 +89,7 @@ struct EnvelopeReveal: View {
 
             if !reduceMotion {
                 EnvelopeFlap().fill(velvet).brightness(0.06).frame(width: 300, height: 200)
-                    .rotation3DEffect(.degrees(stage >= 1 ? 180 : 0), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.6)
+                    .rotation3DEffect(.degrees(stage >= 1 ? 180 : (hingeOpen ?? 0) * 120), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.6)
                     .zIndex(stage >= 1 ? -1 : 2)
                 Circle()
                     .fill(RadialGradient(colors: [.goldStart, .goldMid, .gold], center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0, endRadius: 22))
