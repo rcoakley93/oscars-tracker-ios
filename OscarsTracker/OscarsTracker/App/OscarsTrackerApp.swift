@@ -31,7 +31,7 @@ struct OscarsTrackerApp: App {
     #if DEBUG
     /// Opens a tab, a film or a debug gallery from launch arguments, so
     /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
-    /// `-group 1`, `-gallery tokens`.
+    /// `-group 1`, `-sheet profile`, `-gallery tokens`.
     private static func openScreenshotRoute(in model: AppModel) {
         let defaults = UserDefaults.standard
         if let tab = defaults.string(forKey: "tab").flatMap(AppNavigation.Tab.init(rawValue:)) {
@@ -45,6 +45,9 @@ struct OscarsTrackerApp: App {
         }
         if defaults.object(forKey: "group") != nil {
             model.navigation.selectedGroupID = defaults.integer(forKey: "group")
+        }
+        if defaults.string(forKey: "sheet") == "profile" {
+            model.navigation.sheet = .profile
         }
         model.navigation.debugGallery = defaults.string(forKey: "gallery")
     }

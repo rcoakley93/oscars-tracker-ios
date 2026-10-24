@@ -253,6 +253,29 @@ final class SampleDataSource: AppDataSource {
         return BoardPerson(watchedMovieIDs: films, picks: picks)
     }
 
+    // MARK: - Account
+
+    var accountProvider: Account.Provider = .email
+    var history: [SeasonResult] = [
+        SeasonResult(ceremonyId: 1, number: 98, name: "98th Academy Awards", ceremonyAt: Date(timeIntervalSince1970: 1_773_014_400),
+                     watchedCount: 41, correctCount: 15, points: 15, score: 15, scoring: .traditional, rank: 3, players: 212),
+    ]
+    var revokedAppleCodes: [String] = []
+
+    func account() async -> Account? {
+        signedIn ? Account(email: "filmbuff@example.com", provider: accountProvider) : nil
+    }
+
+    func seasonHistory() async throws -> [SeasonResult] {
+        _ = try requireUser()
+        return history
+    }
+
+    func revokeApple(authorizationCode: String) async throws {
+        _ = try requireUser()
+        revokedAppleCodes.append(authorizationCode)
+    }
+
     // MARK: - Profile
 
     func profile(userID: String) async throws -> Profile? {

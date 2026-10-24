@@ -1,10 +1,13 @@
 import Foundation
 import Observation
 
-/// Your profile: username, and deleting the account.
+/// Your profile: username, email and sign-in method, password, past
+/// seasons, and deleting the account.
 @Observable
 final class ProfileStore {
     private(set) var profile: Profile?
+    private(set) var account: Account?
+    private(set) var history: [SeasonResult] = []
     private(set) var state: LoadState = .idle
     private(set) var isWorking = false
     var actionError: AppError?
@@ -24,6 +27,7 @@ final class ProfileStore {
         state = .loading
         do {
             profile = try await data.profile(userID: userID)
+            account = await data.account()
             state = .loaded
         } catch {
             state = .failed(AppError(error))
@@ -44,11 +48,33 @@ final class ProfileStore {
         }
     }
 
-    /// Really deletes the account. The caller signs out only when this returns true.
-    func deleteAccount() async -> Bool {
+    /// Past seasons, for the Profile. Nothing to show is fine: it's your first.
+    func loadHistory() async {
+        history = (try? await data.seasonHistory()) ?? history
+    }
+
+    /// For email accounts; the README's rules (8 characters, upper, lower, number).
+    func changePassword(_ password: String) async -> Bool {
+        guard PasswordRules.isValid(password) else {
+            actionError = .weakPassword
+            return false
+        }
+        return await working { try await data.updatePassword(password) }
+    }
+
+    /// Really deletes the account. A Sign in with Apple account first revokes
+    /// its Apple tokens with a fresh authorization code, and nothing is
+    /// deleted if that fails. The caller signs out only when this returns true.
+    func deleteAccount(appleAuthorizationCode: String? = nil) async -> Bool {
         await working {
+            if account?.provider == .apple {
+                guard let code = appleAuthorizationCode else { throw AppError.server("Apple authorization code missing") }
+                try await data.revokeApple(authorizationCode: code)
+            }
             try await data.deleteAccount()
             profile = nil
+            account = nil
+            history = []
         }
     }
 
@@ -67,6 +93,8 @@ final class ProfileStore {
 
     func reset() {
         profile = nil
+        account = nil
+        history = []
         state = .idle
     }
 }

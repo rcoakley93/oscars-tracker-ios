@@ -79,5 +79,12 @@ protocol AppDataSource: AnyObject, Sendable {
     // Profile
     func profile(userID: String) async throws -> Profile?
     func updateUsername(_ username: String, userID: String) async throws
+    /// Your email and how you sign in, from the session.
+    func account() async -> Account?
+    /// Past seasons you played, newest first.
+    func seasonHistory() async throws -> [SeasonResult]
+    /// Revokes your Sign in with Apple tokens (guideline 5.1.1(v)), with a
+    /// fresh authorization code, before the account is deleted.
+    func revokeApple(authorizationCode: String) async throws
     func deleteAccount() async throws
 }

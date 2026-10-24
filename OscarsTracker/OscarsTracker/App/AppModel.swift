@@ -63,8 +63,8 @@ final class AppModel {
     }
 
     /// Deletes the account, and signs out only if that worked (guideline 5.1.1).
-    func deleteAccount() async -> Bool {
-        guard await profile.deleteAccount() else { return false }
+    func deleteAccount(appleAuthorizationCode: String? = nil) async -> Bool {
+        guard await profile.deleteAccount(appleAuthorizationCode: appleAuthorizationCode) else { return false }
         session.didDeleteAccount()
         clearUserData()
         return true
