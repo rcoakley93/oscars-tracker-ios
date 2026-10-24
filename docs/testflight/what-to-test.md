@@ -2,6 +2,23 @@
 
 Paste the section for a build into App Store Connect → TestFlight → the build → Test Details. Keep it under 4,000 characters.
 
+## testflight/2026-10-24.2 (push notifications)
+
+Thanks for testing Oscars Tracker. This build turns on push notifications. Please try:
+
+- **Notifications:** Profile → Notifications → Turn on, or allow the prompt after your first pick or watched film. Test notifications should arrive on your iPhone, with the app open or closed.
+- Everything from the last build still applies: mark films watched, plan a few nights, pick your ballot, check the Board and your groups, and try bigger text.
+
+Tell us anything that looks wrong, reads oddly, or loses your place, with a screenshot if you can (shake or use the TestFlight app's Send Beta Feedback).
+
+Known gaps: tapping a notification closes the app in this build; swipe it away instead (fixed for the next build). Deleting an account that signs in with Apple fails until the Sign in with Apple key is set up on the server; email and Google accounts delete normally.
+
+## Next build (after PR for P4 QA)
+
+- **Tapping a notification** opens the screen it names (the ballot, a film, a category, a group) instead of closing the app.
+- **Invite links** (oscarstracker.com/join/…) open the Join sheet in the app.
+- **VoiceOver:** your pick on a folded ballot card reads as a button; double-tap it to change the pick.
+
 ## First Phase 4 build (all native screens)
 
 Thanks for testing Oscars Tracker. This build has every screen rebuilt for iOS 27. Please try:
