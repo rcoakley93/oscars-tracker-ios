@@ -78,7 +78,6 @@ private struct PlanCalendar: View {
         ScrollView {
             DatePicker("Day", selection: selection, displayedComponents: .date)
                 .datePickerStyle(.graphical)
-                .tint(.goldOnGlass)
                 .padding(Theme.Space.m)
         }
     }
