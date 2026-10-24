@@ -32,6 +32,17 @@ struct RootView: View {
         .fullScreenCover(isPresented: .constant(model.session.isChoosingNewPassword)) {
             NewPasswordView()
         }
+        #if DEBUG
+        .fullScreenCover(isPresented: Binding { model.navigation.debugGallery != nil } set: { if !$0 { model.navigation.debugGallery = nil } }) {
+            NavigationStack {
+                switch model.navigation.debugGallery {
+                case "moments": MomentsGallery()
+                case "envelope": EnvelopeReveal(category: "Best Picture", winner: "Hamnet", outcome: .correct) {}
+                default: TokensGallery().navigationTitle("Design tokens")
+                }
+            }
+        }
+        #endif
     }
 }
 

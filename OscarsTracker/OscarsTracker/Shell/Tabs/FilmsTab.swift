@@ -1,20 +1,30 @@
 import SwiftUI
 
-/// Films: the list in the first column and the selected film in the detail
-/// column on regular widths (P4-02 and P4-03 build the grid and the film page).
+/// Films (screens.md, 3.1): the hero, then the films still to watch and the
+/// ones you've watched as a poster grid, or by category. On compact widths a
+/// film opens in a sheet; on regular widths in the detail column. The
+/// selection is `AppNavigation.selectedMovieID` either way, so a fold moves
+/// the open film between the two.
 struct FilmsTab: View {
+    enum Mode: String, CaseIterable, Identifiable {
+        case all, byCategory
+        var id: String { rawValue }
+        var label: String { self == .all ? "All films" : "By category" }
+    }
+
     enum Sort: String, CaseIterable, Identifiable {
-        case title, shortest
+        case shortest, title
         var id: String { rawValue }
         var label: String { self == .title ? "Title" : "Shortest first" }
     }
 
     @Environment(AppModel.self) private var model
-    @Environment(\.copy) private var copy
-    @AppStorage("films.sort") private var sort: Sort = .title
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @AppStorage("films.mode") private var mode: Mode = .all
+    @AppStorage("films.sort") private var sort: Sort = .shortest
     @AppStorage("films.hidesWatched") private var hidesWatched = false
     /// The last film marked watched, and a counter that tears its stub. The
-    /// stub is drawn over the list, because the row moves to Watched at once.
+    /// stub is drawn over the screen, because the tile moves to Watched at once.
     @State private var stubTitle = ""
     @State private var tears = 0
 
@@ -22,36 +32,27 @@ struct FilmsTab: View {
         @Bindable var navigation = model.navigation
         let films = model.films
 
-        NavigationSplitView {
+        NavigationSplitView(preferredCompactColumn: .constant(.sidebar)) {
             LoadStateView(state: films.state, isEmpty: films.movies.isEmpty) {
-                List(selection: $navigation.selectedMovieID) {
-                    Section {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("\(films.watchedCount)").displayFont(.largeTitle)
-                                .foregroundStyle(Theme.goldGradient)
-                            Text("of \(films.movies.count) films").font(.title3.bold()).fontDesign(.rounded)
-                        }
-                        .accessibilityElement(children: .combine)
-                        Text(films.toWatch.isEmpty ? copy.allWatched : copy.progressSummary(films.watchedCount, films.movies.count))
-                    }
-                    Section(copy.toWatchHeading) {
-                        ForEach(sorted(films.toWatch)) { movie in
-                            FilmRow(movie: movie) { stubTitle = $0; tears += 1 }.tag(movie.id)
-                        }
-                    }
-                    if !hidesWatched {
-                        Section(copy.watchedHeading) {
-                            ForEach(sorted(films.watched)) { movie in
-                                FilmRow(movie: movie) { _ in }.tag(movie.id)
-                            }
-                        }
-                    }
-                }
-                .overlay(alignment: .bottom) {
-                    TicketStub(title: stubTitle, trigger: tears).padding(.bottom, 120)
+                switch mode {
+                case .all:
+                    FilmsGrid(sort: sort, hidesWatched: hidesWatched, open: open, onWatched: watched)
+                case .byCategory:
+                    FilmsByCategory(open: open, onWatched: watched)
                 }
             }
+            .overlay(alignment: .bottom) {
+                TicketStub(title: stubTitle, trigger: tears).padding(.bottom, 120)
+            }
             .tabChrome("Films", posters: films.movies.compactMap(\.posterUrl))
+            .safeAreaBar(edge: .top) {
+                Picker("View", selection: $mode) {
+                    ForEach(Mode.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, Theme.Space.m)
+                .padding(.bottom, Theme.Space.xs)
+            }
             .toolbar {
                 ToolbarOverflowMenu {
                     Picker("Sort", systemImage: "arrow.up.arrow.down", selection: $sort) {
@@ -61,12 +62,90 @@ struct FilmsTab: View {
                 }
                 .visibilityPriority(.low)
             }
-            .navigationSplitViewColumnWidth(min: 380, ideal: 420)
+            .navigationSplitViewColumnWidth(min: 380, ideal: 440)
         } detail: {
-            if let id = navigation.selectedMovieID, let movie = films.movies.first(where: { $0.id == id }) {
-                FilmDetail(movie: movie)
+            if let movie = films.movies.first(where: { $0.id == navigation.selectedMovieID }) {
+                MovieDetail(movie: movie, layout: .column)
+                    .id(movie.id)
             } else {
                 NothingSelected(title: "Choose a film", systemImage: "film")
+            }
+        }
+        .sheet(item: Binding {
+            sizeClass == .compact ? films.movies.first { $0.id == navigation.selectedMovieID } : nil
+        } set: { movie in
+            if movie == nil, sizeClass == .compact { navigation.selectedMovieID = nil }
+        }) { movie in
+            MovieDetail(movie: movie, layout: .sheet)
+        }
+    }
+
+    private func open(_ movie: Movie) {
+        model.navigation.selectedMovieID = movie.id
+    }
+
+    private func watched(_ title: String) {
+        stubTitle = title
+        tears += 1
+    }
+}
+
+/// The hero and the poster grid: still to watch, then watched.
+private struct FilmsGrid: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    let sort: FilmsTab.Sort
+    let hidesWatched: Bool
+    var open: (Movie) -> Void
+    var onWatched: (String) -> Void
+
+    private nonisolated struct Metrics: Equatable {
+        var width: CGFloat = 0
+        var fold: CGRect?
+    }
+
+    @State private var metrics = Metrics()
+
+    var body: some View {
+        let films = model.films
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.xl) {
+                HeroCard(watched: films.watchedCount, total: films.movies.count, daysLeft: model.season.daysToCeremony())
+                section(copy.toWatchHeading, sorted(films.toWatch))
+                if !hidesWatched {
+                    section(copy.watchedHeading, sorted(films.watched))
+                }
+            }
+            .padding(.horizontal, Theme.Space.m)
+            .padding(.bottom, Theme.Space.xxl)
+        }
+        .onGeometryChange(for: Metrics.self) { proxy in
+            Metrics(width: proxy.size.width, fold: FoldLayout.fold(in: proxy))
+        } action: { metrics = $0 }
+    }
+
+    /// `max(3, width / 118)` (4 on regular widths), kept even across a fold.
+    private var columns: Int {
+        let ideal = max(sizeClass == .regular ? 4 : 3, Int((metrics.width - 2 * Theme.Space.m) / 118))
+        return FoldLayout.columns(ideal, fold: metrics.fold)
+    }
+
+    @ViewBuilder
+    private func section(_ title: String, _ movies: [Movie]) -> some View {
+        if !movies.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                Text(title)
+                    .font(.title3.bold()).fontDesign(.rounded)
+                    .foregroundStyle(.ink)
+                    .accessibilityAddTraits(.isHeader)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Theme.Space.s, alignment: .top), count: columns),
+                          spacing: Theme.Space.m) {
+                    ForEach(movies) { movie in
+                        PosterTile(movie: movie, onOpen: { open(movie) }, onWatched: onWatched)
+                    }
+                }
+                .accessibilityElement(children: .contain)
             }
         }
     }
@@ -79,86 +158,38 @@ struct FilmsTab: View {
     }
 }
 
-private struct FilmRow: View {
+/// Each category with its progress and its films.
+private struct FilmsByCategory: View {
     @Environment(AppModel.self) private var model
-    let movie: Movie
+    var open: (Movie) -> Void
     var onWatched: (String) -> Void
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(movie.title).font(.headline)
-                Text(movie.facts).font(.footnote).foregroundStyle(.inkMuted)
-            }
-            Spacer()
-            WatchedButton(movie: movie, onWatched: onWatched)
-        }
-        .accessibilityElement(children: .contain)
-    }
-}
-
-/// The circle that marks a film watched: a separate button from the row,
-/// at least 44 points, gold once it's watched.
-struct WatchedButton: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.copy) private var copy
-    let movie: Movie
-    var onWatched: (String) -> Void = { _ in }
-
-    var body: some View {
-        let watched = model.films.isWatched(movie.id)
-        Button {
-            guard let userID = model.session.userID else { return }
-            if !watched { onWatched(movie.title) }
-            Task { await model.films.toggleWatched(movie.id, userID: userID) }
-        } label: {
-            Image(systemName: watched ? "checkmark.circle.fill" : "circle")
-                .font(.title2)
-                .foregroundStyle(watched ? AnyShapeStyle(Theme.goldGradient) : AnyShapeStyle(.inkMuted))
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(copy.markWatched)
-        .accessibilityValue(watched ? copy.watched : "Not watched")
-        .accessibilityAddTraits(watched ? .isSelected : [])
-        .moment(watched ? .watched : .unwatched, trigger: watched)
-    }
-}
-
-/// The selected film in the detail column (P4-03 builds the real page).
-private struct FilmDetail: View {
-    let movie: Movie
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Theme.Space.m) {
-                Text(movie.title).displayFont(.title).accessibilityAddTraits(.isHeader)
-                Text(movie.facts).foregroundStyle(.inkMuted)
-                HStack {
-                    Text("Watched").font(.headline)
-                    Spacer()
-                    WatchedButton(movie: movie)
+        List {
+            ForEach(model.ballot.categories) { category in
+                let movies = Self.films(in: category)
+                Section {
+                    ForEach(movies) { movie in
+                        FilmListRow(movie: movie, onOpen: { open(movie) }, onWatched: onWatched)
+                    }
+                } header: {
+                    HStack {
+                        Text(category.name)
+                        Spacer()
+                        Text("\(movies.count { model.films.isWatched($0.id) }) of \(movies.count)")
+                            .monospacedDigit()
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
                 }
-                .padding(Theme.Space.m)
-                .solidSurface(radius: Theme.Radius.row)
-                Text("Where to watch, the nominations and Add to plan come in Phase 4.")
-                    .font(.footnote).foregroundStyle(.inkMuted)
             }
-            .padding(Theme.Space.m)
-            .frame(maxWidth: 640, alignment: .leading)
         }
-        .background(.ground)
-        .navigationTitle(movie.title)
-        .navigationBarTitleDisplayMode(.inline)
     }
-}
 
-extension Movie {
-    /// "2025 · 2h 6m": the year and runtime, whichever are known.
-    var facts: String {
-        [releaseYear.map { String($0) }, Runtime.format(minutes: runtimeMinutes)]
-            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+    /// The category's films, once each (a film can have two nominees).
+    static func films(in category: BallotCategory) -> [Movie] {
+        var seen = Set<Int>()
+        return category.nominations.compactMap(\.movie).filter { seen.insert($0.id).inserted }
     }
 }
 
@@ -172,4 +203,12 @@ extension Movie {
 
 #Preview("Large text") {
     FilmsTab().environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
+
+#Preview("All watched") {
+    FilmsTab().environment(AppModel.preview { data in data.watched = Set(SampleData.movies.map(\.id)) }).preferredColorScheme(.dark)
+}
+
+#Preview("Error") {
+    FilmsTab().environment(AppModel.preview { $0.failure = .offline }).preferredColorScheme(.dark)
 }

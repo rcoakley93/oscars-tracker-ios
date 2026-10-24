@@ -5,7 +5,7 @@ import SwiftUI
 /// custom layout that spans the inner display reads the fold here, so a
 /// grid keeps an even number of columns and a single piece of content sits
 /// in one half. Never the device model: no fold, no change.
-enum FoldLayout {
+nonisolated enum FoldLayout {
     /// The fold crossing this view, in its local coordinates. Inactive folds
     /// count too, so nothing jumps as the phone opens past flat.
     static func fold(in proxy: GeometryProxy) -> CGRect? {
