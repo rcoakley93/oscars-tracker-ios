@@ -96,6 +96,11 @@ struct Copy {
     let tickerFinalWeek: (_ days: Int, _ filmsLeft: Int) -> String
     /// `left` is already formatted ("3 hours", "40 minutes").
     let tickerLockDay: (_ left: String) -> String
+    /// Before nominations; the date ("Jan 21") when it's known.
+    let tickerBeforeNominations: (_ date: String?) -> String
+    let tickerLive: String
+    /// After the show: your final place on a board.
+    let tickerAfter: (_ rank: Int, _ size: Int, _ board: String) -> String
 
     // The setting itself
     let label: String
@@ -183,6 +188,9 @@ extension Copy {
         tickerSeason: classicCountdown,
         tickerFinalWeek: classicCountdown,
         tickerLockDay: { left in "Ballot locks in \(left)." },
+        tickerBeforeNominations: { date in date.map { "Nominations announced \($0)." } ?? "Nominations are coming." },
+        tickerLive: "LIVE · Winners as they're announced",
+        tickerAfter: { rank, size, board in "Final: \(rankLine(rank, size, board))" },
         label: "Classic",
         sample: "12 of 50 films watched."
     )
@@ -284,6 +292,11 @@ extension Copy {
             }
         },
         tickerLockDay: { left in "Pens down in \(left)." },
+        tickerBeforeNominations: { date in "Shortlists are in. Nominations \(date ?? "soon")." },
+        tickerLive: "LIVE · The envelopes are open. Breathe.",
+        tickerAfter: { rank, size, board in
+            "Final: \(rankLine(rank, size, board)). " + (rank == 1 ? "Take a bow." : "Gracious in defeat?")
+        },
         label: "Host",
         sample: "12 down, 38 to go. The Academy watched all of these. Allegedly."
     )

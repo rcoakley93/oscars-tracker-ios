@@ -1,49 +1,96 @@
 import Foundation
 import Observation
 
-/// The active ceremony: its name, the ceremony time and the ballot lock.
-/// Phase 2 (P2-07) moves this to a server RPC that also reports the lock.
+/// The active season and the app's config (P4-10): `get_season_facts()` and
+/// `app_config`, loaded at launch and on return to the foreground, and cached
+/// so the app opens offline with the last good copy. Lock decisions use the
+/// server's clock, so a phone set to the wrong time still agrees with it.
 @Observable
 final class SeasonStore {
     private(set) var ceremony: Ceremony?
+    private(set) var config = AppConfig.defaults
+    private(set) var isRehearsal = false
     private(set) var state: LoadState = .idle
-    /// For "What can I watch?". P4-10 caches the rest of `app_config`.
-    private(set) var runtimeBuckets = RuntimeBucket.defaults
+    /// Server time minus this phone's time, from the last load.
+    private(set) var clockOffset: TimeInterval = 0
+
+    var runtimeBuckets: [RuntimeBucket] { config.runtimeBuckets }
 
     private let data: any AppDataSource
+    private let cacheKey: String?
 
-    init(data: any AppDataSource) {
+    /// `cacheKey` nil keeps nothing between launches (previews and tests).
+    init(data: any AppDataSource, cacheKey: String? = nil) {
         self.data = data
-    }
-
-    func load() async {
-        state = .loading
-        do {
-            ceremony = try await data.activeCeremony()
+        self.cacheKey = cacheKey
+        if let cached = Cache.read(cacheKey) {
+            ceremony = cached.facts?.ceremony
+            isRehearsal = cached.facts?.isRehearsal ?? false
+            config = cached.config
+            clockOffset = cached.clockOffset
             state = .loaded
-            if let buckets = try? await data.runtimeBuckets(), !buckets.isEmpty { runtimeBuckets = buckets }
-        } catch {
-            state = .failed(AppError(error))
         }
     }
 
-    func isBallotLocked(at now: Date = .now) -> Bool {
-        ceremony?.isBallotLocked(at: now) ?? false
+    func load() async {
+        if ceremony == nil { state = .loading }
+        do {
+            async let facts = data.seasonFacts()
+            async let config = data.appConfig()
+            let (loadedFacts, loadedConfig) = try await (facts, config)
+            ceremony = loadedFacts?.ceremony
+            isRehearsal = loadedFacts?.isRehearsal ?? false
+            clockOffset = loadedFacts.map { $0.serverNow.timeIntervalSinceNow } ?? 0
+            self.config = loadedConfig
+            state = .loaded
+            Cache.write(Cache(facts: loadedFacts, config: loadedConfig, clockOffset: clockOffset), cacheKey)
+        } catch {
+            // Keep the cached season; say it failed only when there's nothing.
+            if ceremony == nil { state = .failed(AppError(error)) }
+        }
     }
 
-    /// What the season ticker says. Until the season facts land (P4-10) it
-    /// knows only the season and lock day, from the ballot lock; nominations
-    /// day, live and after show nothing.
+    /// Now, by the server's clock.
+    func serverNow() -> Date {
+        Date.now.addingTimeInterval(clockOffset)
+    }
+
+    func isBallotLocked(at now: Date? = nil) -> Bool {
+        ceremony?.isBallotLocked(at: now ?? serverNow()) ?? false
+    }
+
+    /// Whether this build is older than `min_supported_build`.
+    func needsUpdate(build: Int? = Bundle.main.buildNumber) -> Bool {
+        guard let build else { return false }
+        return build < config.minSupportedBuild
+    }
+
+    /// What the season ticker says (screens.md, section 2).
     enum Ticker: Equatable {
         case none
+        /// No nominees yet; the date when `app_config` knows it.
+        case beforeNominations(Date?)
         /// Before the ballot locks: days to the ceremony and films left to watch.
         case season(days: Int, filmsLeft: Int)
         /// Less than a day before the lock.
         case lockDay(locksAt: Date)
+        /// The show is on (the five hours from its start).
+        case live
+        /// The month after the show: your final standing.
+        case after
     }
 
-    func ticker(filmsLeft: Int, now: Date = .now) -> Ticker {
-        guard let ceremony, now < ceremony.ballotLockAt else { return .none }
+    static let showLength: TimeInterval = 5 * 60 * 60
+
+    func ticker(filmsLeft: Int, hasNominees: Bool = true, now: Date? = nil) -> Ticker {
+        let now = now ?? serverNow()
+        guard let ceremony else { return .none }
+        if !hasNominees, now < ceremony.ballotLockAt { return .beforeNominations(config.nominationsAt) }
+        if now >= ceremony.ceremonyAt.addingTimeInterval(Self.showLength) {
+            return now < ceremony.ceremonyAt.addingTimeInterval(30 * 24 * 60 * 60) ? .after : .none
+        }
+        if now >= ceremony.ceremonyAt { return .live }
+        guard now < ceremony.ballotLockAt else { return .none }
         if ceremony.ballotLockAt.timeIntervalSince(now) < 24 * 60 * 60 {
             return .lockDay(locksAt: ceremony.ballotLockAt)
         }
@@ -52,9 +99,33 @@ final class SeasonStore {
     }
 
     /// Whole days until the ceremony, in the viewer's time zone; nil once it's past.
-    func daysToCeremony(now: Date = .now) -> Int? {
+    func daysToCeremony(now: Date? = nil) -> Int? {
         guard let ceremony else { return nil }
-        let days = PlanDay.today(now: now).days(until: PlanDay(ceremony.ceremonyAt))
+        let days = PlanDay.today(now: now ?? serverNow()).days(until: PlanDay(ceremony.ceremonyAt))
         return days >= 0 ? days : nil
+    }
+
+    /// The last good season, in UserDefaults.
+    private struct Cache: Codable {
+        let facts: SeasonFacts?
+        let config: AppConfig
+        let clockOffset: TimeInterval
+
+        static func read(_ key: String?) -> Cache? {
+            guard let key, let stored = UserDefaults.standard.data(forKey: key) else { return nil }
+            return try? JSONDecoder().decode(Cache.self, from: stored)
+        }
+
+        static func write(_ cache: Cache, _ key: String?) {
+            guard let key, let encoded = try? JSONEncoder().encode(cache) else { return }
+            UserDefaults.standard.set(encoded, forKey: key)
+        }
+    }
+}
+
+extension Bundle {
+    /// `CFBundleVersion` as a number, for `min_supported_build`.
+    var buildNumber: Int? {
+        (infoDictionary?["CFBundleVersion"] as? String).flatMap(Int.init)
     }
 }

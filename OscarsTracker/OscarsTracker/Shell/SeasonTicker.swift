@@ -3,7 +3,9 @@ import SwiftUI
 /// The line above the tab bar that says where the season is (screens.md,
 /// section 2). Text only when the tab bar is minimised (`.inline`); text and,
 /// on lock day, a Ballot button when it's `.expanded`. Tapping it opens the
-/// matching tab. Gold is for the live and after states (P4-10), so none here.
+/// matching tab. Gold is for the live and after states, the shell's earned
+/// element. The state comes from `SeasonStore` (season facts), on the
+/// server's clock.
 struct SeasonTicker: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
@@ -11,7 +13,9 @@ struct SeasonTicker: View {
 
     var body: some View {
         TimelineView(.everyMinute) { context in
-            let ticker = model.season.ticker(filmsLeft: model.films.toWatch.count, now: context.date)
+            let now = context.date.addingTimeInterval(model.season.clockOffset)
+            let ticker = model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: !model.films.movies.isEmpty, now: now)
+            let earned = ticker == .live || ticker == .after
             if let line = line(for: ticker, now: context.date) {
                 HStack(spacing: Theme.Space.s) {
                     Button {
@@ -19,15 +23,16 @@ struct SeasonTicker: View {
                     } label: {
                         Text(line)
                             .font(.footnote.weight(.medium))
+                            .foregroundStyle(earned ? AnyShapeStyle(.goldOnGlass) : AnyShapeStyle(.primary))
                             .lineLimit(placement == .inline ? 1 : 2)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Opens \(destination(for: ticker).rawValue.capitalized)")
 
-                    if placement != .inline, case .lockDay = ticker {
-                        Button("Ballot", systemImage: "checkmark.seal") {
-                            model.navigation.tab = .ballot
+                    if placement != .inline, let button = button(for: ticker) {
+                        Button(button.title, systemImage: button.symbol) {
+                            model.navigation.tab = destination(for: ticker)
                         }
                         .buttonStyle(.glass)
                         .controlSize(.small)
@@ -51,11 +56,41 @@ struct SeasonTicker: View {
             days <= 7 ? copy.tickerFinalWeek(days, left) : copy.tickerSeason(days, left)
         case .lockDay(let locksAt):
             copy.tickerLockDay(Self.timeLeft(until: locksAt, now: now))
+        case .beforeNominations(let date):
+            copy.tickerBeforeNominations(date?.formatted(.dateTime.month(.abbreviated).day()))
+        case .live:
+            copy.tickerLive
+        case .after:
+            finalStanding
+        }
+    }
+
+    /// Your place on your first group's board, or the global one.
+    private var finalStanding: String? {
+        guard let userID = model.session.userID else { return nil }
+        let boards = model.groups.groups.map { (Optional($0.id), $0.name) } + [(nil, "everyone")]
+        for (groupID, name) in boards {
+            if let standing = model.leaderboard.standing(in: groupID, userID: userID, metric: .predictions) {
+                return copy.tickerAfter(standing.rank, standing.size, name)
+            }
+        }
+        return nil
+    }
+
+    private func button(for ticker: SeasonStore.Ticker) -> (title: String, symbol: String)? {
+        switch ticker {
+        case .lockDay, .live: ("Ballot", "checkmark.seal")
+        case .after: ("Recap", "trophy")
+        default: nil
         }
     }
 
     private func destination(for ticker: SeasonStore.Ticker) -> AppNavigation.Tab {
-        if case .lockDay = ticker { .ballot } else { .films }
+        switch ticker {
+        case .lockDay, .live: .ballot
+        case .after: .board
+        default: .films
+        }
     }
 
     /// "3 hours", "1 hour", "40 minutes": rounded up, so it never says 0.

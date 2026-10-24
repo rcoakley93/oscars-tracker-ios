@@ -24,11 +24,22 @@ struct SeasonTickerTests {
         #expect(season.ticker(filmsLeft: 2, now: lock.addingTimeInterval(-3 * 3600)) == .lockDay(locksAt: lock))
     }
 
-    @Test func saysNothingAfterTheLockUntilSeasonFactsLand() async throws {
+    @Test func goesLiveAtTheShowThenGivesTheFinalStanding() async throws {
         let season = await loadedSeason()
-        let lock = try #require(season.ceremony?.ballotLockAt)
-        #expect(season.ticker(filmsLeft: 0, now: lock.addingTimeInterval(60)) == .none)
+        let start = try #require(season.ceremony?.ceremonyAt)
+        #expect(season.ticker(filmsLeft: 0, now: start.addingTimeInterval(60)) == .live)
+        #expect(season.ticker(filmsLeft: 0, now: start.addingTimeInterval(6 * 3600)) == .after)
+        #expect(season.ticker(filmsLeft: 0, now: start.addingTimeInterval(40 * 24 * 3600)) == .none)
         #expect(SeasonStore(data: SampleDataSource()).ticker(filmsLeft: 3) == .none)
+    }
+
+    @Test func waitsForTheNominees() async {
+        let data = SampleDataSource(now: now)
+        let date = now.addingTimeInterval(9 * 24 * 3600)
+        data.config.nominationsAt = date
+        let season = SeasonStore(data: data)
+        await season.load()
+        #expect(season.ticker(filmsLeft: 0, hasNominees: false, now: now) == .beforeNominations(date))
     }
 
     @Test func roundsTheTimeLeftUp() {

@@ -112,14 +112,20 @@ final class SampleDataSource: AppDataSource {
 
     // MARK: - Season
 
-    func activeCeremony() async throws -> Ceremony? {
+    /// The server's clock, for tests of a phone whose clock is wrong.
+    var serverNow: Date?
+    var config = AppConfig.defaults
+
+    func seasonFacts() async throws -> SeasonFacts? {
         try check()
-        return ceremony
+        let now = serverNow ?? .now
+        return SeasonFacts(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremony.ceremonyAt,
+                           ballotLockAt: ceremony.ballotLockAt, isLocked: now >= ceremony.ballotLockAt, isRehearsal: false, serverNow: now)
     }
 
-    func runtimeBuckets() async throws -> [RuntimeBucket] {
+    func appConfig() async throws -> AppConfig {
         try check()
-        return RuntimeBucket.defaults
+        return config
     }
 
     // MARK: - Films and watched

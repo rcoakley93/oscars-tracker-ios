@@ -3,7 +3,7 @@ import Foundation
 /// A runtime range for "What can I watch?", from `app_config.runtime_buckets`
 /// (`{"short": [0, 40], "medium": [41, 90], "standard": [91, 120]}`), so the
 /// season can change them without a release.
-nonisolated struct RuntimeBucket: Hashable, Identifiable, Sendable {
+nonisolated struct RuntimeBucket: Codable, Hashable, Identifiable, Sendable {
     var id: String { name }
     let name: String
     let minutes: ClosedRange<Int>

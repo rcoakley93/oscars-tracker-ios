@@ -84,30 +84,44 @@ final class LiveDataSource: AppDataSource {
 
     // MARK: - Season
 
-    func activeCeremony() async throws -> Ceremony? {
+    func seasonFacts() async throws -> SeasonFacts? {
         try await run {
-            let rows: [Ceremony] = try await client.from("ceremonies")
-                .select("id, number, name, ceremony_at, ballot_lock_at, is_active")
-                .eq("is_active", value: true)
-                .limit(1)
-                .execute()
-                .value
+            let rows: [SeasonFacts] = try await client.rpc("get_season_facts").execute().value
             return rows.first
         }
     }
 
-    private nonisolated struct BucketsRow: Decodable {
-        let value: [String: [Int]]
+    private nonisolated struct ConfigRow: Decodable {
+        let key: String
+        let value: AnyJSON
     }
 
-    func runtimeBuckets() async throws -> [RuntimeBucket] {
+    /// Unknown keys are ignored and malformed values keep their defaults.
+    func appConfig() async throws -> AppConfig {
         try await run {
-            let rows: [BucketsRow] = try await client.from("app_config")
-                .select("value")
-                .eq("key", value: "runtime_buckets")
-                .execute()
-                .value
-            return rows.first.map { RuntimeBucket.parse($0.value) } ?? []
+            let rows: [ConfigRow] = try await client.from("app_config").select("key, value").execute().value
+            var config = AppConfig.defaults
+            for row in rows {
+                switch (row.key, row.value) {
+                case ("min_supported_build", .integer(let build)):
+                    config.minSupportedBuild = build
+                case ("min_supported_build", .double(let build)):
+                    config.minSupportedBuild = Int(build)
+                case ("feature_flags", .object(let flags)):
+                    config.featureFlags = flags.compactMapValues { if case .bool(let on) = $0 { on } else { nil } }
+                case ("runtime_buckets", .object(let buckets)):
+                    let parsed = RuntimeBucket.parse(buckets.compactMapValues { value in
+                        guard case .array(let bounds) = value else { return nil }
+                        return bounds.compactMap { if case .integer(let n) = $0 { n } else { nil } }
+                    })
+                    if !parsed.isEmpty { config.runtimeBuckets = parsed }
+                case ("nominations_at", .string(let date)):
+                    config.nominationsAt = try? Date(date, strategy: .iso8601)
+                default:
+                    break
+                }
+            }
+            return config
         }
     }
 

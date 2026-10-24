@@ -38,7 +38,7 @@ struct AppShell: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .tabBarMinimizeBehavior(.onScrollDown)
-        .tabViewBottomAccessory(isEnabled: model.season.ticker(filmsLeft: model.films.toWatch.count) != .none) {
+        .tabViewBottomAccessory(isEnabled: model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: !model.films.movies.isEmpty) != .none) {
             SeasonTicker()
         }
         // Notifications are asked about after the first saved pick or
