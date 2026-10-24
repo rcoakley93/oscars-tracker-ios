@@ -45,6 +45,10 @@ protocol AppDataSource: AnyObject, Sendable {
     func movies() async throws -> [Movie]
     func watchedMovieIDs(userID: String) async throws -> Set<Int>
     func setWatched(_ watched: Bool, movieID: Int, userID: String) async throws
+    /// Where to watch a film in the US.
+    func offers(movieID: Int) async throws -> [WatchOffer]
+    /// How many in each of your groups have seen a film.
+    func seenInGroups(movieID: Int) async throws -> [GroupSeen]
 
     // Ballot
     func ballot() async throws -> [BallotCategory]

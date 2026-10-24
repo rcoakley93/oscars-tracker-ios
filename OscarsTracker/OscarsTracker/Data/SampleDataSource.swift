@@ -15,6 +15,8 @@ final class SampleDataSource: AppDataSource {
     var planItems: [WatchPlanItem]
     var groups: [PoolGroup]
     var board: [LeaderboardEntry]
+    /// Where to watch, by film; films not listed have no offers.
+    var offerList: [Int: [WatchOffer]] = SampleData.offers
     var userProfile: Profile?
     /// Makes every call fail with this error, to preview error states.
     var failure: AppError?
@@ -125,6 +127,18 @@ final class SampleDataSource: AppDataSource {
     func watchedMovieIDs(userID: String) async throws -> Set<Int> {
         _ = try requireUser()
         return watched
+    }
+
+    func offers(movieID: Int) async throws -> [WatchOffer] {
+        try check()
+        return offerList[movieID] ?? []
+    }
+
+    func seenInGroups(movieID: Int) async throws -> [GroupSeen] {
+        _ = try requireUser()
+        return groups.map { group in
+            GroupSeen(groupId: group.id, groupName: group.name, memberCount: 6, seenCount: (movieID + group.id) % 6 + (watched.contains(movieID) ? 1 : 0))
+        }
     }
 
     func setWatched(_ isWatched: Bool, movieID: Int, userID: String) async throws {
@@ -262,6 +276,19 @@ nonisolated enum SampleData {
         movie(9, "Marty Supreme", 2025, 149),
         movie(10, "Train Dreams", 2025, 102),
     ]
+
+    /// Where to watch the first few sample films (logos from the live `providers` table).
+    static let offers: [Int: [WatchOffer]] = {
+        func offer(_ id: Int, _ type: String, _ name: String, _ logo: String?) -> WatchOffer {
+            WatchOffer(id: id, availabilityType: type, provider: .init(name: name, logoPath: logo))
+        }
+        let apple = "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png", amazon = "/jn6TLbtaTZntTRX9UYucHJvpQx1.png", google = "/aZRENwYILujqs0RVOZutTh0BVGV.png"
+        return [
+            1: [offer(1, "streaming", "Peacock", nil), offer(2, "rent", "Apple TV Store", apple), offer(3, "rent", "Amazon Video", amazon), offer(4, "buy", "Apple TV Store", apple), offer(5, "buy", "Google Play Movies", google)],
+            2: [offer(6, "streaming", "Netflix", nil)],
+            3: [offer(7, "streaming", "Netflix", nil), offer(8, "theaters", "Theaters (Limited)", nil)],
+        ]
+    }()
 
     /// TMDB poster paths for the sample films (from the live `movies` table).
     static let posterPaths: [String: String] = [
