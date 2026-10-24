@@ -91,10 +91,24 @@ final class SessionStore {
         }
     }
 
-    /// Handles `oscarstracker://` links from auth emails and returns whether
-    /// it signed you in. A reset-password link then asks for a new password.
+    /// An invite code from a link, kept (across sign-up too) until you're in
+    /// the app, which then opens the join sheet with it.
+    var pendingInviteCode: String? {
+        get { access(keyPath: \.pendingInviteCode); return UserDefaults.standard.string(forKey: Self.inviteKey) }
+        set { withMutation(keyPath: \.pendingInviteCode) { UserDefaults.standard.set(newValue, forKey: Self.inviteKey) } }
+    }
+
+    private static let inviteKey = "invite.pending"
+
+    /// Handles invite links (keeping the code) and `oscarstracker://` links
+    /// from auth emails, and returns whether it signed you in. A
+    /// reset-password link then asks for a new password.
     @discardableResult
     func open(_ url: URL) async -> Bool {
+        if let code = InviteLink.code(in: url) {
+            pendingInviteCode = code
+            return false
+        }
         guard url.scheme == "oscarstracker" else { return false }
         let isReset = url.host() == "reset-password"
         return await perform {

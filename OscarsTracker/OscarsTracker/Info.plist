@@ -21,5 +21,7 @@
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SupabaseHost</key>
 	<string>$(SUPABASE_HOST)</string>
+	<key>SiteHost</key>
+	<string>$(SITE_HOST)</string>
 </dict>
 </plist>

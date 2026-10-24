@@ -254,7 +254,8 @@ private struct GapCard: View {
     }
 }
 
-private struct BoardRow: View {
+/// A board row: rank, avatar, name (gold when it's you) and the count.
+struct BoardRow: View {
     let rank: Int
     let entry: BoardEntry
     let metric: LeaderboardStore.Metric

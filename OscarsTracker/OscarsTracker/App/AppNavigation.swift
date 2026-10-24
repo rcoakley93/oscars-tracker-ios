@@ -16,7 +16,6 @@ final class AppNavigation {
         case profile
         case joinGroup(code: String?)
         case createGroup
-        case addToPlan(movieID: Int?)
         /// Plan: pick a film for this day.
         case addToDay(PlanDay)
         /// Plan: move this plan item to another day.
@@ -30,7 +29,6 @@ final class AppNavigation {
             case .profile: "profile"
             case .joinGroup(let code): "join-\(code ?? "")"
             case .createGroup: "create-group"
-            case .addToPlan(let id): "add-\(id.map(String.init) ?? "")"
             case .addToDay(let day): "add-day-\(day)"
             case .reschedule(let id): "reschedule-\(id)"
             case .whatCanIWatch: "what-can-i-watch"
