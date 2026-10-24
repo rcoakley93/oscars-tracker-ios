@@ -117,6 +117,11 @@ final class SampleDataSource: AppDataSource {
         return ceremony
     }
 
+    func runtimeBuckets() async throws -> [RuntimeBucket] {
+        try check()
+        return RuntimeBucket.defaults
+    }
+
     // MARK: - Films and watched
 
     func movies() async throws -> [Movie] {

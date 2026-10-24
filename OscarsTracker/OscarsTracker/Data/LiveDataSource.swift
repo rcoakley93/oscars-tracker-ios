@@ -96,6 +96,21 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    private nonisolated struct BucketsRow: Decodable {
+        let value: [String: [Int]]
+    }
+
+    func runtimeBuckets() async throws -> [RuntimeBucket] {
+        try await run {
+            let rows: [BucketsRow] = try await client.from("app_config")
+                .select("value")
+                .eq("key", value: "runtime_buckets")
+                .execute()
+                .value
+            return rows.first.map { RuntimeBucket.parse($0.value) } ?? []
+        }
+    }
+
     // MARK: - Films and watched
 
     func movies() async throws -> [Movie] {

@@ -49,6 +49,14 @@ struct AppShell: View {
                 if let movie = model.films.movies.first(where: { $0.id == id }) {
                     MovieDetail(movie: movie, layout: .sheet)
                 }
+            case .addToDay(let day):
+                AddToDaySheet(day: day)
+            case .reschedule(let itemID):
+                RescheduleSheet(itemID: itemID)
+            case .whatCanIWatch:
+                WhatCanIWatchSheet()
+            case .fillPlan:
+                FillPlanSheet()
             default:
                 ComingSoonSheet()
             }
