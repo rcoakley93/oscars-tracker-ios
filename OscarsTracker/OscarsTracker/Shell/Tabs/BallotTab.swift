@@ -1,11 +1,14 @@
 import SwiftUI
 
-/// Ballot: every category in one list on compact widths; on regular widths
-/// the categories in the first column and the selected one's nominees in the
-/// detail column. The selection is `AppNavigation.selectedCategoryID`, so a
-/// fold mid-pick keeps the category open. P4-05 builds the real screen.
+/// Ballot (screens.md, 3.4): pick a winner in every category before the
+/// lock, then see how you did. On compact widths one column of category
+/// cards, where picked categories collapse to a line and open on tap; on
+/// regular widths the categories in the first column and the selected one's
+/// nominees in the detail column. The selection is
+/// `AppNavigation.selectedCategoryID`, so a fold mid-pick keeps it open.
 struct BallotTab: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
@@ -13,31 +16,21 @@ struct BallotTab: View {
         let ballot = model.ballot
 
         NavigationSplitView {
-            LoadStateView(state: ballot.state, isEmpty: ballot.categories.isEmpty,
-                          empty: ContentUnavailableView("No categories yet", systemImage: "checkmark.seal", description: Text("Check back when nominations are announced."))) {
+            LoadStateView(state: ballot.state, isEmpty: ballot.categories.isEmpty, empty: preseason) {
                 if sizeClass == .regular {
                     List(selection: $navigation.selectedCategoryID) {
+                        BallotIntro().listRowBackground(Color.clear)
                         ForEach(ballot.categories) { category in
-                            CategoryRow(category: category).tag(category.id)
+                            CategoryRow(category: category)
+                                .tag(category.id)
+                                .listRowBackground(Color.surface)
                         }
                     }
                 } else {
-                    // One list of every category, opened at the category that
-                    // was open in the detail column before the fold.
-                    ScrollViewReader { proxy in
-                        List {
-                            ForEach(ballot.categories) { category in
-                                Section(category.name) {
-                                    ForEach(category.nominations) { NomineeRow(category: category, nominee: $0) }
-                                }
-                                .id(category.id)
-                            }
-                        }
-                        .onAppear {
-                            if let id = navigation.selectedCategoryID { proxy.scrollTo(id, anchor: .top) }
-                        }
-                    }
+                    BallotCards()
                 }
+            } placeholder: {
+                BallotCards(isPlaceholder: true)
             }
             .tabChrome("Ballot")
             .safeAreaBar(edge: .top) { BallotStatusBar() }
@@ -45,18 +38,56 @@ struct BallotTab: View {
             // when the Duo's outer screen is short of room.
             .toolbarVerticalCompressionBehavior(.prefersToolbarItems)
             .navigationSplitViewColumnWidth(min: 320, ideal: 360)
+            .alert("Couldn't save your pick", isPresented: Binding { ballot.actionError != nil } set: { if !$0 { ballot.actionError = nil } }) {
+                Button("OK") {}
+            } message: {
+                Text(ballot.actionError?.message ?? "")
+            }
         } detail: {
             if let category = ballot.categories.first(where: { $0.id == navigation.selectedCategoryID }) ?? ballot.nextCategory {
                 CategoryDetail(category: category)
+                    .id(category.id)
             } else {
                 NothingSelected(title: "Choose a category", systemImage: "checkmark.seal")
             }
         }
     }
+
+    /// Before nominations: no categories yet.
+    private var preseason: ContentUnavailableView<Label<Text, Image>, Text?, EmptyView> {
+        ContentUnavailableView(copy.ballotEmpty.title, systemImage: "envelope", description: Text(copy.ballotEmpty.body))
+    }
 }
 
-/// "18 of 23 categories picked · Locks Sun, Mar 14, 7:00 PM" over a gold bar,
-/// pinned under the title.
+/// The voice's line under the title, or your score once winners are in.
+private struct BallotIntro: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+
+    var body: some View {
+        let ballot = model.ballot
+        Group {
+            if ballot.hasWinners {
+                Text("\(ballot.score) \(ballot.score == 1 ? "point" : "points") so far")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.goldText)
+                    .contentTransition(.numericText(value: Double(ballot.score)))
+            } else if model.season.isBallotLocked() {
+                Text(copy.locked)
+            } else if ballot.isComplete {
+                Text(copy.ballotComplete(ballot.categories.count))
+            } else {
+                Text(copy.ballotIntro(ballot.remaining))
+            }
+        }
+        .font(.subheadline)
+        .foregroundStyle(.inkMuted)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// "18 of 23 categories picked · Locks Sun, Mar 14, 7:00 PM" over a 6 pt gold
+/// bar, pinned under the title; "Pens down" once the ballot locks.
 private struct BallotStatusBar: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
@@ -75,8 +106,9 @@ private struct BallotStatusBar: View {
                     }
                 }
                 .font(.footnote.weight(.medium))
-                ProgressView(value: Double(ballot.pickedCount), total: Double(ballot.categories.count))
-                    .tint(.gold)
+                .foregroundStyle(.ink)
+                GoldBar(progress: Double(ballot.pickedCount) / Double(max(ballot.categories.count, 1)))
+                    .frame(height: 6)
                     .accessibilityHidden(true)
             }
             .padding(.horizontal, Theme.Space.m)
@@ -89,77 +121,270 @@ private struct BallotStatusBar: View {
     }
 }
 
+/// A rounded track with the gold gradient filled to `progress`.
+private struct GoldBar: View {
+    let progress: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            Capsule().fill(.ink.opacity(0.12))
+                .overlay(alignment: .leading) {
+                    Capsule().fill(Theme.goldGradient)
+                        .frame(width: proxy.size.width * min(max(progress, 0), 1))
+                }
+        }
+        .animation(.smooth, value: progress)
+    }
+}
+
+/// Every category as a card, in order. Picked ones collapse to a line and
+/// open on tap; the last pick fires gold dust (from the store's save).
+private struct BallotCards: View {
+    @Environment(AppModel.self) private var model
+    var isPlaceholder = false
+    /// Picked categories opened again by a tap.
+    @State private var opened: Set<Int> = []
+    @State private var scrolledID: Int?
+
+    var body: some View {
+        let ballot = model.ballot
+        let locked = model.season.isBallotLocked()
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: Theme.Space.m) {
+                BallotIntro()
+                if isPlaceholder {
+                    ForEach(BallotCategory.placeholders) { CategoryCard(category: $0, isOpen: true, toggle: {}) }
+                } else {
+                    ForEach(ballot.categories) { category in
+                        let picked = ballot.pick(for: category.id) != nil
+                        CategoryCard(category: category,
+                                     isOpen: !picked && !locked && !ballot.hasWinners || opened.contains(category.id)) {
+                            withAnimation(.smooth) {
+                                if opened.contains(category.id) { opened.remove(category.id) } else { opened.insert(category.id) }
+                            }
+                        }
+                        .id(category.id)
+                    }
+                }
+            }
+            .scrollTargetLayout()
+            .padding(.horizontal, Theme.Space.m)
+            .padding(.bottom, Theme.Space.xxl)
+        }
+        .scrollPosition(id: $scrolledID, anchor: .top)
+        .overlay { GoldDust(trigger: ballot.completions).allowsHitTesting(false) }
+        .moment(.ballotComplete, trigger: ballot.completions)
+        .onAppear {
+            if scrolledID == nil, let id = model.navigation.selectedCategoryID { scrolledID = id }
+        }
+        .onChange(of: scrolledID) { _, id in
+            if let id { model.navigation.selectedCategoryID = id }
+        }
+        .onChange(of: ballot.picks) { old, new in
+            // A fresh pick in an opened card closes it again.
+            let changed = new.filter { old[$0.key] != $0.value }.map(\.key)
+            withAnimation(.smooth) { opened.subtract(changed) }
+        }
+    }
+}
+
+/// One category: its name, its points, then its nominees, or, collapsed,
+/// your pick on one line.
+private struct CategoryCard: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+    let category: BallotCategory
+    let isOpen: Bool
+    var toggle: () -> Void
+
+    var body: some View {
+        let ballot = model.ballot
+        let pick = category.nominations.first { $0.id == ballot.pick(for: category.id) }
+        let outcome = ballot.outcome(for: category)
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(category.name)
+                    .displayFont(.title3)
+                    .foregroundStyle(.ink)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: Theme.Space.xs)
+                Text(verbatim: "\(category.pointsValue) pts")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.goldText)
+            }
+            .contentShape(.rect)
+            // Only a picked category collapses and opens again.
+            .onTapGesture { if pick != nil { toggle() } }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityAction(named: isOpen ? "Collapse" : "Show nominees") { if pick != nil { toggle() } }
+
+            if isOpen {
+                VStack(spacing: Theme.Space.xs) {
+                    ForEach(category.nominations) { NomineeRow(category: category, nominee: $0) }
+                }
+            } else if let pick {
+                PickSummary(pick: pick, outcome: outcome)
+                    .onTapGesture(perform: toggle)
+            }
+        }
+        .padding(Theme.Space.m)
+        .solidSurface()
+    }
+}
+
+/// A collapsed category: your pick in gold, and once the winner is in,
+/// whether you called it.
+private struct PickSummary: View {
+    @Environment(\.copy) private var copy
+    let pick: BallotNominee
+    let outcome: BallotStore.Outcome?
+
+    var body: some View {
+        HStack(spacing: Theme.Space.s) {
+            Image(systemName: outcome == .wrong ? "xmark.circle" : "checkmark.circle.fill")
+                .foregroundStyle(outcome == .wrong ? AnyShapeStyle(.inkMuted) : AnyShapeStyle(Theme.goldGradient))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(pick.personName ?? pick.movie?.title ?? "Your pick")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(outcome == .wrong ? .inkMuted : .goldText)
+                if let outcome {
+                    Text(outcome == .correct ? copy.correct : copy.wrong)
+                        .font(.footnote)
+                        .foregroundStyle(.inkMuted)
+                } else if pick.personName != nil, let film = pick.movie?.title {
+                    Text(film).font(.footnote).foregroundStyle(.inkMuted)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .contentShape(.rect)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Your pick: \(pick.spokenName)")
+        .accessibilityValue(outcome.map { $0 == .correct ? "Correct" : "Not this time" } ?? "")
+    }
+}
+
+/// The sidebar row on regular widths: the category, your pick, and a check
+/// (or, after winners, a trophy or a cross).
 private struct CategoryRow: View {
     @Environment(AppModel.self) private var model
     let category: BallotCategory
 
     var body: some View {
         let pick = category.nominations.first { $0.id == model.ballot.pick(for: category.id) }
+        let outcome = model.ballot.outcome(for: category)
         HStack {
             VStack(alignment: .leading) {
-                Text(category.name).font(.headline)
+                Text(category.name).font(.headline).foregroundStyle(.ink)
                 if let pick {
-                    Text(pick.spokenName).font(.footnote).foregroundStyle(.goldText)
+                    Text(pick.spokenName).font(.footnote).foregroundStyle(outcome == .wrong ? .inkMuted : .goldText)
                 }
             }
             Spacer()
-            Image(systemName: pick == nil ? "circle" : "checkmark.circle.fill")
-                .foregroundStyle(pick == nil ? AnyShapeStyle(.inkMuted) : AnyShapeStyle(Theme.goldGradient))
+            Image(systemName: outcome == .correct ? "trophy.fill" : outcome == .wrong ? "xmark.circle" : pick == nil ? "circle" : "checkmark.circle.fill")
+                .foregroundStyle(pick == nil || outcome == .wrong ? AnyShapeStyle(.inkMuted) : AnyShapeStyle(Theme.goldGradient))
                 .accessibilityHidden(true)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityValue(pick == nil ? "No pick yet" : "Picked")
+        .accessibilityValue(pick == nil ? "No pick yet" : outcome == .correct ? "Correct" : outcome == .wrong ? "Not this time" : "Picked")
     }
 }
 
+/// The selected category on regular widths.
 private struct CategoryDetail: View {
     let category: BallotCategory
 
     var body: some View {
-        List {
-            ForEach(category.nominations) { NomineeRow(category: category, nominee: $0) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                Text(verbatim: "\(category.pointsValue) pts")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.goldText)
+                ForEach(category.nominations) { NomineeRow(category: category, nominee: $0) }
+            }
+            .padding(Theme.Space.m)
+            .frame(maxWidth: 640, alignment: .leading)
         }
-        .scrollContentBackground(.hidden)
-        .background(.ground)
+        .background { AmbientBackground(posters: category.nominations.compactMap(\.movie?.posterUrl)) }
         .navigationTitle(category.name)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
+/// A nominee as one whole-row choice (screens.md, section 2): the film's
+/// thumbnail, the person over the film for acting categories, and a circle
+/// that fills with gold when it's your pick, with the voice's line under it.
+/// Once the winner is in, a trophy on the winner and a cross on a wrong pick,
+/// never red. Read-only after the lock.
 private struct NomineeRow: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
     let category: BallotCategory
     let nominee: BallotNominee
 
     var body: some View {
-        let picked = model.ballot.pick(for: category.id) == nominee.id
+        let ballot = model.ballot
+        let picked = ballot.pick(for: category.id) == nominee.id
+        let locked = model.season.isBallotLocked()
+        let wrong = picked && ballot.outcome(for: category) == .wrong
         Button {
             guard let userID = model.session.userID else { return }
-            Task { await model.ballot.choose(nominationID: nominee.id, in: category.id, userID: userID, locked: model.season.isBallotLocked()) }
+            Task { await ballot.choose(nominationID: nominee.id, in: category.id, userID: userID, locked: locked) }
         } label: {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(nominee.personName ?? nominee.movie?.title ?? "Nominee").font(.headline)
-                    if nominee.personName != nil, let film = nominee.movie?.title {
-                        Text(film).font(.footnote).foregroundStyle(.inkMuted)
+            HStack(spacing: Theme.Space.s) {
+                if let movie = nominee.movie {
+                    PosterImage(movie: movie, radius: Theme.Radius.thumbnail, size: .thumbnail)
+                        .frame(width: 40)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    if let person = nominee.personName, !person.isEmpty {
+                        Text(person).font(.body.weight(.semibold)).foregroundStyle(.ink)
+                        if let film = nominee.movie?.title {
+                            Text(film).font(.subheadline).foregroundStyle(.inkMuted)
+                        }
+                    } else {
+                        Text(nominee.movie?.title ?? "Nominee").font(.body.weight(.semibold)).foregroundStyle(.ink)
+                        if let year = nominee.movie?.releaseYear {
+                            Text(verbatim: String(year)).font(.subheadline).foregroundStyle(.inkMuted)
+                        }
+                    }
+                    if picked, !locked, !ballot.hasWinners {
+                        Text(copy.pickSaved(nominee.id))
+                            .font(.footnote)
+                            .foregroundStyle(.goldText)
                     }
                 }
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 if nominee.isWinner {
-                    Label("Winner", systemImage: "star.fill").font(.caption.bold()).foregroundStyle(.goldText)
+                    Image(systemName: "trophy.fill")
+                        .foregroundStyle(Theme.goldGradient)
+                        .accessibilityHidden(true)
                 }
-                Image(systemName: picked ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(picked ? AnyShapeStyle(Theme.goldGradient) : AnyShapeStyle(.inkMuted))
+                Image(systemName: wrong ? "xmark.circle" : picked ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(wrong ? AnyShapeStyle(.inkMuted) : picked ? AnyShapeStyle(Theme.goldGradient) : AnyShapeStyle(.hairline))
+                    .symbolEffect(.bounce, value: picked)
+                    .accessibilityHidden(true)
             }
-            .frame(minHeight: 44)
+            .padding(.horizontal, Theme.Space.s)
+            .padding(.vertical, Theme.Space.xs)
+            .frame(minHeight: 56)
+            .background(Color.ground.opacity(0.35), in: Theme.shape(Theme.Radius.row))
+            .overlay {
+                if picked && !wrong {
+                    Theme.shape(Theme.Radius.row).strokeBorder(.goldText, lineWidth: 1.5)
+                }
+            }
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .disabled(locked || ballot.hasWinners)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(nominee.spokenName)
         .accessibilityValue([picked ? "Your pick" : nil, nominee.isWinner ? "Winner" : nil].compactMap { $0 }.joined(separator: ", "))
         .accessibilityAddTraits(picked ? [.isButton, .isSelected] : .isButton)
-        .sensoryFeedback(.selection, trigger: picked)
+        .moment(.pick, trigger: picked)
     }
 }
 
@@ -174,6 +399,15 @@ extension BallotNominee {
     }
 }
 
+extension BallotCategory {
+    /// Stand-ins for the redacted cards while the ballot loads.
+    static let placeholders: [BallotCategory] = (1...3).map { id in
+        BallotCategory(id: -id, name: "Best Picture", pointsValue: 10, nominations: (1...3).map {
+            BallotNominee(id: -(id * 10 + $0), movie: nil, personName: nil, isWinner: false)
+        })
+    }
+}
+
 #Preview("Dark") {
     BallotTab().environment(AppModel.preview()).preferredColorScheme(.dark)
 }
@@ -184,4 +418,29 @@ extension BallotNominee {
 
 #Preview("Large text") {
     BallotTab().environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
+
+#Preview("Before nominations") {
+    BallotTab().environment(AppModel.preview { $0.categories = [] }).preferredColorScheme(.dark)
+}
+
+#Preview("Loading") {
+    BallotTab().environment(AppModel(data: SampleDataSource())).preferredColorScheme(.dark)
+}
+
+#Preview("Locked") {
+    BallotTab().environment(AppModel.preview { data in
+        data.ceremony = Ceremony(id: 2, number: 99, name: "99th Academy Awards", ceremonyAt: .now, ballotLockAt: .now.addingTimeInterval(-60), isActive: true)
+    }).preferredColorScheme(.dark)
+}
+
+#Preview("Winners in") {
+    BallotTab().environment(AppModel.preview { data in
+        data.ceremony = Ceremony(id: 2, number: 99, name: "99th Academy Awards", ceremonyAt: .now, ballotLockAt: .now.addingTimeInterval(-3600), isActive: true)
+        data.categories = data.categories.map { category in
+            BallotCategory(id: category.id, name: category.name, pointsValue: category.pointsValue, nominations: category.nominations.enumerated().map { index, nominee in
+                BallotNominee(id: nominee.id, movie: nominee.movie, personName: nominee.personName, isWinner: index == 0)
+            })
+        }
+    }).preferredColorScheme(.dark)
 }

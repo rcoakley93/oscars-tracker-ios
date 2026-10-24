@@ -12,6 +12,9 @@ final class BallotStore {
     private(set) var categories: [BallotCategory] = []
     private(set) var picks: [Int: Int] = [:]
     private(set) var state: LoadState = .idle
+    /// Counts the saves that picked the last category, for the gold dust. It
+    /// changes only once the save succeeds, so a rolled-back pick never celebrates.
+    private(set) var completions = 0
     var actionError: AppError?
 
     private let data: any AppDataSource
@@ -42,6 +45,15 @@ final class BallotStore {
         categories.first { picks[$0.id] == nil } ?? categories.first
     }
 
+    /// Whether any winner is in yet (ceremony night onwards).
+    var hasWinners: Bool { categories.contains { $0.nominations.contains(where: \.isWinner) } }
+
+    /// Points from correct picks so far.
+    var score: Int { categories.filter { outcome(for: $0) == .correct }.map(\.pointsValue).reduce(0, +) }
+
+    /// Categories left to pick.
+    var remaining: Int { categories.count - pickedCount }
+
     func pick(for categoryID: Int) -> Int? {
         picks[categoryID]
     }
@@ -64,6 +76,7 @@ final class BallotStore {
         picks[categoryID] = nominationID
         do {
             try await data.savePick(categoryID: categoryID, nominationID: nominationID, userID: userID)
+            if previous == nil, isComplete { completions += 1 }
         } catch {
             picks[categoryID] = previous
             actionError = AppError(error)
