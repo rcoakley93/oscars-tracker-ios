@@ -172,22 +172,29 @@ struct PlanDaySection: View {
     @Environment(\.copy) private var copy
     let day: PlanStore.Day
     var isPast = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let movies = day.items.compactMap { model.plan.movie(for: $0, in: model.films.movies) }
         let runtime = movies.compactMap(\.runtimeMinutes).reduce(0, +)
+        // The runtime goes under the day at accessibility sizes, so neither breaks mid-word.
+        let heading = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Space.xs))
         VStack(alignment: .leading, spacing: Theme.Space.xs) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.xs) {
-                Text(day.day.label)
-                    .font(.headline)
-                    .foregroundStyle(isPast ? .inkMuted : .ink)
-                    .accessibilityAddTraits(.isHeader)
-                if runtime > 0 {
-                    Text(Runtime.format(minutes: runtime))
-                        .font(.subheadline)
-                        .monospacedDigit()
-                        .foregroundStyle(.inkMuted)
-                        .accessibilityLabel("\(Runtime.format(minutes: runtime)) planned")
+            HStack(alignment: .center, spacing: Theme.Space.xs) {
+                heading {
+                    Text(day.day.label)
+                        .font(.headline)
+                        .foregroundStyle(isPast ? .inkMuted : .ink)
+                        .accessibilityAddTraits(.isHeader)
+                    if runtime > 0 {
+                        Text(Runtime.format(minutes: runtime))
+                            .font(.subheadline)
+                            .monospacedDigit()
+                            .foregroundStyle(.inkMuted)
+                            .accessibilityLabel("\(Runtime.format(minutes: runtime)) planned")
+                    }
                 }
                 Spacer(minLength: 0)
                 if !isPast {

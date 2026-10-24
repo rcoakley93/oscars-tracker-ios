@@ -193,17 +193,23 @@ private struct CategoryCard: View {
     let isOpen: Bool
     var toggle: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         let ballot = model.ballot
         let pick = category.nominations.first { $0.id == ballot.pick(for: category.id) }
         let outcome = ballot.outcome(for: category)
+        // The points go under the name at accessibility sizes, so the name keeps the width.
+        let heading = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Space.xxs))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
         VStack(alignment: .leading, spacing: Theme.Space.s) {
-            HStack(alignment: .firstTextBaseline) {
+            heading {
                 Text(category.name)
                     .displayFont(.title3)
                     .foregroundStyle(.ink)
                     .multilineTextAlignment(.leading)
-                Spacer(minLength: Theme.Space.xs)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text(verbatim: "\(category.pointsValue) pts")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.goldText)
