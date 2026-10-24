@@ -50,6 +50,8 @@ struct Copy {
 
     // Ballot
     let ballotProgress: (_ picked: Int, _ total: Int) -> String
+    /// Under the title while categories are left to pick.
+    let ballotIntro: (_ left: Int) -> String
     let ballotComplete: (_ total: Int) -> String
     /// After a pick; the seed (the nomination id) keeps the Host's line steady.
     let pickSaved: (_ seed: Int) -> String
@@ -137,6 +139,9 @@ extension Copy {
         compareTied: { name in "You're tied with \(name)." },
         boardLeader: "You're in first place.",
         ballotProgress: { picked, total in "\(picked) of \(total) categories picked" },
+        ballotIntro: { left in
+            "Pick a winner in each category before the ballot locks. \(left) \(left == 1 ? "category" : "categories") left."
+        },
         ballotComplete: { total in "All \(total) categories picked." },
         pickSaved: { _ in "Pick saved." },
         lockLabel: "Predictions lock at",
@@ -216,6 +221,11 @@ extension Copy {
         compareTied: { name in "Dead level with \(name). Someone blinks first." },
         boardLeader: "Top of the board. Act humble.",
         ballotProgress: { picked, total in "\(picked) of \(total) categories picked" },
+        ballotIntro: { left in
+            left == 1
+                ? "One to go. Don't leave a free point on the table."
+                : "\(left) to go. Every blank is a free point for your rivals."
+        },
         ballotComplete: { _ in "Every category, locked in. Now we wait." },
         pickSaved: { seed in hostPickLines[abs(seed) % hostPickLines.count] },
         lockLabel: "Pens down at",

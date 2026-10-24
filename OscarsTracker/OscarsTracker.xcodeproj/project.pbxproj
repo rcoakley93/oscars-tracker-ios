@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		65FAFBE37DA22A2C79CDA017 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E18CC5C2C11C139D430B5E13 /* Kingfisher */; };
 		F3051D706F6E1003707735C5 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8E708AA264E4AD4E7E846E6B /* Supabase */; };
 /* End PBXBuildFile section */
 
@@ -59,7 +58,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F3051D706F6E1003707735C5 /* Supabase in Frameworks */,
-				65FAFBE37DA22A2C79CDA017 /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -144,7 +142,6 @@
 			name = OscarsTracker;
 			packageProductDependencies = (
 				8E708AA264E4AD4E7E846E6B /* Supabase */,
-				E18CC5C2C11C139D430B5E13 /* Kingfisher */,
 			);
 			productName = OscarsTracker;
 			productReference = 3687A5FE000ED2FDFF18BB4F /* OscarsTracker.app */;
@@ -180,7 +177,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				828A4313AF8003DB38862927 /* XCRemoteSwiftPackageReference "supabase-swift" */,
-				46BE55B8233A4B7251647F53 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8E1E64432B28A85D64364A58 /* Products */;
@@ -500,14 +496,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		46BE55B8233A4B7251647F53 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.0.0;
-			};
-		};
 		828A4313AF8003DB38862927 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase-community/supabase-swift.git";
@@ -523,11 +511,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 828A4313AF8003DB38862927 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
-		};
-		E18CC5C2C11C139D430B5E13 /* Kingfisher */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 46BE55B8233A4B7251647F53 /* XCRemoteSwiftPackageReference "Kingfisher" */;
-			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
