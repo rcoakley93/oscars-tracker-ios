@@ -53,7 +53,7 @@ private struct GroupDetail: View {
     var body: some View {
         List {
             Section("Board") {
-                ForEach(model.groups.boards[group.id] ?? [], id: \.userId) { entry in
+                ForEach(model.leaderboard.entries(group.id)) { entry in
                     HStack {
                         Text(entry.username)
                         Spacer()
@@ -70,7 +70,7 @@ private struct GroupDetail: View {
         .background(.ground)
         .navigationTitle(group.name)
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: group.id) { await model.groups.loadBoard(for: group.id) }
+        .task(id: group.id) { await model.leaderboard.load(ceremonyID: model.season.ceremony?.id, groupID: group.id) }
     }
 }
 

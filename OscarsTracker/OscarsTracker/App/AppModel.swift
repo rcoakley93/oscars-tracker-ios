@@ -38,17 +38,23 @@ final class AppModel {
     /// Loads (or reloads) everything at once, for launch, sign-in and pull to refresh.
     func refresh() async {
         let userID = session.userID
-        async let season: Void = season.load()
+        async let season: Void = loadSeasonAndBoards()
         async let films: Void = films.load(userID: userID)
         async let ballot: Void = ballot.load(userID: userID)
-        async let board: Void = leaderboard.load()
         if let userID {
             async let plan: Void = plan.load(userID: userID)
             async let groups: Void = groups.load(userID: userID)
             async let profile: Void = profile.load(userID: userID)
             _ = await (plan, groups, profile)
         }
-        _ = await (season, films, ballot, board)
+        _ = await (season, films, ballot)
+    }
+
+    /// The boards need the ceremony's id.
+    private func loadSeasonAndBoards() async {
+        await season.load()
+        guard session.userID != nil else { return }
+        await leaderboard.reload(ceremonyID: season.ceremony?.id)
     }
 
     func signOut() async {

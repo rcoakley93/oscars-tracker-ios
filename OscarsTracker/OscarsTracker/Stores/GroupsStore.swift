@@ -1,11 +1,10 @@
 import Foundation
 import Observation
 
-/// Your groups and their leaderboards.
+/// Your groups. Their boards are in `LeaderboardStore`.
 @Observable
 final class GroupsStore {
     private(set) var groups: [PoolGroup] = []
-    private(set) var boards: [Int: [GroupLeaderboardEntry]] = [:]
     private(set) var state: LoadState = .idle
     private(set) var isWorking = false
     var actionError: AppError?
@@ -24,45 +23,6 @@ final class GroupsStore {
         } catch {
             state = .failed(AppError(error))
         }
-    }
-
-    func loadBoard(for groupID: Int) async {
-        do {
-            boards[groupID] = try await data.groupLeaderboard(groupID: groupID)
-        } catch {
-            actionError = AppError(error)
-        }
-    }
-
-    /// Where you stand in a group by films watched: your rank, the group's
-    /// size, and how you compare with the nearest person above you.
-    struct Standing: Equatable {
-        enum Position: Equatable {
-            case first
-            /// Level at the top with someone else.
-            case tied(with: String)
-            /// `films` behind `name`, the nearest person with more.
-            case behind(String, films: Int)
-        }
-
-        let rank: Int
-        let size: Int
-        let position: Position
-    }
-
-    /// Nil until the group's board is loaded, or if you're not on it.
-    func standing(in groupID: Int, userID: String) -> Standing? {
-        guard let board = boards[groupID], let me = board.first(where: { $0.userId == userID }) else { return nil }
-        let others = board.filter { $0.userId != userID }
-        let position: Standing.Position
-        if let above = others.filter({ $0.watchedCount > me.watchedCount }).min(by: { $0.watchedCount < $1.watchedCount }) {
-            position = .behind(above.username, films: above.watchedCount - me.watchedCount)
-        } else if let level = others.first(where: { $0.watchedCount == me.watchedCount }) {
-            position = .tied(with: level.username)
-        } else {
-            position = .first
-        }
-        return Standing(rank: me.rank, size: board.count, position: position)
     }
 
     /// The message to show for a group name, or nil when it's fine.
@@ -107,7 +67,6 @@ final class GroupsStore {
     func remove(member userID: String, from groupID: Int) async {
         _ = await working {
             try await data.removeMember(userID: userID, groupID: groupID)
-            boards[groupID]?.removeAll { $0.userId == userID }
         }
     }
 
@@ -125,7 +84,6 @@ final class GroupsStore {
 
     func reset() {
         groups = []
-        boards = [:]
         state = .idle
     }
 }

@@ -14,7 +14,7 @@ final class SampleDataSource: AppDataSource {
     var savedPicks: [Int: Int]
     var planItems: [WatchPlanItem]
     var groups: [PoolGroup]
-    var board: [LeaderboardEntry]
+    var board: [BoardEntry]
     /// Where to watch, by film; films not listed have no offers.
     var offerList: [Int: [WatchOffer]] = SampleData.offers
     var userProfile: Profile?
@@ -233,17 +233,24 @@ final class SampleDataSource: AppDataSource {
         _ = try requireUser()
     }
 
-    func groupLeaderboard(groupID: Int) async throws -> [GroupLeaderboardEntry] {
+    /// The global board is everyone; Movies LLC the top six; any other group just you.
+    func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry] {
         _ = try requireUser()
-        return board.prefix(6).map {
-            GroupLeaderboardEntry(userId: $0.userId, username: $0.username, avatarUrl: nil, watchedCount: $0.watchedCount,
-                                  predictionScore: $0.predictionScore, rank: $0.rank, isCreator: $0.userId == Self.userID)
+        switch groupID {
+        case nil: return board
+        case 1: return Array(board.prefix(6))
+        default: return board.filter { $0.userId == Self.userID }.map { $0.ranked(1) }
         }
     }
 
-    func leaderboard() async throws -> [LeaderboardEntry] {
-        try check()
-        return board
+    /// Everyone on the sample board watched the first films in the list; picks show after the lock.
+    func boardPerson(ceremonyID: Int, userID: String) async throws -> BoardPerson {
+        let me = try requireUser()
+        if userID == me { return BoardPerson(watchedMovieIDs: watched, picks: savedPicks) }
+        guard let entry = board.first(where: { $0.userId == userID }) else { throw AppError.server("Not in a group with this person") }
+        let films = Set(movieList.prefix(entry.watchedCount).map(\.id))
+        let picks = ceremony.isBallotLocked() ? Dictionary(uniqueKeysWithValues: categories.compactMap { c in c.nominations.first.map { (c.id, $0.id) } }) : [:]
+        return BoardPerson(watchedMovieIDs: films, picks: picks)
     }
 
     // MARK: - Profile
@@ -339,12 +346,25 @@ nonisolated enum SampleData {
         return item
     }
 
-    static let leaderboard: [LeaderboardEntry] = [
-        LeaderboardEntry(userId: "u-sam", username: "Sam", avatarUrl: nil, watchedCount: 31, predictionScore: 0, lastWatchedAt: nil, rank: 1),
-        LeaderboardEntry(userId: SampleDataSource.userID, username: "filmbuff", avatarUrl: nil, watchedCount: 29, predictionScore: 0, lastWatchedAt: nil, rank: 2),
-        LeaderboardEntry(userId: "u-jordan", username: "Jordan", avatarUrl: nil, watchedCount: 24, predictionScore: 0, lastWatchedAt: nil, rank: 3),
-        LeaderboardEntry(userId: "u-alex", username: "Alex", avatarUrl: nil, watchedCount: 19, predictionScore: 0, lastWatchedAt: nil, rank: 4),
-        LeaderboardEntry(userId: "u-priya", username: "Priya", avatarUrl: nil, watchedCount: 15, predictionScore: 0, lastWatchedAt: nil, rank: 5),
-        LeaderboardEntry(userId: "u-chris", username: "Chris", avatarUrl: nil, watchedCount: 9, predictionScore: 0, lastWatchedAt: nil, rank: 6),
+    static let leaderboard: [BoardEntry] = [
+        BoardEntry.sample("u-sam", "Sam", watched: 31, rank: 1),
+        BoardEntry.sample(SampleDataSource.userID, "filmbuff", watched: 29, rank: 2),
+        BoardEntry.sample("u-jordan", "Jordan", watched: 24, rank: 3),
+        BoardEntry.sample("u-alex", "Alex", watched: 19, rank: 4),
+        BoardEntry.sample("u-priya", "Priya", watched: 15, rank: 5),
+        BoardEntry.sample("u-chris", "Chris", watched: 9, rank: 6),
     ]
+}
+
+nonisolated extension BoardEntry {
+    /// A board row before any winners: no score yet, ranked by films watched.
+    static func sample(_ userID: String, _ name: String, watched: Int, rank: Int, score: Int = 0, scoring: Scoring = .traditional, isCreator: Bool = false) -> BoardEntry {
+        BoardEntry(rank: rank, userId: userID, username: name, avatarUrl: nil, watchedCount: watched,
+                   correctCount: scoring == .traditional ? score : 0, points: score, score: score, scoring: scoring, isCreator: isCreator)
+    }
+
+    func ranked(_ rank: Int) -> BoardEntry {
+        BoardEntry(rank: rank, userId: userId, username: username, avatarUrl: avatarUrl, watchedCount: watchedCount,
+                   correctCount: correctCount, points: points, score: score, scoring: scoring, isCreator: isCreator)
+    }
 }

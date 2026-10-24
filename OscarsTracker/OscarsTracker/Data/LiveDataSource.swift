@@ -345,15 +345,29 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
-    func groupLeaderboard(groupID: Int) async throws -> [GroupLeaderboardEntry] {
+    private nonisolated struct BoardParams: Encodable {
+        let p_ceremony_id: Int
+        let p_group_id: Int?
+    }
+
+    func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry] {
         try await run {
-            try await client.rpc("get_group_leaderboard", params: ["p_group_id": groupID]).execute().value
+            try await client.rpc("get_leaderboard", params: BoardParams(p_ceremony_id: ceremonyID, p_group_id: groupID)).execute().value
         }
     }
 
-    func leaderboard() async throws -> [LeaderboardEntry] {
+    private nonisolated struct PersonParams: Encodable {
+        let p_ceremony_id: Int
+        let p_user_id: String
+    }
+
+    func boardPerson(ceremonyID: Int, userID: String) async throws -> BoardPerson {
         try await run {
-            try await client.rpc("get_leaderboard").execute().value
+            let rows: [BoardPerson.Row] = try await client
+                .rpc("get_board_person", params: PersonParams(p_ceremony_id: ceremonyID, p_user_id: userID))
+                .execute()
+                .value
+            return BoardPerson(rows: rows)
         }
     }
 
