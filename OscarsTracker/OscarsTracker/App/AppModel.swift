@@ -21,7 +21,7 @@ final class AppModel {
 
     init(data: any AppDataSource) {
         session = SessionStore(data: data)
-        season = SeasonStore(data: data)
+        season = SeasonStore(data: data, cacheKey: data is LiveDataSource ? "season.cache" : nil)
         films = FilmsStore(data: data)
         ballot = BallotStore(data: data)
         plan = PlanStore(data: data)
@@ -52,6 +52,14 @@ final class AppModel {
             _ = await (plan, groups, profile, push)
         }
         _ = await (season, films, ballot)
+    }
+
+    /// Back from the background: the season may have moved on (the lock, the
+    /// winners), and the push token may have changed.
+    func foreground() async {
+        async let season: Void = loadSeasonAndBoards()
+        async let push: Void = push.refresh()
+        _ = await (season, push)
     }
 
     /// The boards need the ceremony's id.

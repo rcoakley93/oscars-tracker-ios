@@ -18,7 +18,7 @@ struct OscarsTrackerApp: App {
                     #endif
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { Task { await model.push.refresh() } }
+                    if phase == .active { Task { await model.foreground() } }
                 }
         }
     }

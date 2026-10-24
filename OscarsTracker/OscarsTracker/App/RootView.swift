@@ -7,16 +7,20 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            switch model.session.state {
-            case .checking:
-                LaunchView()
-            case .signedOut:
-                SignInView()
-            case .signedIn:
-                if model.profile.needsUsername {
-                    UsernameView()
-                } else {
-                    AppShell()
+            if model.season.needsUpdate() {
+                UpdateRequiredView()
+            } else {
+                switch model.session.state {
+                case .checking:
+                    LaunchView()
+                case .signedOut:
+                    SignInView()
+                case .signedIn:
+                    if model.profile.needsUsername {
+                        UsernameView()
+                    } else {
+                        AppShell()
+                    }
                 }
             }
         }

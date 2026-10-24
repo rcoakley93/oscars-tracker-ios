@@ -98,9 +98,9 @@ struct FilmsTab: View {
         }
     }
 
-    /// Before nominations: no films yet. P4-10 gives it the nominations date.
+    /// Before nominations: no films yet, with the date when `app_config` has it.
     private var preseason: ContentUnavailableView<Label<Text, Image>, Text?, EmptyView> {
-        let empty = copy.filmsPreseason(nil)
+        let empty = copy.filmsPreseason(model.season.config.nominationsAt?.formatted(.dateTime.month(.abbreviated).day()))
         return ContentUnavailableView(empty.title, systemImage: "envelope", description: Text(empty.body))
     }
 

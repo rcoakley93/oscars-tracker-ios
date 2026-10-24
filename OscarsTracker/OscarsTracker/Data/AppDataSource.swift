@@ -39,9 +39,9 @@ protocol AppDataSource: AnyObject, Sendable {
     func updatePassword(_ password: String) async throws
 
     // Season
-    func activeCeremony() async throws -> Ceremony?
-    /// `app_config.runtime_buckets`, shortest first.
-    func runtimeBuckets() async throws -> [RuntimeBucket]
+    /// The active ceremony and the server's clock; nil between seasons.
+    func seasonFacts() async throws -> SeasonFacts?
+    func appConfig() async throws -> AppConfig
 
     // Films and watched
     func movies() async throws -> [Movie]
