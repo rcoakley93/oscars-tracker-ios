@@ -102,8 +102,10 @@ struct SignInView: View {
                     Task { await submit() }
                 } label: {
                     ZStack {
-                        if session.isWorking { ProgressView() } else { Text(creatingAccount ? "Create account" : "Sign in") }
+                        if session.isWorking { ProgressView().tint(.ground) } else { Text(creatingAccount ? "Create account" : "Sign in") }
                     }
+                    // Dark on the ink fill: in dark mode the tint is cream.
+                    .foregroundStyle(.ground)
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)

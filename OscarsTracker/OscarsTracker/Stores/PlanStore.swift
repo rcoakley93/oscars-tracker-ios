@@ -44,6 +44,30 @@ final class PlanStore {
         }
     }
 
+    /// The agenda: today and the next `minimumDays - 1` days, empty or not,
+    /// then every later day that has films.
+    func agenda(today: PlanDay = .today(), minimumDays: Int = 7) -> [Day] {
+        let planned = Dictionary(uniqueKeysWithValues: upcomingDays(today: today).map { ($0.day, $0) })
+        let week = (0..<minimumDays).map { today.adding(days: $0) }
+        let days = Set(week).union(planned.keys).sorted()
+        return days.map { planned[$0] ?? Day(day: $0, items: []) }
+    }
+
+    /// Days before today that have films, newest first ("Show past days").
+    func pastDays(today: PlanDay = .today()) -> [Day] {
+        days(where: { $0 < today }).reversed()
+    }
+
+    /// Films planned for today or later, for Fill my plan and the add sheet.
+    func plannedMovieIDs(from today: PlanDay = .today()) -> Set<Int> {
+        Set(upcomingDays(today: today).flatMap(\.items).map(\.movieId))
+    }
+
+    /// How many films each day from today already has, for Fill my plan.
+    func countsByDay(from today: PlanDay = .today()) -> [PlanDay: Int] {
+        Dictionary(uniqueKeysWithValues: upcomingDays(today: today).map { ($0.day, $0.items.count) })
+    }
+
     /// The films planned for one day.
     func items(on day: PlanDay) -> [WatchPlanItem] {
         items.filter { PlanDay($0.plannedDate) == day }
@@ -72,6 +96,30 @@ final class PlanStore {
             if let index = items.firstIndex(where: { $0.id == itemID }) { items[index].plannedDate = previous }
             actionError = AppError(error)
         }
+    }
+
+    /// Moves several films to one day (a drag between days, or Reschedule).
+    func move(_ itemIDs: [Int], to day: PlanDay) async {
+        for id in itemIDs where items.first(where: { $0.id == id }).flatMap({ PlanDay($0.plannedDate) }) != day {
+            await move(id, to: day)
+        }
+    }
+
+    /// Adds Fill my plan's assignments; returns how many were saved. Stops
+    /// at the first failure, which `actionError` reports.
+    @discardableResult
+    func fill(_ assignments: [PlanFiller.Assignment], userID: String) async -> Int {
+        var added = 0
+        for assignment in assignments {
+            do {
+                items.append(try await data.addToPlan(movieID: assignment.movieID, day: assignment.day, userID: userID))
+                added += 1
+            } catch {
+                actionError = AppError(error)
+                break
+            }
+        }
+        return added
     }
 
     /// "Move all to this week": one film a day from today, in their planned order.

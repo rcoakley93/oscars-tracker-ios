@@ -30,9 +30,12 @@ struct UsernameView: View {
             } else if let error = model.profile.actionError {
                 Text(error.message).font(.footnote).foregroundStyle(.dangerText)
             }
-            Button("Continue") {
+            Button {
                 guard let userID = model.session.userID else { return }
                 Task { _ = await model.profile.setUsername(username, userID: userID) }
+            } label: {
+                // Dark on the ink fill: in dark mode the tint is cream.
+                Text("Continue").foregroundStyle(.ground)
             }
             .buttonStyle(.glassProminent)
             .controlSize(.large)

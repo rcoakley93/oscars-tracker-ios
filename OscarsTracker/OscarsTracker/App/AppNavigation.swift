@@ -17,6 +17,12 @@ final class AppNavigation {
         case joinGroup(code: String?)
         case createGroup
         case addToPlan(movieID: Int?)
+        /// Plan: pick a film for this day.
+        case addToDay(PlanDay)
+        /// Plan: move this plan item to another day.
+        case reschedule(itemID: Int)
+        case whatCanIWatch
+        case fillPlan
 
         var id: String {
             switch self {
@@ -25,6 +31,10 @@ final class AppNavigation {
             case .joinGroup(let code): "join-\(code ?? "")"
             case .createGroup: "create-group"
             case .addToPlan(let id): "add-\(id.map(String.init) ?? "")"
+            case .addToDay(let day): "add-day-\(day)"
+            case .reschedule(let id): "reschedule-\(id)"
+            case .whatCanIWatch: "what-can-i-watch"
+            case .fillPlan: "fill-plan"
             }
         }
     }

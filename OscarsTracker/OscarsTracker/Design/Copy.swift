@@ -66,6 +66,15 @@ struct Copy {
     let markedWatched: String
     let rescheduled: String
     let removed: String
+    /// The reschedule bar: past days' films not yet watched.
+    let planReschedule: (_ films: Int) -> String
+    let planNothing: String
+    /// After Fill my plan.
+    let planFillDone: (_ films: Int, _ days: Int) -> String
+    let planFillNothing: String
+    /// What can I watch: the best fit, with its runtime already formatted.
+    let planFit: (_ title: String, _ runtime: String) -> String
+    let planNoFit: String
 
     // Groups and boards
     let groupsEmpty: Empty
@@ -139,6 +148,12 @@ extension Copy {
         markedWatched: "Marked as watched.",
         rescheduled: "Rescheduled.",
         removed: "Removed from your plan.",
+        planReschedule: { films in "\(filmCount(films)) to reschedule." },
+        planNothing: "Nothing planned",
+        planFillDone: { films, days in "Planned \(filmCount(films)) over \(Copy.days(days))." },
+        planFillNothing: "Every unwatched film is already planned.",
+        planFit: { title, runtime in "\(title) (\(runtime)) fits your time." },
+        planNoFit: "Nothing fits that time. Try a longer one.",
         groupsEmpty: Empty(title: "No groups yet", body: "Create a group, or join one with an invite code, to compete with friends."),
         groupBoardEmpty: "No members yet. Share the invite code to add people.",
         boardEmpty: "No one is on the board yet.",
@@ -212,6 +227,16 @@ extension Copy {
         markedWatched: "Another one down.",
         rescheduled: "Moved. Life happens.",
         removed: "Cut in the edit.",
+        planReschedule: { films in
+            films == 1 ? "1 film slipped. Happens to the best of us." : "\(films) films slipped. Happens to the best of us."
+        },
+        planNothing: "Nothing planned. The couch is free.",
+        planFillDone: { films, days in
+            "Spread \(filmCount(films)) over \(days == 1 ? "1 night" : "\(days) nights"). You're welcome."
+        },
+        planFillNothing: "Every film already has a date. Look at you.",
+        planFit: { title, runtime in "\(runtime) fits. \(title), then bed." },
+        planNoFit: "Nothing that short is left. Try a longer slot.",
         groupsEmpty: Empty(title: "Flying solo?", body: "Start a group, or join one with an invite code. Awards season is better with rivals."),
         groupBoardEmpty: "Nobody here yet. Share the invite code and fill the seats.",
         boardEmpty: "The red carpet's empty. Be the first to arrive.",

@@ -40,6 +40,8 @@ protocol AppDataSource: AnyObject, Sendable {
 
     // Season
     func activeCeremony() async throws -> Ceremony?
+    /// `app_config.runtime_buckets`, shortest first.
+    func runtimeBuckets() async throws -> [RuntimeBucket]
 
     // Films and watched
     func movies() async throws -> [Movie]

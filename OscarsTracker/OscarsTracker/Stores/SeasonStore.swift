@@ -7,6 +7,8 @@ import Observation
 final class SeasonStore {
     private(set) var ceremony: Ceremony?
     private(set) var state: LoadState = .idle
+    /// For "What can I watch?". P4-10 caches the rest of `app_config`.
+    private(set) var runtimeBuckets = RuntimeBucket.defaults
 
     private let data: any AppDataSource
 
@@ -19,6 +21,7 @@ final class SeasonStore {
         do {
             ceremony = try await data.activeCeremony()
             state = .loaded
+            if let buckets = try? await data.runtimeBuckets(), !buckets.isEmpty { runtimeBuckets = buckets }
         } catch {
             state = .failed(AppError(error))
         }
