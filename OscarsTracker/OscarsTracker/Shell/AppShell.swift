@@ -45,6 +45,10 @@ struct AppShell: View {
             switch sheet {
             case .profile:
                 ProfileSheet()
+            case .movie(let id):
+                if let movie = model.films.movies.first(where: { $0.id == id }) {
+                    MovieDetail(movie: movie, layout: .sheet)
+                }
             default:
                 ComingSoonSheet()
             }

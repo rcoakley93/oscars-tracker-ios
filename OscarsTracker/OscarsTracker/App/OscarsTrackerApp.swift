@@ -8,7 +8,12 @@ struct OscarsTrackerApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
-                .task { await model.start() }
+                .task {
+                    await model.start()
+                    #if DEBUG
+                    Self.openScreenshotRoute(in: model)
+                    #endif
+                }
         }
     }
 
@@ -22,4 +27,23 @@ struct OscarsTrackerApp: App {
         #endif
         return LiveDataSource()
     }
+
+    #if DEBUG
+    /// Opens a tab, a film or a debug gallery from launch arguments, so
+    /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
+    /// `-gallery tokens`.
+    private static func openScreenshotRoute(in model: AppModel) {
+        let defaults = UserDefaults.standard
+        if let tab = defaults.string(forKey: "tab").flatMap(AppNavigation.Tab.init(rawValue:)) {
+            model.navigation.tab = tab
+        }
+        if defaults.object(forKey: "movie") != nil {
+            model.navigation.selectedMovieID = defaults.integer(forKey: "movie")
+        }
+        if defaults.object(forKey: "category") != nil {
+            model.navigation.selectedCategoryID = defaults.integer(forKey: "category")
+        }
+        model.navigation.debugGallery = defaults.string(forKey: "gallery")
+    }
+    #endif
 }

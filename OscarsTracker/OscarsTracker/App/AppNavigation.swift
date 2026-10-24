@@ -40,6 +40,10 @@ final class AppNavigation {
     var sheet: Sheet?
     /// The search tab's query, kept across a fold like everything else here.
     var searchText = ""
+    #if DEBUG
+    /// A debug gallery opened from launch arguments for screenshots ("tokens", "moments").
+    var debugGallery: String?
+    #endif
 
     func reset() {
         tab = .films
