@@ -81,9 +81,10 @@ struct FilmsTab: View {
                 }
                 .visibilityPriority(.low)
             }
-            .navigationSplitViewColumnWidth(min: 380, ideal: 440)
+            .navigationSplitViewColumnWidth(min: 380, ideal: 500, max: 640)
         } detail: {
-            if let movie = films.movies.first(where: { $0.id == navigation.selectedMovieID }) {
+            // Wide layouts open on the next film to watch rather than an empty column.
+            if let movie = films.movies.first(where: { $0.id == navigation.selectedMovieID }) ?? films.toWatch.first {
                 MovieDetail(movie: movie, layout: .column)
                     .id(movie.id)
             } else {

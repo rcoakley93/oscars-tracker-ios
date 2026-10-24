@@ -49,13 +49,13 @@ struct EnvelopeReveal: View {
         .accessibilityLabel("\(category): \(winner)")
         .moment(.envelopeOpen, trigger: stage == 1)
         .moment(outcome == .wrong ? .wrong : .correct, trigger: stage == 3 && outcome != nil)
-        .onHingeChange(isEnabled: !reduceMotion) { _, context in
-            guard stage == 0, let hinge = context.hinge, hinge.status == .partiallyOpen else {
+        .onHingeOpenness(isEnabled: !reduceMotion) { openness in
+            guard stage == 0, let openness else {
                 hingeOpen = nil
                 return
             }
             withAnimation(.smooth(duration: 0.2)) {
-                hingeOpen = min(max(hinge.angle.degrees / 180, 0), 1)
+                hingeOpen = openness
             }
         }
         .task {
