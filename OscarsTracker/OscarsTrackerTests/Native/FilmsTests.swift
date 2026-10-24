@@ -62,31 +62,6 @@ struct FilmsTests {
         #expect(store.completions == 0)
     }
 
-    @Test func standingNamesThePersonAboveAndTheGap() async throws {
-        let store = GroupsStore(data: SampleDataSource())
-        #expect(store.standing(in: 1, userID: user) == nil)
-        await store.loadBoard(for: 1)
-        let standing = try #require(store.standing(in: 1, userID: user))
-        #expect(standing.rank == 2)
-        #expect(standing.size == 6)
-        #expect(standing.position == .behind("Sam", films: 2))
-    }
-
-    @Test func standingKnowsTheLeaderAndTies() async {
-        let data = SampleDataSource()
-        data.board = [
-            LeaderboardEntry(userId: user, username: "filmbuff", avatarUrl: nil, watchedCount: 31, predictionScore: 0, lastWatchedAt: nil, rank: 1),
-            LeaderboardEntry(userId: "u-sam", username: "Sam", avatarUrl: nil, watchedCount: 20, predictionScore: 0, lastWatchedAt: nil, rank: 2),
-        ]
-        let store = GroupsStore(data: data)
-        await store.loadBoard(for: 1)
-        #expect(store.standing(in: 1, userID: user)?.position == .first)
-
-        data.board[1] = LeaderboardEntry(userId: "u-sam", username: "Sam", avatarUrl: nil, watchedCount: 31, predictionScore: 0, lastWatchedAt: nil, rank: 1)
-        await store.loadBoard(for: 1)
-        #expect(store.standing(in: 1, userID: user)?.position == .tied(with: "Sam"))
-    }
-
     @Test func bothVoicesGiveTheRankAndTheGap() {
         for voice in Voice.allCases {
             let copy = Copy.for(voice)

@@ -45,6 +45,9 @@ final class AppNavigation {
     var selectedCategoryID: Int?
     var selectedDay: PlanDay?
     var selectedGroupID: Int?
+    /// The Board's group; nil is the global board.
+    var boardGroupID: Int?
+    var boardMetric: LeaderboardStore.Metric = .films
     /// The person whose picks or watched films the Board shows on wide layouts.
     var selectedPersonID: String?
     var sheet: Sheet?
@@ -61,6 +64,8 @@ final class AppNavigation {
         selectedCategoryID = nil
         selectedDay = nil
         selectedGroupID = nil
+        boardGroupID = nil
+        boardMetric = .films
         selectedPersonID = nil
         sheet = nil
         searchText = ""

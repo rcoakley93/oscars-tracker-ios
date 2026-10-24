@@ -69,20 +69,22 @@ struct AppShell: View {
 extension View {
     /// The title, the season under it, the profile button and the ambient
     /// light for a tab's first column. Each tab adds its own items.
-    func tabChrome(_ title: String, posters: [String] = []) -> some View {
-        modifier(TabChrome(title: title, posters: posters))
+    /// The subtitle defaults to the ceremony's name.
+    func tabChrome(_ title: String, subtitle: String? = nil, posters: [String] = []) -> some View {
+        modifier(TabChrome(title: title, subtitle: subtitle, posters: posters))
     }
 }
 
 private struct TabChrome: ViewModifier {
     @Environment(AppModel.self) private var model
     let title: String
+    var subtitle: String?
     var posters: [String]
 
     func body(content: Content) -> some View {
         content
             .navigationTitle(title)
-            .navigationSubtitle(model.season.ceremony?.name ?? "")
+            .navigationSubtitle(subtitle ?? model.season.ceremony?.name ?? "")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button("Profile", systemImage: "person.crop.circle") {

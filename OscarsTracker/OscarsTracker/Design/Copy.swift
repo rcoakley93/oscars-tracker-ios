@@ -80,8 +80,13 @@ struct Copy {
 
     // Groups and boards
     let groupsEmpty: Empty
-    let groupBoardEmpty: String
+    /// A group with only you in it.
+    let boardAlone: String
     let boardEmpty: String
+    /// The Predictions tab before the ballot locks.
+    let boardPredictionsLocked: String
+    /// You're `points` behind `name` on predictions.
+    let scoreGap: (_ points: Int, _ name: String) -> String
 
     // Season ticker (screens.md, section 2)
     let tickerSeason: (_ days: Int, _ filmsLeft: Int) -> String
@@ -104,6 +109,11 @@ extension Copy {
     /// "1 film", "2 films".
     nonisolated static func filmCount(_ films: Int) -> String {
         films == 1 ? "1 film" : "\(films) films"
+    }
+
+    /// "1 point", "3 points".
+    nonisolated static func pointCount(_ points: Int) -> String {
+        points == 1 ? "1 point" : "\(points) points"
     }
 
     /// "2nd of 6 in Movies LLC".
@@ -160,8 +170,10 @@ extension Copy {
         planFit: { title, runtime in "\(title) (\(runtime)) fits your time." },
         planNoFit: "Nothing fits that time. Try a longer one.",
         groupsEmpty: Empty(title: "No groups yet", body: "Create a group, or join one with an invite code, to compete with friends."),
-        groupBoardEmpty: "No members yet. Share the invite code to add people.",
+        boardAlone: "No other members yet.",
         boardEmpty: "No one is on the board yet.",
+        boardPredictionsLocked: "Predictions open when the ballot locks.",
+        scoreGap: { points, name in "You're \(pointCount(points)) behind \(name)." },
         tickerSeason: classicCountdown,
         tickerFinalWeek: classicCountdown,
         tickerLockDay: { left in "Ballot locks in \(left)." },
@@ -248,8 +260,10 @@ extension Copy {
         planFit: { title, runtime in "\(runtime) fits. \(title), then bed." },
         planNoFit: "Nothing that short is left. Try a longer slot.",
         groupsEmpty: Empty(title: "Flying solo?", body: "Start a group, or join one with an invite code. Awards season is better with rivals."),
-        groupBoardEmpty: "Nobody here yet. Share the invite code and fill the seats.",
+        boardAlone: "Just you. Fill the seats: share the invite.",
         boardEmpty: "The red carpet's empty. Be the first to arrive.",
+        boardPredictionsLocked: "Ballots stay sealed until the lock. No peeking.",
+        scoreGap: { points, name in "\(pointCount(points)) behind \(name). It's not over till the last envelope." },
         tickerSeason: { days, left in
             left == 0
                 ? "\(Copy.days(days)). Every film watched. Smug is allowed."

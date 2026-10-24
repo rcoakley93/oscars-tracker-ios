@@ -235,10 +235,11 @@ private struct GroupComparisonCard: View {
     var body: some View {
         let groups = model.groups.groups
         if let userID = model.session.userID, let group = groups.first(where: { $0.id == chosenGroupID }) ?? groups.first {
-            let standing = model.groups.standing(in: group.id, userID: userID)
+            let standing = model.leaderboard.standing(in: group.id, userID: userID)
             HStack(alignment: .center, spacing: Theme.Space.s) {
                 Button {
-                    model.navigation.selectedGroupID = group.id
+                    model.navigation.boardGroupID = group.id
+                    model.navigation.boardMetric = .films
                     model.navigation.tab = .board
                 } label: {
                     VStack(alignment: .leading, spacing: Theme.Space.xxs) {
@@ -274,11 +275,15 @@ private struct GroupComparisonCard: View {
             .padding(.horizontal, Theme.Space.m)
             .solidSurface()
             .redacted(reason: standing == nil ? .placeholder : [])
-            .task(id: group.id) { await model.groups.loadBoard(for: group.id) }
+            .task(id: group.id) {
+                if model.leaderboard.boards[group.id] == nil {
+                    await model.leaderboard.load(ceremonyID: model.season.ceremony?.id, groupID: group.id)
+                }
+            }
         }
     }
 
-    private func line(_ standing: GroupsStore.Standing?) -> String {
+    private func line(_ standing: LeaderboardStore.Standing?) -> String {
         switch standing?.position {
         case .first: copy.boardLeader
         case .tied(let name): copy.compareTied(name)
