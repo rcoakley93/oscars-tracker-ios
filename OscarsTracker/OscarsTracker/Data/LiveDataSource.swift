@@ -388,6 +388,28 @@ final class LiveDataSource: AppDataSource {
 
     /// Really deletes the account (guideline 5.1.1): `delete_user()` removes the
     /// auth user and, through cascades, every row that belongs to them.
+    func account() async -> Account? {
+        guard let user = try? await client.auth.session.user else { return nil }
+        let provider: Account.Provider = switch user.appMetadata["provider"] {
+        case .string("apple"): .apple
+        case .string("google"): .google
+        default: .email
+        }
+        return Account(email: user.email, provider: provider)
+    }
+
+    func seasonHistory() async throws -> [SeasonResult] {
+        try await run {
+            try await client.rpc("get_season_history").execute().value
+        }
+    }
+
+    func revokeApple(authorizationCode: String) async throws {
+        try await run {
+            try await client.functions.invoke("revoke-apple", options: FunctionInvokeOptions(body: ["authorization_code": authorizationCode]))
+        }
+    }
+
     func deleteAccount() async throws {
         try await run {
             try await client.rpc("delete_user").execute()
