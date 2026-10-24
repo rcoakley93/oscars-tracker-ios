@@ -7,9 +7,11 @@ import SwiftUI
 /// in one half. Never the device model: no fold, no change.
 nonisolated enum FoldLayout {
     /// The fold crossing this view, in its local coordinates. Inactive folds
-    /// count too, so nothing jumps as the phone opens past flat.
+    /// count too, so nothing jumps as the phone opens past flat. Reserved
+    /// regions arrived with the iPhone Duo in iOS 27.1; before it there's no fold.
     static func fold(in proxy: GeometryProxy) -> CGRect? {
-        proxy.reservedRegions(kind: .division, options: .includeInactive)
+        guard #available(iOS 27.1, *) else { return nil }
+        return proxy.reservedRegions(kind: .division, options: .includeInactive)
             .map(\.frame)
             .first { !$0.isEmpty && $0.intersects(CGRect(origin: .zero, size: proxy.size)) }
     }

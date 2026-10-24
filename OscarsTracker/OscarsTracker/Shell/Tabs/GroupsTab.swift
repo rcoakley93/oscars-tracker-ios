@@ -48,7 +48,8 @@ struct GroupsTab: View {
             .navigationSplitViewColumnWidth(min: 320, ideal: 380)
             .goldDust(trigger: groups.joins)
         } detail: {
-            if let group = groups.groups.first(where: { $0.id == navigation.selectedGroupID }) {
+            // Wide layouts open on your first group rather than an empty column.
+            if let group = groups.groups.first(where: { $0.id == navigation.selectedGroupID }) ?? groups.groups.first {
                 GroupDetail(group: group).id(group.id)
             } else {
                 NothingSelected(title: "Choose a group", systemImage: "person.3")

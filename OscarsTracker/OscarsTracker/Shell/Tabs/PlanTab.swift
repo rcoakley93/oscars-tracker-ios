@@ -21,12 +21,11 @@ struct PlanTab: View {
                 if plan.items.isEmpty {
                     PlanEmpty()
                 } else if sizeClass == .regular {
-                    ArrangementView {
+                    SplitArrangement {
                         PlanCalendar()
                     } secondary: {
                         PlanSelectedDay()
                     }
-                    .arrangementViewStyle(.split)
                 } else {
                     PlanAgenda(hidesPast: hidesPast)
                 }

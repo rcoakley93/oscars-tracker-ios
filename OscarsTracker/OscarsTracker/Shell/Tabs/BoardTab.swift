@@ -56,7 +56,9 @@ struct BoardTab: View {
                 }
             }
         } detail: {
-            if let entry = entries.first(where: { $0.userId == navigation.selectedPersonID }) {
+            // Wide layouts open on your own season rather than an empty column.
+            if let entry = entries.first(where: { $0.userId == navigation.selectedPersonID })
+                ?? entries.first(where: { $0.userId == model.session.userID }) {
                 PersonDetail(entry: entry, metric: navigation.boardMetric).id(entry.userId)
             } else {
                 NothingSelected(title: "Choose someone", systemImage: "trophy")
@@ -342,7 +344,8 @@ private struct PersonDetail: View {
         .background(.ground)
         .navigationTitle(isYou ? "You" : entry.username)
         .navigationBarTitleDisplayMode(.inline)
-        .task { await model.leaderboard.loadPerson(entry.userId) }
+        // Again whenever a refresh clears the people loaded so far.
+        .task(id: loaded == nil) { await model.leaderboard.loadPerson(entry.userId) }
     }
 
     private func picks(_ person: BoardPerson) -> some View {
