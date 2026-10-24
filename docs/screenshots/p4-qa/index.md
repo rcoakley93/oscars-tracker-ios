@@ -2,7 +2,7 @@
 
 Sample data (`-sample-data`), recaptured Oct 24, 2026 with the five-tab bar (Search in the Films toolbar). "large" is `accessibility-large` (SwiftUI `.accessibility2`), dark. Each cell links the shot; half resolution JPEG.
 
-| Screen | iPhone 18 Pro (27.0) | Duo outer (27.1) | Duo inner (27.1) | iPad Pro 11" portrait (27.0) | iPad landscape |
+| Screen | iPhone 18 Pro (27.0) | Duo outer (27.1) | Duo inner (27.1): pending | iPad Pro 11" portrait (27.0) | iPad landscape |
 |---|---|---|---|---|---|
 | Films | [dark](films-iphone-dark.jpg) · [light](films-iphone-light.jpg) · [large](films-iphone-large.jpg) | [dark](films-duo-outer-dark.jpg) · [light](films-duo-outer-light.jpg) | — | [dark](films-ipad-dark.jpg) · [light](films-ipad-light.jpg) | [dark](films-ipad-landscape-dark.jpg) |
 | Movie sheet (KPop Demon Hunters) | [dark](movie-iphone-dark.jpg) · [light](movie-iphone-light.jpg) · [large](movie-iphone-large.jpg) | [dark](movie-duo-outer-dark.jpg) · [light](movie-duo-outer-light.jpg) | — | [dark](movie-ipad-dark.jpg) · [light](movie-ipad-light.jpg) | [dark](movie-ipad-landscape-dark.jpg) |
@@ -13,7 +13,7 @@ Sample data (`-sample-data`), recaptured Oct 24, 2026 with the five-tab bar (Sea
 | Profile | [dark](profile-iphone-dark.jpg) · [light](profile-iphone-light.jpg) · [large](profile-iphone-large.jpg) | [dark](profile-duo-outer-dark.jpg) · [light](profile-duo-outer-light.jpg) | — | [dark](profile-ipad-dark.jpg) · [light](profile-ipad-light.jpg) | [dark](profile-ipad-landscape-dark.jpg) |
 | Sign-in | [dark](signin-iphone-dark.jpg) · [light](signin-iphone-light.jpg) · [large](signin-iphone-large.jpg) | [dark](signin-duo-outer-dark.jpg) · [light](signin-duo-outer-light.jpg) | — | [dark](signin-ipad-dark.jpg) · [light](signin-ipad-light.jpg) | [dark](signin-ipad-landscape-dark.jpg) |
 
-Duo inner: pending the Simulator unfold (Device Hub's fold control can't be driven from the command line). The P3-11 inner set is in [`../p3-11/`](../p3-11/).
+**Duo inner: pending: needs the Simulator unfolded in Device Hub.** There's no supported command-line fold control. Meanwhile, the P3-11 inner-display shots of the same screens are in [`../p3-11/`](../p3-11/) (`inner-*-dark.jpg`, `inner-*-light.jpg`).
 
 ## Findings for review
 
