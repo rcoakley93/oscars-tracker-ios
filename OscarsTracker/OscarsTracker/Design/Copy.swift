@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// The two voices (docs/design/voice.md in the backend repo). Classic says it
@@ -33,6 +34,17 @@ struct Copy {
     let watched: String
     let watchHint: String
     let noProviders: String
+    /// Before nominations; the date ("Jan 21") once the season facts give it.
+    let filmsPreseason: (_ date: String?) -> Empty
+    let searchEmpty: String
+
+    // Group comparison (Films) and the board
+    /// "2nd of 6 in Movies LLC": a fact, the same in both voices.
+    let compareRank: (_ rank: Int, _ size: Int, _ group: String) -> String
+    /// You're `films` behind `name`, the person one place above you.
+    let compareGap: (_ films: Int, _ name: String) -> String
+    let compareTied: (_ name: String) -> String
+    let boardLeader: String
 
     // Ballot
     let ballotProgress: (_ picked: Int, _ total: Int) -> String
@@ -76,6 +88,18 @@ extension Copy {
         days == 1 ? "1 day" : "\(days) days"
     }
 
+    /// "1 film", "2 films".
+    nonisolated static func filmCount(_ films: Int) -> String {
+        films == 1 ? "1 film" : "\(films) films"
+    }
+
+    /// "2nd of 6 in Movies LLC".
+    nonisolated static func rankLine(_ rank: Int, _ size: Int, _ group: String) -> String {
+        let ordinal = NumberFormatter()
+        ordinal.numberStyle = .ordinal
+        return "\(ordinal.string(from: rank as NSNumber) ?? "\(rank)") of \(size) in \(group)"
+    }
+
     static func `for`(_ voice: Voice) -> Copy {
         voice == .host ? host : classic
     }
@@ -91,6 +115,15 @@ extension Copy {
         watched: "Watched",
         watchHint: "Adds it to your watched films.",
         noProviders: "No streaming information yet. JustWatch may know more.",
+        filmsPreseason: { date in
+            Empty(title: date.map { "The nominees arrive \($0)" } ?? "No nominees yet",
+                  body: "The films appear here when nominations are announced.")
+        },
+        searchEmpty: "Search films and nominees.",
+        compareRank: rankLine,
+        compareGap: { films, name in "You're \(filmCount(films)) behind \(name)." },
+        compareTied: { name in "You're tied with \(name)." },
+        boardLeader: "You're in first place.",
         ballotProgress: { picked, total in "\(picked) of \(total) categories picked" },
         ballotComplete: { total in "All \(total) categories picked." },
         pickSaved: { _ in "Pick saved." },
@@ -144,6 +177,19 @@ extension Copy {
         watched: "Watched",
         watchHint: "Tear the ticket. You know you want to.",
         noProviders: "Not streaming anywhere we know of. JustWatch might have the scoop.",
+        filmsPreseason: { date in
+            Empty(title: date.map { "Nominations land \($0)" } ?? "The envelopes aren't printed yet",
+                  body: "Until then, the shortlists. Check back on nominations day.")
+        },
+        searchEmpty: "Search the nominees. All of them. Even the shorts.",
+        compareRank: rankLine,
+        compareGap: { films, name in
+            films <= 2
+                ? "\(filmCount(films)) behind \(name). One double feature and that crown is yours."
+                : "\(filmCount(films)) behind \(name). Clear your weekend."
+        },
+        compareTied: { name in "Dead level with \(name). Someone blinks first." },
+        boardLeader: "Top of the board. Act humble.",
         ballotProgress: { picked, total in "\(picked) of \(total) categories picked" },
         ballotComplete: { _ in "Every category, locked in. Now we wait." },
         pickSaved: { seed in hostPickLines[abs(seed) % hostPickLines.count] },

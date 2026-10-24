@@ -24,7 +24,7 @@ actor PosterPalette {
 
     private func color(for url: URL) async -> Color? {
         if let cached = cache[url] { return cached }
-        guard let (data, _) = try? await URLSession.shared.data(from: url),
+        guard let (data, _) = try? await URLSession.posters.data(for: URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)),
               let image = UIImage(data: data)?.preparingThumbnail(of: CGSize(width: 64, height: 96)),
               let cgImage = image.cgImage,
               let clusters = Self.clusters(in: CIImage(cgImage: cgImage), context: context),

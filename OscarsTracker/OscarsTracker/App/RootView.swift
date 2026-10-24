@@ -26,6 +26,7 @@ struct RootView: View {
         // places that are gold say so themselves.
         .tint(.ink)
         .environment(\.copy, Copy.for(voice))
+        .asyncImageURLSession(.posters)
         .onOpenURL { url in
             Task {
                 if await model.session.open(url) { await model.refresh() }

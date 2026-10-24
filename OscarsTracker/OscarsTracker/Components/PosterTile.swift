@@ -1,16 +1,19 @@
 import SwiftUI
 
-/// A film's poster from TMDB, or its title on a surface while it loads or
-/// when there's none. Decorative: the tile or row around it is labelled.
+/// A film's poster from TMDB at the size it's shown, or its title on a
+/// surface while it loads or when there's none. Loads through the poster
+/// session set at the root (`URLSession.posters`), from its cache first.
+/// Decorative: the tile or row around it is labelled.
 struct PosterImage: View {
     let movie: Movie
     var radius: CGFloat = Theme.Radius.tile
+    var size: PosterSize = .tile
 
     var body: some View {
         Color.surface
             .aspectRatio(2 / 3, contentMode: .fit)
             .overlay {
-                AsyncImage(url: movie.posterUrl.flatMap(URL.init(string:))) { phase in
+                AsyncImage(request: size.request(movie.posterUrl)) { phase in
                     if let image = phase.image {
                         image.resizable().aspectRatio(contentMode: .fill)
                     } else {
@@ -58,14 +61,40 @@ struct PosterTile: View {
         .overlay(alignment: .topTrailing) {
             WatchedButton(movie: movie, onWatched: onWatched, style: .badge)
         }
-        .contextMenu {
-            Button(watched ? "Mark as not watched" : "Mark as watched", systemImage: watched ? "circle" : "checkmark.circle") {
-                guard let userID = model.session.userID else { return }
-                if !watched { onWatched(movie.title) }
-                Task { await model.films.toggleWatched(movie.id, userID: userID) }
-            }
-            Button("Open", systemImage: "film", action: onOpen)
+        .contextMenu { FilmActions(movie: movie, onOpen: onOpen, onWatched: onWatched) }
+    }
+}
+
+/// The context menu on a film (screens.md, section 2): mark watched, add
+/// to tonight's or tomorrow's plan, open, share.
+struct FilmActions: View {
+    @Environment(AppModel.self) private var model
+    let movie: Movie
+    var onOpen: () -> Void
+    var onWatched: (String) -> Void
+
+    var body: some View {
+        let watched = model.films.isWatched(movie.id)
+        Button(watched ? "Mark as not watched" : "Mark as watched", systemImage: watched ? "circle" : "checkmark.circle") {
+            guard let userID = model.session.userID else { return }
+            if !watched { onWatched(movie.title) }
+            Task { await model.films.toggleWatched(movie.id, userID: userID) }
         }
+        if !watched {
+            Menu("Add to plan", systemImage: "calendar.badge.plus") {
+                Button("Tonight", systemImage: "moon") { plan(.today()) }
+                Button("Tomorrow", systemImage: "sunrise") { plan(.today().adding(days: 1)) }
+            }
+        }
+        Button("Open", systemImage: "film", action: onOpen)
+        ShareLink(item: movie.shareLine, subject: Text(movie.title)) {
+            Label("Share", systemImage: "square.and.arrow.up")
+        }
+    }
+
+    private func plan(_ day: PlanDay) {
+        guard let userID = model.session.userID else { return }
+        Task { await model.plan.add(movieID: movie.id, on: day, userID: userID) }
     }
 }
 
@@ -80,7 +109,7 @@ struct FilmListRow: View {
         HStack(spacing: Theme.Space.s) {
             Button(action: onOpen) {
                 HStack(spacing: Theme.Space.s) {
-                    PosterImage(movie: movie, radius: Theme.Radius.thumbnail)
+                    PosterImage(movie: movie, radius: Theme.Radius.thumbnail, size: .thumbnail)
                         .frame(width: 44)
                     VStack(alignment: .leading) {
                         Text(movie.title).font(.body).foregroundStyle(.ink)
@@ -95,6 +124,7 @@ struct FilmListRow: View {
             WatchedButton(movie: movie, onWatched: onWatched)
         }
         .accessibilityElement(children: .contain)
+        .contextMenu { FilmActions(movie: movie, onOpen: onOpen, onWatched: onWatched) }
     }
 }
 
@@ -135,6 +165,11 @@ struct WatchedButton: View {
 }
 
 extension Movie {
+    /// "Hamnet (2025)", for sharing.
+    var shareLine: String {
+        releaseYear.map { "\(title) (\(String($0)))" } ?? title
+    }
+
     /// "2025 · 2h 6m": the year and runtime, whichever are known.
     var facts: String {
         [releaseYear.map { String($0) }, Runtime.format(minutes: runtimeMinutes)]
