@@ -31,6 +31,10 @@ struct RootView: View {
         .tint(.ink)
         .environment(\.copy, Copy.for(voice))
         .asyncImageURLSession(.posters)
+        // Back online: send what queued up, then reload.
+        .onChange(of: model.connectivity.isOnline) { _, online in
+            if online { Task { await model.refresh() } }
+        }
         .onOpenURL { url in
             Task {
                 if await model.session.open(url) { await model.refresh() }

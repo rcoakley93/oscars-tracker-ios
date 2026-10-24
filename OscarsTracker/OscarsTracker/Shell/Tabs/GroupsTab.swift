@@ -187,11 +187,7 @@ private struct GroupDetail: View {
         } message: {
             Text("You can join again with the invite code.")
         }
-        .alert("Couldn't change the group", isPresented: Binding { model.groups.actionError != nil } set: { if !$0 { model.groups.actionError = nil } }) {
-            Button("OK") {}
-        } message: {
-            Text(model.groups.actionError?.message ?? "")
-        }
+        .errorAlert("Couldn't change the group", error: Bindable(model.groups).actionError)
         .task { await model.leaderboard.load(ceremonyID: model.season.ceremony?.id, groupID: group.id) }
     }
 

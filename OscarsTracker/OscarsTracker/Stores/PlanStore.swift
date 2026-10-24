@@ -30,6 +30,13 @@ final class PlanStore {
         }
     }
 
+    /// The last good copy, at launch, until the network answers.
+    func restore(items: [WatchPlanItem]) {
+        guard self.items.isEmpty, !items.isEmpty else { return }
+        self.items = items
+        state = .loaded
+    }
+
     /// Today and later, by day.
     func upcomingDays(today: PlanDay = .today()) -> [Day] {
         days(where: { $0 >= today })

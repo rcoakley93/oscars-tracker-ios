@@ -17,8 +17,10 @@ final class FilmsStore {
     private(set) var completions = 0
     /// Counts films marked watched and saved, for asking about notifications after the first.
     private(set) var saves = 0
-    /// The last write that failed, for a toast. Cleared by the view.
+    /// The last write that failed, for an alert. Cleared by the view.
     var actionError: AppError?
+    /// Takes a toggle made offline (P4-11); the toggle then stays, queued.
+    var onOffline: ((PendingWrite) -> Void)?
 
     private let data: any AppDataSource
 
@@ -77,9 +79,27 @@ final class FilmsStore {
             if nowWatched { saves += 1 }
             if nowWatched, !movies.isEmpty, watchedCount == movies.count { completions += 1 }
         } catch {
+            let error = AppError(error)
+            if error == .offline, let onOffline {
+                onOffline(.watched(movieID: movieID, watched: nowWatched))
+                return
+            }
             if nowWatched { watchedIDs.remove(movieID) } else { watchedIDs.insert(movieID) }
-            actionError = AppError(error)
+            actionError = error
         }
+    }
+
+    /// The last good copy, at launch, until the network answers.
+    func restore(movies: [Movie], watchedIDs: Set<Int>) {
+        guard self.movies.isEmpty, !movies.isEmpty else { return }
+        self.movies = movies
+        self.watchedIDs = watchedIDs
+        state = .loaded
+    }
+
+    /// A queued toggle, over what the server or the cache said.
+    func apply(watched: Bool, movieID: Int) {
+        if watched { watchedIDs.insert(movieID) } else { watchedIDs.remove(movieID) }
     }
 
     func reset() {

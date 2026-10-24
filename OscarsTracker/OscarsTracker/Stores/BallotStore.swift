@@ -18,6 +18,8 @@ final class BallotStore {
     /// Counts saved picks, for asking about notifications after the first.
     private(set) var saves = 0
     var actionError: AppError?
+    /// Takes a pick made offline (P4-11); the pick then stays, queued.
+    var onOffline: ((PendingWrite) -> Void)?
 
     private let data: any AppDataSource
 
@@ -81,9 +83,27 @@ final class BallotStore {
             saves += 1
             if previous == nil, isComplete { completions += 1 }
         } catch {
+            let error = AppError(error)
+            if error == .offline, let onOffline {
+                onOffline(.pick(categoryID: categoryID, nominationID: nominationID))
+                return
+            }
             picks[categoryID] = previous
-            actionError = AppError(error)
+            actionError = error
         }
+    }
+
+    /// The last good copy, at launch, until the network answers.
+    func restore(categories: [BallotCategory], picks: [Int: Int]) {
+        guard self.categories.isEmpty, !categories.isEmpty else { return }
+        self.categories = categories
+        self.picks = picks
+        state = .loaded
+    }
+
+    /// A queued pick, over what the server or the cache said.
+    func apply(pick nominationID: Int, in categoryID: Int) {
+        picks[categoryID] = nominationID
     }
 
     func reset() {

@@ -63,6 +63,7 @@ struct FilmsTab: View {
                 TicketStub(title: stubTitle, trigger: tears).padding(.bottom, 120)
             }
             .tabChrome("Films", posters: films.movies.compactMap(\.posterUrl))
+            .errorAlert("Couldn't save that", error: Bindable(films).actionError)
             .safeAreaBar(edge: .top) {
                 Picker("View", selection: $mode) {
                     ForEach(Mode.allCases) { Text($0.label).tag($0) }

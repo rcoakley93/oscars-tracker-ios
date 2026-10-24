@@ -13,7 +13,7 @@ struct PlanTab: View {
     @AppStorage("plan.hidesPast") private var hidesPast = true
 
     var body: some View {
-        let plan = model.plan
+        @Bindable var plan = model.plan
         let overdue = plan.toReschedule(watchedIDs: model.films.watchedIDs)
 
         NavigationStack {
@@ -52,11 +52,7 @@ struct PlanTab: View {
                 }
                 .visibilityPriority(.low)
             }
-            .alert("Couldn't save your plan", isPresented: Binding { plan.actionError != nil } set: { if !$0 { plan.actionError = nil } }) {
-                Button("OK") {}
-            } message: {
-                Text(plan.actionError?.message ?? "")
-            }
+            .errorAlert("Couldn't save your plan", error: $plan.actionError)
         }
     }
 

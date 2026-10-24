@@ -18,6 +18,8 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case emailInUse
     case weakPassword
     case linkExpired
+    /// A pick made offline reached the server after the lock.
+    case offlinePickLocked
     /// The person closed the Apple or Google sheet: show nothing.
     case cancelled
     case server(String)
@@ -36,6 +38,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .emailInUse: "There's already an account with that email. Try signing in."
         case .weakPassword: "Use at least 8 characters, with a lowercase letter, an uppercase letter and a number."
         case .linkExpired: "That link has expired or was already used. Ask for a new one."
+        case .offlinePickLocked: "A pick you made offline reached us after the ballot locked, so it wasn't saved."
         case .cancelled: ""
         case .server: "Something went wrong on our side. Please try again."
         }
@@ -89,6 +92,12 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         else if text.contains("not authenticated") { self = .notSignedIn }
         else { self = .server(serverMessage) }
     }
+}
+
+/// So SwiftUI's error alerts and anything that reads `localizedDescription`
+/// get the friendly text, never a raw server message.
+extension AppError: LocalizedError {
+    var errorDescription: String? { message }
 }
 
 /// Where a store's data stands. Views show a skeleton, the content or an
