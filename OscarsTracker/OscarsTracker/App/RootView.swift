@@ -22,7 +22,9 @@ struct RootView: View {
         }
         .animation(.smooth, value: model.session.state)
         .animation(.smooth, value: model.profile.needsUsername)
-        .tint(.goldOnGlass)
+        // Ink, not gold: gold is earned (progress, your picks, wins), so the
+        // places that are gold say so themselves.
+        .tint(.ink)
         .environment(\.copy, Copy.for(voice))
         .onOpenURL { url in
             Task {
