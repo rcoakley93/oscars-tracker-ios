@@ -28,12 +28,13 @@ struct OscarsTrackerApp: App {
 
     /// The live backend, or (debug builds only) the sample season when launched
     /// with `-sample-data`, for screenshots and demos without an account
-    /// (`-signed-out` too, for the sign-in screen).
+    /// (`-signed-out` too, for the sign-in screen, and `-full-ballot` for all
+    /// 24 categories).
     private static func dataSource() -> any AppDataSource {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-sample-data") {
-            return SampleDataSource(signedIn: !arguments.contains("-signed-out"))
+            return SampleDataSource(signedIn: !arguments.contains("-signed-out"), fullBallot: arguments.contains("-full-ballot"))
         }
         #endif
         return LiveDataSource()

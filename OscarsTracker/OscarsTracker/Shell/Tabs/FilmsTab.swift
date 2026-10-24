@@ -73,6 +73,12 @@ struct FilmsTab: View {
                 .padding(.bottom, Theme.Space.xs)
             }
             .toolbar {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button("Search", systemImage: "magnifyingglass") {
+                        navigation.sheet = .search
+                    }
+                }
+                .visibilityPriority(.high)
                 ToolbarOverflowMenu {
                     Picker("Sort", systemImage: "arrow.up.arrow.down", selection: $sort) {
                         ForEach(Sort.allCases) { Text($0.label).tag($0) }
