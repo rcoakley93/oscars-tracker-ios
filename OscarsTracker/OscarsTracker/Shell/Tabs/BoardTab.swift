@@ -148,6 +148,9 @@ private struct Podium: View {
             }
         }
         .padding(.horizontal, Theme.Space.m)
+        // Three columns on a phone can't hold accessibility sizes; the rows
+        // below and VoiceOver's label carry the same facts at full size.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
         .accessibilityActions {
