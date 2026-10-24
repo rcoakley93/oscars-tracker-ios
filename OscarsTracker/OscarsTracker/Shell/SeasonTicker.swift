@@ -25,10 +25,13 @@ struct SeasonTicker: View {
                             .font(.footnote.weight(.medium))
                             .foregroundStyle(earned ? AnyShapeStyle(.goldOnGlass) : AnyShapeStyle(.primary))
                             .lineLimit(placement == .inline ? 1 : 2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            // The whole height of the accessory, not just the line, takes the tap.
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                            .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Opens \(destination(for: ticker).rawValue.capitalized)")
+                    .accessibilityIdentifier("season-ticker")
 
                     if placement != .inline, !model.isOffline, let button = button(for: ticker) {
                         Button(button.title, systemImage: button.symbol) {

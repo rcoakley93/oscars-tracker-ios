@@ -103,6 +103,7 @@ private struct BallotStatusBar: View {
                 }
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.ink)
+                .accessibilityIdentifier("ballot-status")
                 GoldBar(progress: Double(ballot.pickedCount) / Double(max(ballot.categories.count, 1)))
                     .frame(height: 6)
                     .accessibilityHidden(true)
@@ -228,6 +229,7 @@ private struct CategoryCard: View {
             } else if let pick {
                 PickSummary(pick: pick, outcome: outcome)
                     .onTapGesture(perform: toggle)
+                    .accessibilityAction { toggle() }
             }
         }
         .padding(Theme.Space.m)
@@ -264,6 +266,9 @@ private struct PickSummary: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Your pick: \(pick.spokenName)")
         .accessibilityValue(outcome.map { $0 == .correct ? "Correct" : "Not this time" } ?? "")
+        // A tap opens the nominees again, so VoiceOver hears it's a button.
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(outcome == nil ? "Shows the nominees, to change your pick" : "Shows the nominees")
     }
 }
 

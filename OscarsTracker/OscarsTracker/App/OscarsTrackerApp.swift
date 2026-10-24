@@ -10,6 +10,9 @@ struct OscarsTrackerApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
+                #if DEBUG
+                .preferredColorScheme(Self.screenshotColorScheme)
+                #endif
                 .task {
                     delegate.model = model
                     await model.start()
@@ -24,17 +27,29 @@ struct OscarsTrackerApp: App {
     }
 
     /// The live backend, or (debug builds only) the sample season when launched
-    /// with `-sample-data`, for screenshots and demos without an account.
+    /// with `-sample-data`, for screenshots and demos without an account
+    /// (`-signed-out` too, for the sign-in screen).
     private static func dataSource() -> any AppDataSource {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-sample-data") {
-            return SampleDataSource()
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-sample-data") {
+            return SampleDataSource(signedIn: !arguments.contains("-signed-out"))
         }
         #endif
         return LiveDataSource()
     }
 
     #if DEBUG
+    /// `-appearance light` or `dark`, for screenshot runs on simulators that
+    /// don't follow `simctl ui appearance`.
+    private static var screenshotColorScheme: ColorScheme? {
+        switch UserDefaults.standard.string(forKey: "appearance") {
+        case "light": .light
+        case "dark": .dark
+        default: nil
+        }
+    }
+
     /// Opens a tab, a film or a debug gallery from launch arguments, so
     /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
     /// `-group 1`, `-sheet profile`, `-gallery tokens`.

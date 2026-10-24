@@ -27,10 +27,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         [.banner, .sound, .list]
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        let path = response.notification.request.content.userInfo["path"] as? String
-        await MainActor.run {
-            if let path { model?.navigation.open(path: path) }
+    /// On the main actor: a nonisolated version returns to UIKit off the
+    /// main thread, which crashes the app on every tap.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        if let path = response.notification.request.content.userInfo["path"] as? String {
+            model?.navigation.open(path: path)
         }
     }
 }
