@@ -15,8 +15,8 @@ struct SeasonTicker: View {
         TimelineView(.everyMinute) { context in
             let now = context.date.addingTimeInterval(model.season.clockOffset)
             let ticker = model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: !model.films.movies.isEmpty, now: now)
-            let earned = ticker == .live || ticker == .after
-            if let line = line(for: ticker, now: context.date) {
+            let earned = !model.isOffline && (ticker == .live || ticker == .after)
+            if let line = model.isOffline ? copy.tickerOffline(model.pending.count) : line(for: ticker, now: now) {
                 HStack(spacing: Theme.Space.s) {
                     Button {
                         model.navigation.tab = destination(for: ticker)
@@ -30,7 +30,7 @@ struct SeasonTicker: View {
                     .buttonStyle(.plain)
                     .accessibilityHint("Opens \(destination(for: ticker).rawValue.capitalized)")
 
-                    if placement != .inline, let button = button(for: ticker) {
+                    if placement != .inline, !model.isOffline, let button = button(for: ticker) {
                         Button(button.title, systemImage: button.symbol) {
                             model.navigation.tab = destination(for: ticker)
                         }

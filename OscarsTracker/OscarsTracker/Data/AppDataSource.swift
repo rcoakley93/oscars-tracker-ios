@@ -1,7 +1,7 @@
 import Foundation
 
 /// A category on the ballot with its nominees (each nomination carries its film).
-nonisolated struct BallotCategory: Identifiable, Hashable, Sendable {
+nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let name: String
     let pointsValue: Int
@@ -13,7 +13,7 @@ nonisolated struct BallotCategory: Identifiable, Hashable, Sendable {
     }
 }
 
-nonisolated struct BallotNominee: Identifiable, Hashable, Sendable {
+nonisolated struct BallotNominee: Codable, Identifiable, Hashable, Sendable {
     let id: Int
     let movie: Movie?
     /// The person, for acting categories (`nominations.detail_text`).

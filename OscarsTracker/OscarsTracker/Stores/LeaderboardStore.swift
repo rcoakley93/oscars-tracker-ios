@@ -55,6 +55,22 @@ final class LeaderboardStore {
         }
     }
 
+    /// The last good copy, at launch; keyed as `OfflineSnapshot.boards`.
+    func restore(boards cached: [String: [BoardEntry]], ceremonyID: Int?) {
+        self.ceremonyID = self.ceremonyID ?? ceremonyID
+        for (key, entries) in cached {
+            let groupID: Int? = key == "global" ? nil : Int(key)
+            guard groupID != nil || key == "global", boards[groupID] == nil else { continue }
+            boards[groupID] = entries
+            states[groupID] = .loaded
+        }
+    }
+
+    /// For the snapshot.
+    var cachedBoards: [String: [BoardEntry]] {
+        Dictionary(uniqueKeysWithValues: boards.map { ($0.key.map(String.init) ?? "global", $0.value) })
+    }
+
     func loadPerson(_ userID: String) async {
         guard let ceremonyID, people[userID] == nil else { return }
         people[userID] = .some(try? await data.boardPerson(ceremonyID: ceremonyID, userID: userID))

@@ -27,6 +27,13 @@ final class GroupsStore {
         }
     }
 
+    /// The last good copy, at launch, until the network answers.
+    func restore(groups: [PoolGroup]) {
+        guard self.groups.isEmpty, !groups.isEmpty else { return }
+        self.groups = groups
+        state = .loaded
+    }
+
     /// The message to show for a group name, or nil when it's fine.
     static func nameProblem(_ name: String) -> String? {
         ValidationService.validateGroupName(name).errorMessage

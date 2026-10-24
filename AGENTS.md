@@ -30,7 +30,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -projec
 - `Data/AppDataSource.swift` is every backend call. `LiveDataSource` talks to Supabase; `SampleDataSource` serves a sample season in memory for previews (`AppModel.preview()`) and tests. Its `failure` property makes every call fail, to preview error states.
 - Stores change state optimistically and roll back on failure, setting `actionError` (an `AppError` with friendly text) for the view to show. `LoadState` drives skeletons, content and error views.
 - `Utilities/PlanDay.swift`: `PlanDay` is a calendar day in the viewer's time zone (watch plans). Deadlines are `Date` instants (`Ceremony.ballotLockAt`). `Runtime.format` is the one runtime formatter.
-- The old `ViewModels/` and `Views/` still run the current screens. Each is deleted when Phase 4 rebuilds its screen on the stores.
+- Offline (P4-11): `AppModel` shows the last good copy (`Data/OfflineCache.swift`, per account in Caches) at launch, queues watched toggles and picks made offline (`PendingWrite`) and sends them first on the next refresh or when `Connectivity` sees the network return. Stores show errors through `.errorAlert(_:error:)` bound to `actionError`.
+- Every screen runs on the stores; the old `ViewModels/` and `Views/` are gone (P4-11).
 
 ## Conventions
 - Prefer system components and their iOS 27 behaviour: `TabView` with `Tab` (plus the search tab and the season ticker in `tabViewBottomAccessory`), `NavigationStack` and `NavigationSplitView`, toolbars, sheets with detents, `Menu`, `.buttonStyle(.glass)` and `.glassProminent`, SF Symbols.

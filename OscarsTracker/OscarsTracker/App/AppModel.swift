@@ -18,8 +18,17 @@ final class AppModel {
     let profile: ProfileStore
     let push: PushStore
     let navigation = AppNavigation()
+    let connectivity = Connectivity()
+    /// Watched toggles and picks made offline, oldest first (P4-11).
+    private(set) var pending: [PendingWrite] = []
 
-    init(data: any AppDataSource) {
+    private let data: any AppDataSource
+    private let cache: OfflineCache
+
+    /// `cache` defaults to files in Caches for the live backend and nothing otherwise.
+    init(data: any AppDataSource, cache: OfflineCache? = nil) {
+        self.data = data
+        self.cache = cache ?? (data is LiveDataSource ? .live : .none)
         session = SessionStore(data: data)
         season = SeasonStore(data: data, cacheKey: data is LiveDataSource ? "season.cache" : nil)
         films = FilmsStore(data: data)
@@ -29,17 +38,28 @@ final class AppModel {
         leaderboard = LeaderboardStore(data: data)
         profile = ProfileStore(data: data)
         push = PushStore(data: data)
+        films.onOffline = { [weak self] in self?.enqueue($0) }
+        ballot.onOffline = { [weak self] in self?.enqueue($0) }
     }
 
-    /// At launch: restore the session, then load the season and everything for the user.
+    /// The network is gone, so what's on screen is the last good copy.
+    var isOffline: Bool { !connectivity.isOnline }
+
+    /// At launch: restore the session and show the last good copy at once,
+    /// then load the season and everything for the user.
     func start() async {
+        connectivity.start()
         await session.restore()
+        restoreSnapshot()
         await refresh()
         await push.refresh()
     }
 
-    /// Loads (or reloads) everything at once, for launch, sign-in and pull to refresh.
+    /// Loads (or reloads) everything at once, for launch, sign-in, pull to
+    /// refresh and the network coming back. Offline writes go first, so the
+    /// reload includes them.
     func refresh() async {
+        await sendPending()
         let userID = session.userID
         async let season: Void = loadSeasonAndBoards()
         async let films: Void = films.load(userID: userID)
@@ -52,6 +72,75 @@ final class AppModel {
             _ = await (plan, groups, profile, push)
         }
         _ = await (season, films, ballot)
+        applyPending()
+        saveSnapshot()
+    }
+
+    // MARK: - Offline (P4-11)
+
+    private func restoreSnapshot() {
+        guard let userID = session.userID else { return }
+        pending = cache.queue(for: userID)
+        if let snapshot = cache.snapshot(for: userID) {
+            films.restore(movies: snapshot.movies, watchedIDs: snapshot.watchedIDs)
+            ballot.restore(categories: snapshot.categories, picks: snapshot.picks)
+            plan.restore(items: snapshot.plan)
+            groups.restore(groups: snapshot.groups)
+            leaderboard.restore(boards: snapshot.boards, ceremonyID: season.ceremony?.id)
+        }
+        applyPending()
+    }
+
+    private func saveSnapshot() {
+        guard let userID = session.userID, !films.movies.isEmpty else { return }
+        cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, categories: ballot.categories,
+                                   picks: ballot.picks, plan: plan.items, groups: groups.groups, boards: leaderboard.cachedBoards),
+                   for: userID)
+    }
+
+    private func enqueue(_ write: PendingWrite) {
+        guard let userID = session.userID else { return }
+        pending.removeAll { write.replaces($0) }
+        pending.append(write)
+        cache.save(pending, for: userID)
+    }
+
+    /// Queued writes over whatever the stores hold (the cache, or a load
+    /// that finished while some were still waiting).
+    private func applyPending() {
+        for write in pending {
+            switch write {
+            case .watched(let movieID, let watched): films.apply(watched: watched, movieID: movieID)
+            case .pick(let categoryID, let nominationID): ballot.apply(pick: nominationID, in: categoryID)
+            }
+        }
+    }
+
+    /// Sends what queued up offline, oldest first, and stops at the first
+    /// one that still can't reach the server. A pick that arrives after the
+    /// lock is dropped, and the Ballot says so plainly.
+    func sendPending() async {
+        guard let userID = session.userID, !pending.isEmpty else { return }
+        sending: while let write = pending.first {
+            do {
+                switch write {
+                case .watched(let movieID, let watched):
+                    try await data.setWatched(watched, movieID: movieID, userID: userID)
+                case .pick(let categoryID, let nominationID):
+                    try await data.savePick(categoryID: categoryID, nominationID: nominationID, userID: userID)
+                }
+                pending.removeFirst()
+            } catch {
+                let error = AppError(error)
+                if error == .offline { break sending }
+                pending.removeFirst()
+                switch write {
+                case .pick: ballot.actionError = error == .ballotLocked ? .offlinePickLocked : error
+                case .watched: films.actionError = error
+                }
+            }
+        }
+        cache.save(pending, for: userID)
     }
 
     /// Back from the background: the season may have moved on (the lock, the
@@ -71,19 +160,23 @@ final class AppModel {
 
     func signOut() async {
         await push.signingOut()
+        if let userID = session.userID { cache.clear(for: userID) }
         await session.signOut()
         clearUserData()
     }
 
     /// Deletes the account, and signs out only if that worked (guideline 5.1.1).
     func deleteAccount(appleAuthorizationCode: String? = nil) async -> Bool {
+        let userID = session.userID
         guard await profile.deleteAccount(appleAuthorizationCode: appleAuthorizationCode) else { return false }
+        if let userID { cache.clear(for: userID) }
         session.didDeleteAccount()
         clearUserData()
         return true
     }
 
     private func clearUserData() {
+        pending = []
         films.reset()
         ballot.reset()
         plan.reset()

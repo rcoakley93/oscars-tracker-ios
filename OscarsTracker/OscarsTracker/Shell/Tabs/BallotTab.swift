@@ -13,7 +13,7 @@ struct BallotTab: View {
 
     var body: some View {
         @Bindable var navigation = model.navigation
-        let ballot = model.ballot
+        @Bindable var ballot = model.ballot
 
         NavigationSplitView {
             LoadStateView(state: ballot.state, isEmpty: ballot.categories.isEmpty, empty: preseason) {
@@ -38,11 +38,7 @@ struct BallotTab: View {
             // when the Duo's outer screen is short of room.
             .toolbarVerticalCompressionBehavior(.prefersToolbarItems)
             .navigationSplitViewColumnWidth(min: 320, ideal: 360)
-            .alert("Couldn't save your pick", isPresented: Binding { ballot.actionError != nil } set: { if !$0 { ballot.actionError = nil } }) {
-                Button("OK") {}
-            } message: {
-                Text(ballot.actionError?.message ?? "")
-            }
+            .errorAlert("Couldn't save your pick", error: $ballot.actionError)
         } detail: {
             if let category = ballot.categories.first(where: { $0.id == navigation.selectedCategoryID }) ?? ballot.nextCategory {
                 CategoryDetail(category: category)
