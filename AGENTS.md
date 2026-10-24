@@ -6,7 +6,7 @@ This is the product: a native SwiftUI app for iPhone, iPhone Duo and iPad, iOS 2
 - `OscarsTracker/OscarsTracker.xcodeproj`: one app target (`OscarsTracker`) and one unit-test target (`OscarsTrackerTests`), and a shared scheme.
 - **Groups are folder-synced.** Any file in `OscarsTracker/OscarsTracker/` belongs to the app and any file in `OscarsTracker/OscarsTrackerTests/` to the tests. Never edit `project.pbxproj` to add a file. `Info.plist` is excluded from the app's resources by an exception set in the project.
 - `OscarsTracker/Config/Shared.xcconfig`: the public Supabase host and anon key, read through `Info.plist` (`SupabaseHost`, `SupabaseAnonKey`) by `Services/SupabaseClient.swift`. Never put the service role key, the APNs key or the TMDB key in this repo.
-- `docs/brand/`: the app icon's source image. `docs/archive/`: the 2025–26 product notes and screenshots.
+- `OscarsTracker/OscarsTracker/Resources/AppIcon.icon`: the app icon, an Icon Composer file (P3-12). Edit it in Icon Composer (in Xcode's Applications), never as PNGs. `docs/brand/`: the 2025–26 icon's source image. `docs/archive/`: the 2025–26 product notes and screenshots.
 
 ## Build and test
 Run Xcode tools with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (xcode-select points at the Command Line Tools on this Mac).
