@@ -47,7 +47,7 @@ struct AmbientBackground: View {
         .backgroundExtensionEffect()
         .accessibilityHidden(true)
         .task(id: Self.pick(posters)) {
-            let urls = Self.pick(posters).compactMap(URL.init(string:))
+            let urls = Self.pick(posters).compactMap(PosterSize.thumbnail.url)
             let colors = await PosterPalette.shared.colors(for: urls)
             withAnimation(.smooth(duration: 0.8)) { palette = colors }
         }

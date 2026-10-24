@@ -13,12 +13,28 @@ struct FilmsTab: View {
     }
 
     enum Sort: String, CaseIterable, Identifiable {
-        case shortest, title
+        case shortest, longest, title
         var id: String { rawValue }
-        var label: String { self == .title ? "Title" : "Shortest first" }
+        var label: String {
+            switch self {
+            case .shortest: "Shortest first"
+            case .longest: "Longest first"
+            case .title: "Title"
+            }
+        }
+
+        /// Films without a runtime go last either way.
+        func sorted(_ movies: [Movie]) -> [Movie] {
+            switch self {
+            case .title: movies
+            case .shortest: movies.sorted { ($0.runtimeMinutes ?? .max) < ($1.runtimeMinutes ?? .max) }
+            case .longest: movies.sorted { ($0.runtimeMinutes ?? .min) > ($1.runtimeMinutes ?? .min) }
+            }
+        }
     }
 
     @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
     @Environment(\.horizontalSizeClass) private var sizeClass
     @AppStorage("films.mode") private var mode: Mode = .all
     @AppStorage("films.sort") private var sort: Sort = .shortest
@@ -33,13 +49,15 @@ struct FilmsTab: View {
         let films = model.films
 
         NavigationSplitView(preferredCompactColumn: .constant(.sidebar)) {
-            LoadStateView(state: films.state, isEmpty: films.movies.isEmpty) {
+            LoadStateView(state: films.state, isEmpty: films.movies.isEmpty, empty: preseason) {
                 switch mode {
                 case .all:
                     FilmsGrid(sort: sort, hidesWatched: hidesWatched, open: open, onWatched: watched)
                 case .byCategory:
                     FilmsByCategory(open: open, onWatched: watched)
                 }
+            } placeholder: {
+                FilmsGrid(sort: sort, hidesWatched: true, isPlaceholder: true, open: { _ in }, onWatched: { _ in })
             }
             .overlay(alignment: .bottom) {
                 TicketStub(title: stubTitle, trigger: tears).padding(.bottom, 120)
@@ -80,6 +98,12 @@ struct FilmsTab: View {
         }
     }
 
+    /// Before nominations: no films yet. P4-10 gives it the nominations date.
+    private var preseason: ContentUnavailableView<Label<Text, Image>, Text?, EmptyView> {
+        let empty = copy.filmsPreseason(nil)
+        return ContentUnavailableView(empty.title, systemImage: "envelope", description: Text(empty.body))
+    }
+
     private func open(_ movie: Movie) {
         model.navigation.selectedMovieID = movie.id
     }
@@ -95,8 +119,11 @@ private struct FilmsGrid: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var typeSize
     let sort: FilmsTab.Sort
     let hidesWatched: Bool
+    /// Stands in, redacted, while the films load.
+    var isPlaceholder = false
     var open: (Movie) -> Void
     var onWatched: (String) -> Void
 
@@ -111,10 +138,18 @@ private struct FilmsGrid: View {
         let films = model.films
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.xl) {
-                HeroCard(watched: films.watchedCount, total: films.movies.count, daysLeft: model.season.daysToCeremony())
-                section(copy.toWatchHeading, sorted(films.toWatch))
-                if !hidesWatched {
-                    section(copy.watchedHeading, sorted(films.watched))
+                if isPlaceholder {
+                    HeroCard(watched: 0, total: Movie.placeholders.count, daysLeft: nil)
+                    section(copy.toWatchHeading, Movie.placeholders)
+                } else {
+                    HeroCard(watched: films.watchedCount, total: films.movies.count, daysLeft: model.season.daysToCeremony())
+                        .goldDust(trigger: films.completions)
+                        .moment(.allWatched, trigger: films.completions)
+                    section(copy.toWatchHeading, sort.sorted(films.toWatch))
+                    GroupComparisonCard()
+                    if !hidesWatched {
+                        section(copy.watchedHeading, sort.sorted(films.watched))
+                    }
                 }
             }
             .padding(.horizontal, Theme.Space.m)
@@ -125,8 +160,10 @@ private struct FilmsGrid: View {
         } action: { metrics = $0 }
     }
 
-    /// `max(3, width / 118)` (4 on regular widths), kept even across a fold.
+    /// `max(3, width / 118)` (4 on regular widths), kept even across a fold;
+    /// 2 at the accessibility text sizes, so titles stay readable.
     private var columns: Int {
+        if typeSize > .accessibility1 { return 2 }
         let ideal = max(sizeClass == .regular ? 4 : 3, Int((metrics.width - 2 * Theme.Space.m) / 118))
         return FoldLayout.columns(ideal, fold: metrics.fold)
     }
@@ -149,13 +186,6 @@ private struct FilmsGrid: View {
             }
         }
     }
-
-    private func sorted(_ movies: [Movie]) -> [Movie] {
-        switch sort {
-        case .title: movies
-        case .shortest: movies.sorted { ($0.runtimeMinutes ?? .max) < ($1.runtimeMinutes ?? .max) }
-        }
-    }
 }
 
 /// Each category with its progress and its films.
@@ -171,6 +201,7 @@ private struct FilmsByCategory: View {
                 Section {
                     ForEach(movies) { movie in
                         FilmListRow(movie: movie, onOpen: { open(movie) }, onWatched: onWatched)
+                            .listRowBackground(Color.surface)
                     }
                 } header: {
                     HStack {
@@ -193,6 +224,77 @@ private struct FilmsByCategory: View {
     }
 }
 
+/// Your standing in one of your groups, between the grid's sections: "2nd
+/// of 6 in Movies LLC" and the gap to the person above. Tapping it opens the
+/// group's board; with more than one group, a menu picks which.
+private struct GroupComparisonCard: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+    @AppStorage("films.compareGroup") private var chosenGroupID = 0
+
+    var body: some View {
+        let groups = model.groups.groups
+        if let userID = model.session.userID, let group = groups.first(where: { $0.id == chosenGroupID }) ?? groups.first {
+            let standing = model.groups.standing(in: group.id, userID: userID)
+            HStack(alignment: .center, spacing: Theme.Space.s) {
+                Button {
+                    model.navigation.selectedGroupID = group.id
+                    model.navigation.tab = .board
+                } label: {
+                    VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                        Text(standing.map { copy.compareRank($0.rank, $0.size, group.name) } ?? group.name)
+                            .font(.headline)
+                            .foregroundStyle(.ink)
+                        Text(line(standing))
+                            .font(.subheadline)
+                            .foregroundStyle(.inkMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityHint("Opens the group's board")
+
+                if groups.count > 1 {
+                    Menu {
+                        Picker("Group", selection: Binding { group.id } set: { chosenGroupID = $0 }) {
+                            ForEach(groups) { Text($0.name).tag($0.id) }
+                        }
+                    } label: {
+                        Label("Group", systemImage: "person.3")
+                            .labelStyle(.iconOnly)
+                            .foregroundStyle(.inkMuted)
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                }
+            }
+            .padding(.vertical, Theme.Space.s)
+            .padding(.horizontal, Theme.Space.m)
+            .solidSurface()
+            .redacted(reason: standing == nil ? .placeholder : [])
+            .task(id: group.id) { await model.groups.loadBoard(for: group.id) }
+        }
+    }
+
+    private func line(_ standing: GroupsStore.Standing?) -> String {
+        switch standing?.position {
+        case .first: copy.boardLeader
+        case .tied(let name): copy.compareTied(name)
+        case .behind(let name, let films): copy.compareGap(films, name)
+        case nil: "Checking the board"
+        }
+    }
+}
+
+extension Movie {
+    /// Stand-ins for the redacted grid while the films load.
+    static let placeholders: [Movie] = (1...9).map {
+        Movie(id: -$0, title: "Nominated film", posterUrl: nil, releaseYear: nil, runtimeMinutes: 120, createdAt: nil)
+    }
+}
+
 #Preview("Dark") {
     FilmsTab().environment(AppModel.preview()).preferredColorScheme(.dark)
 }
@@ -207,6 +309,14 @@ private struct FilmsByCategory: View {
 
 #Preview("All watched") {
     FilmsTab().environment(AppModel.preview { data in data.watched = Set(SampleData.movies.map(\.id)) }).preferredColorScheme(.dark)
+}
+
+#Preview("Loading") {
+    FilmsTab().environment(AppModel(data: SampleDataSource())).preferredColorScheme(.dark)
+}
+
+#Preview("Before nominations") {
+    FilmsTab().environment(AppModel.preview { $0.movieList = [] }).preferredColorScheme(.dark)
 }
 
 #Preview("Error") {

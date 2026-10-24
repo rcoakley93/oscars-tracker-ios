@@ -34,6 +34,37 @@ final class GroupsStore {
         }
     }
 
+    /// Where you stand in a group by films watched: your rank, the group's
+    /// size, and how you compare with the nearest person above you.
+    struct Standing: Equatable {
+        enum Position: Equatable {
+            case first
+            /// Level at the top with someone else.
+            case tied(with: String)
+            /// `films` behind `name`, the nearest person with more.
+            case behind(String, films: Int)
+        }
+
+        let rank: Int
+        let size: Int
+        let position: Position
+    }
+
+    /// Nil until the group's board is loaded, or if you're not on it.
+    func standing(in groupID: Int, userID: String) -> Standing? {
+        guard let board = boards[groupID], let me = board.first(where: { $0.userId == userID }) else { return nil }
+        let others = board.filter { $0.userId != userID }
+        let position: Standing.Position
+        if let above = others.filter({ $0.watchedCount > me.watchedCount }).min(by: { $0.watchedCount < $1.watchedCount }) {
+            position = .behind(above.username, films: above.watchedCount - me.watchedCount)
+        } else if let level = others.first(where: { $0.watchedCount == me.watchedCount }) {
+            position = .tied(with: level.username)
+        } else {
+            position = .first
+        }
+        return Standing(rank: me.rank, size: board.count, position: position)
+    }
+
     /// The message to show for a group name, or nil when it's fine.
     static func nameProblem(_ name: String) -> String? {
         ValidationService.validateGroupName(name).errorMessage
