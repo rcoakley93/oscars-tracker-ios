@@ -41,6 +41,14 @@ struct AppShell: View {
         .tabViewBottomAccessory(isEnabled: model.season.ticker(filmsLeft: model.films.toWatch.count) != .none) {
             SeasonTicker()
         }
+        // An invite link opened before sign-in (or before the app was
+        // installed and signed up) opens the join sheet once you're in.
+        .onChange(of: model.session.pendingInviteCode, initial: true) {
+            guard let code = model.session.pendingInviteCode else { return }
+            model.session.pendingInviteCode = nil
+            navigation.tab = .groups
+            navigation.sheet = .joinGroup(code: code)
+        }
         .sheet(item: $navigation.sheet) { sheet in
             switch sheet {
             case .profile:
@@ -57,8 +65,10 @@ struct AppShell: View {
                 WhatCanIWatchSheet()
             case .fillPlan:
                 FillPlanSheet()
-            default:
-                ComingSoonSheet()
+            case .joinGroup(let code):
+                JoinGroupSheet(code: code)
+            case .createGroup:
+                CreateGroupSheet()
             }
         }
     }
@@ -109,23 +119,6 @@ struct NothingSelected: View {
         ContentUnavailableView(title, systemImage: systemImage)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.ground)
-    }
-}
-
-/// Sheets that Phase 4 builds (movie, join and create group, add to plan).
-private struct ComingSoonSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView("Coming in Phase 4", systemImage: "hammer", description: Text("This sheet is part of the next build."))
-                .toolbar {
-                    ToolbarItemGroup(placement: .confirmationAction) {
-                        Button("Done", systemImage: "checkmark") { dismiss() }
-                    }
-                }
-        }
-        .presentationDetents([.medium, .large])
     }
 }
 

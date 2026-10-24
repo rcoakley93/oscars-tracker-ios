@@ -80,6 +80,8 @@ struct Copy {
 
     // Groups and boards
     let groupsEmpty: Empty
+    /// After joining a group.
+    let groupsJoined: (_ group: String) -> String
     /// A group with only you in it.
     let boardAlone: String
     let boardEmpty: String
@@ -110,6 +112,9 @@ extension Copy {
     nonisolated static func filmCount(_ films: Int) -> String {
         films == 1 ? "1 film" : "\(films) films"
     }
+
+    /// The invite's subject line: a fact, the same in both voices.
+    nonisolated static let inviteSubject = "Join my Oscars pool"
 
     /// "1 point", "3 points".
     nonisolated static func pointCount(_ points: Int) -> String {
@@ -169,7 +174,8 @@ extension Copy {
         planFillNothing: "Every unwatched film is already planned.",
         planFit: { title, runtime in "\(title) (\(runtime)) fits your time." },
         planNoFit: "Nothing fits that time. Try a longer one.",
-        groupsEmpty: Empty(title: "No groups yet", body: "Create a group, or join one with an invite code, to compete with friends."),
+        groupsEmpty: Empty(title: "You're not in a group yet.", body: "Create a group, or join one with an invite code."),
+        groupsJoined: { group in "Joined \(group)." },
         boardAlone: "No other members yet.",
         boardEmpty: "No one is on the board yet.",
         boardPredictionsLocked: "Predictions open when the ballot locks.",
@@ -259,7 +265,8 @@ extension Copy {
         planFillNothing: "Every film already has a date. Look at you.",
         planFit: { title, runtime in "\(runtime) fits. \(title), then bed." },
         planNoFit: "Nothing that short is left. Try a longer slot.",
-        groupsEmpty: Empty(title: "Flying solo?", body: "Start a group, or join one with an invite code. Awards season is better with rivals."),
+        groupsEmpty: Empty(title: "No group yet.", body: "Start one and lord over it, or join one with an invite code."),
+        groupsJoined: { _ in "You're in. Seats are limited, apparently." },
         boardAlone: "Just you. Fill the seats: share the invite.",
         boardEmpty: "The red carpet's empty. Be the first to arrive.",
         boardPredictionsLocked: "Ballots stay sealed until the lock. No peeking.",

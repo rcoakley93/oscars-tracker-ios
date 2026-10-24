@@ -7,6 +7,8 @@ final class GroupsStore {
     private(set) var groups: [PoolGroup] = []
     private(set) var state: LoadState = .idle
     private(set) var isWorking = false
+    /// Counts successful joins, for the gold dust (it fires only after the server says yes).
+    private(set) var joins = 0
     var actionError: AppError?
 
     private let data: any AppDataSource
@@ -43,11 +45,13 @@ final class GroupsStore {
 
     /// Joins through the `join_group` RPC, which checks the code on the server.
     func join(code: String, userID: String) async -> JoinedGroup? {
-        await working {
+        let joined = await working {
             let joined = try await data.joinGroup(inviteCode: code)
             groups = try await data.myGroups(userID: userID)
             return joined
         }
+        if joined != nil { joins += 1 }
+        return joined
     }
 
     func leave(_ groupID: Int, userID: String) async {
