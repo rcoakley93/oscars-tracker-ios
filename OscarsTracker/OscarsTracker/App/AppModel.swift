@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import SwiftUI
+import WidgetKit
 
 /// The app's state: the session, one store per area, and navigation. Created
 /// once at launch with `LiveDataSource`; previews use `AppModel.preview`.
@@ -30,10 +31,12 @@ final class AppModel {
 
     private let data: any AppDataSource
     private let cache: OfflineCache
+    private let widgets: WidgetSnapshotStore
 
     /// `cache` defaults to files in Caches for the live backend and nothing otherwise.
-    init(data: any AppDataSource, cache: OfflineCache? = nil) {
+    init(data: any AppDataSource, cache: OfflineCache? = nil, widgets: WidgetSnapshotStore? = nil) {
         self.data = data
+        self.widgets = widgets ?? (data is LiveDataSource ? .live : .none)
         self.cache = cache ?? (data is LiveDataSource ? .live : .none)
         session = SessionStore(data: data)
         season = SeasonStore(data: data, cacheKey: data is LiveDataSource ? "season.cache" : nil)
@@ -95,6 +98,7 @@ final class AppModel {
         followLiveMode()
         await followLiveActivity()
         saveSnapshot()
+        saveWidgetSnapshot()
     }
 
     // MARK: - Offline (P4-11)
@@ -117,6 +121,18 @@ final class AppModel {
         cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, categories: ballot.categories,
                                    picks: ballot.picks, plan: plan.items, groups: groups.groups, boards: leaderboard.cachedBoards),
                    for: userID)
+    }
+
+    /// What the widgets show (P6-09), written to the App Group when the stores
+    /// refresh; widgets reload only if it changed. Cleared at sign-out.
+    func saveWidgetSnapshot() {
+        guard session.userID != nil, !films.movies.isEmpty else { return }
+        let titles = Dictionary(films.movies.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
+        let snapshot = WidgetSnapshot(ceremonyAt: season.ceremony?.ceremonyAt, filmsTotal: films.movies.count,
+                                      filmsWatched: films.watchedCount,
+                                      plan: WidgetSnapshot.upcoming(plan.items, watchedIDs: films.watchedIDs, titles: titles, today: .today()),
+                                      savedAt: .now)
+        if widgets.write(snapshot) { WidgetCenter.shared.reloadAllTimelines() }
     }
 
     private func enqueue(_ write: PendingWrite) {
@@ -267,6 +283,8 @@ final class AppModel {
 
     private func clearUserData() {
         pending = []
+        widgets.clear()
+        WidgetCenter.shared.reloadAllTimelines()
         films.reset()
         ballot.reset()
         plan.reset()
