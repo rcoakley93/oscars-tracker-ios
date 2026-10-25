@@ -42,15 +42,6 @@ final class PlanStore {
         days(where: { $0 >= today })
     }
 
-    /// Past days' films you haven't watched: one "N to reschedule" row, not a
-    /// red badge on every item (the season review's UX fix).
-    func toReschedule(watchedIDs: Set<Int>, today: PlanDay = .today()) -> [WatchPlanItem] {
-        items.filter { item in
-            guard let day = PlanDay(item.plannedDate) else { return false }
-            return day < today && !watchedIDs.contains(item.movieId)
-        }
-    }
-
     /// The agenda: today and the next `minimumDays - 1` days, empty or not,
     /// then every later day that has films.
     func agenda(today: PlanDay = .today(), minimumDays: Int = 7) -> [Day] {
@@ -65,7 +56,10 @@ final class PlanStore {
         days(where: { $0 < today }).reversed()
     }
 
-    /// Films planned for today or later, for Fill my plan and the add sheet.
+    /// Every film on the plan, whatever its day.
+    var allPlannedMovieIDs: Set<Int> { Set(items.map(\.movieId)) }
+
+    /// Films planned for today or later, for the add sheet.
     func plannedMovieIDs(from today: PlanDay = .today()) -> Set<Int> {
         Set(upcomingDays(today: today).flatMap(\.items).map(\.movieId))
     }
@@ -85,24 +79,53 @@ final class PlanStore {
         return byDay.keys.filter(include).sorted().map { Day(day: $0, items: byDay[$0]!.map(\.1)) }
     }
 
+    /// Puts a row the server returned into the list, replacing the same film's
+    /// row if two requests for it overlapped (the upsert returns one row for both).
+    private func place(_ item: WatchPlanItem) {
+        if let index = items.firstIndex(where: { $0.id == item.id || $0.movieId == item.movieId }) {
+            items[index] = item
+        } else {
+            items.append(item)
+        }
+    }
+
+    /// Plans a film. A film is on the plan once, so one that's already there
+    /// moves to `day` instead of being added again.
     func add(movieID: Int, on day: PlanDay, userID: String) async {
+        if let existing = items.first(where: { $0.movieId == movieID }) {
+            await move(existing.id, to: day)
+            return
+        }
         do {
-            items.append(try await data.addToPlan(movieID: movieID, day: day, userID: userID))
+            place(try await data.addToPlan(movieID: movieID, day: day, userID: userID))
         } catch {
             actionError = AppError(error)
         }
     }
 
     func move(_ itemID: Int, to day: PlanDay) async {
-        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+        await moveItem(itemID, to: day)
+    }
+
+    /// Moves a film optimistically; returns false (and rolls back) if it fails.
+    @discardableResult
+    private func moveItem(_ itemID: Int, to day: PlanDay) async -> Bool {
+        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return false }
         let previous = items[index].plannedDate
         items[index].plannedDate = day.description
         do {
             try await data.movePlanItem(id: itemID, to: day)
+            return true
         } catch {
             if let index = items.firstIndex(where: { $0.id == itemID }) { items[index].plannedDate = previous }
             actionError = AppError(error)
+            return false
         }
+    }
+
+    /// Where a film is planned, if it is.
+    func plannedDay(of movieID: Int) -> PlanDay? {
+        items.first { $0.movieId == movieID }.flatMap { PlanDay($0.plannedDate) }
     }
 
     /// Moves several films to one day (a drag between days, or Reschedule).
@@ -118,8 +141,13 @@ final class PlanStore {
     func fill(_ assignments: [PlanFiller.Assignment], userID: String) async -> Int {
         var added = 0
         for assignment in assignments {
+            if let existing = items.first(where: { $0.movieId == assignment.movieID }) {
+                guard await moveItem(existing.id, to: assignment.day) else { break }
+                added += 1
+                continue
+            }
             do {
-                items.append(try await data.addToPlan(movieID: assignment.movieID, day: assignment.day, userID: userID))
+                place(try await data.addToPlan(movieID: assignment.movieID, day: assignment.day, userID: userID))
                 added += 1
             } catch {
                 actionError = AppError(error)
@@ -127,13 +155,6 @@ final class PlanStore {
             }
         }
         return added
-    }
-
-    /// "Move all to this week": one film a day from today, in their planned order.
-    func rescheduleAll(_ overdue: [WatchPlanItem], from today: PlanDay = .today()) async {
-        for (offset, item) in overdue.sorted(by: { $0.plannedDate < $1.plannedDate }).enumerated() {
-            await move(item.id, to: today.adding(days: offset))
-        }
     }
 
     func remove(_ itemID: Int) async {

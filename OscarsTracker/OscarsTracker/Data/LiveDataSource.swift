@@ -281,7 +281,8 @@ final class LiveDataSource: AppDataSource {
     func addToPlan(movieID: Int, day: PlanDay, userID: String) async throws -> WatchPlanItem {
         try await run {
             try await client.from("watch_plan")
-                .insert(PlanInsert(user_id: userID, movie_id: movieID, planned_date: day.description))
+                // One row per film: planning a film that's already planned moves it.
+                .upsert(PlanInsert(user_id: userID, movie_id: movieID, planned_date: day.description), onConflict: "user_id,movie_id")
                 .select("id, user_id, movie_id, planned_date, created_at, movie:movies(*)")
                 .single()
                 .execute()

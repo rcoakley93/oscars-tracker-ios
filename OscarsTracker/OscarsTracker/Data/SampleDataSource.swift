@@ -232,6 +232,12 @@ final class SampleDataSource: AppDataSource {
 
     func addToPlan(movieID: Int, day: PlanDay, userID: String) async throws -> WatchPlanItem {
         _ = try requireUser()
+        try check()
+        // Like the server's upsert: a film is planned once, so planning it again moves it.
+        if let index = planItems.firstIndex(where: { $0.movieId == movieID }) {
+            planItems[index].plannedDate = day.description
+            return planItems[index]
+        }
         let item = SampleData.planItem(id: (planItems.map(\.id).max() ?? 0) + 1, movieID: movieID, day: day)
         planItems.append(item)
         return item

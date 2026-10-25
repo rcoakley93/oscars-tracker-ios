@@ -12,6 +12,8 @@ struct AddToPlanChips: View {
 
     @Namespace private var glass
     @State private var planned: PlanDay?
+    /// Where the film was before this tap, so Undo puts it back instead of deleting it.
+    @State private var previousDay: PlanDay?
     @State private var choosingDate = false
     @State private var date = Date.now
 
@@ -71,6 +73,7 @@ struct AddToPlanChips: View {
 
     private func plan(on day: PlanDay) {
         guard let userID = model.session.userID else { return }
+        previousDay = model.plan.plannedDay(of: movie.id)
         withAnimation(.smooth) { planned = day }
         Task {
             await model.plan.add(movieID: movie.id, on: day, userID: userID)
@@ -82,6 +85,10 @@ struct AddToPlanChips: View {
     private func undo(_ day: PlanDay) {
         withAnimation(.smooth) { planned = nil }
         guard let item = model.plan.items(on: day).last(where: { $0.movieId == movie.id }) else { return }
-        Task { await model.plan.remove(item.id) }
+        if let previousDay {
+            Task { await model.plan.move(item.id, to: previousDay) }
+        } else {
+            Task { await model.plan.remove(item.id) }
+        }
     }
 }

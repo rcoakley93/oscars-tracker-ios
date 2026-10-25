@@ -72,8 +72,6 @@ struct Copy {
     let markedWatched: String
     let rescheduled: String
     let removed: String
-    /// The reschedule bar: past days' films not yet watched.
-    let planReschedule: (_ films: Int) -> String
     let planNothing: String
     /// After Fill my plan.
     let planFillDone: (_ films: Int, _ days: Int) -> String
@@ -209,7 +207,6 @@ extension Copy {
         markedWatched: "Marked as watched.",
         rescheduled: "Rescheduled.",
         removed: "Removed from your plan.",
-        planReschedule: { films in "\(filmCount(films)) to reschedule." },
         planNothing: "Nothing planned",
         planFillDone: { films, days in "Planned \(filmCount(films)) over \(Copy.days(days))." },
         planFillNothing: "Every unwatched film is already planned.",
@@ -333,9 +330,6 @@ extension Copy {
         markedWatched: "Another one down.",
         rescheduled: "Moved. Life happens.",
         removed: "Cut in the edit.",
-        planReschedule: { films in
-            films == 1 ? "1 film slipped. Happens to the best of us." : "\(films) films slipped. Happens to the best of us."
-        },
         planNothing: "Nothing planned. The couch is free.",
         planFillDone: { films, days in
             "Spread \(filmCount(films)) over \(days == 1 ? "1 night" : "\(days) nights"). You're welcome."

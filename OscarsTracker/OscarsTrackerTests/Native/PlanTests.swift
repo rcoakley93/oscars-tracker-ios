@@ -59,7 +59,6 @@ struct PlanFillerTests {
     @Test func bothVoicesCarryThePlanNumbers() {
         for voice in Voice.allCases {
             let copy = Copy.for(voice)
-            #expect(copy.planReschedule(4).contains("4"))
             #expect(copy.planFillDone(12, 9).contains("12 films"))
             #expect(copy.planFillDone(12, 9).contains("9"))
             #expect(copy.planFit("KPop Demon Hunters", "1h 36m").contains("KPop Demon Hunters"))
@@ -112,5 +111,98 @@ struct PlanStoreTests {
         let added = await store.fill([.init(movieID: 8, day: .today())], userID: user)
         #expect(added == 0)
         #expect(store.actionError == .offline)
+    }
+}
+
+@MainActor
+@Suite("Planning a film twice")
+struct PlanTwiceTests {
+    private func loaded() async -> (PlanStore, SampleDataSource) {
+        let data = SampleDataSource()
+        let store = PlanStore(data: data)
+        await store.load(userID: SampleDataSource.userID)
+        return (store, data)
+    }
+
+    @Test func addingAPlannedFilmMovesIt() async {
+        let (store, data) = await loaded()
+        let before = store.items.count
+        let day = PlanDay.today().adding(days: 4)
+        // Film 2 is on the plan two days ago in the sample season.
+        await store.add(movieID: 2, on: day, userID: SampleDataSource.userID)
+        #expect(store.items.count == before)
+        #expect(store.plannedDay(of: 2) == day)
+        #expect(store.actionError == nil)
+        #expect(data.planItems.filter { $0.movieId == 2 }.count == 1)
+    }
+
+    @Test func aFailedMoveRollsBack() async {
+        let (store, data) = await loaded()
+        let original = store.plannedDay(of: 2)
+        data.failure = .offline
+        await store.add(movieID: 2, on: PlanDay.today().adding(days: 4), userID: SampleDataSource.userID)
+        #expect(store.plannedDay(of: 2) == original)
+        #expect(store.actionError == .offline)
+    }
+
+    @Test func addingANewFilmStillAdds() async {
+        let (store, _) = await loaded()
+        let before = store.items.count
+        await store.add(movieID: 9, on: .today(), userID: SampleDataSource.userID)
+        #expect(store.items.count == before + 1)
+    }
+
+    @Test func fillingPlansAFilmThatIsAlreadyPlannedByMovingIt() async {
+        let (store, _) = await loaded()
+        let before = store.items.count
+        let day = PlanDay.today().adding(days: 3)
+        let added = await store.fill([PlanFiller.Assignment(movieID: 2, day: day)], userID: SampleDataSource.userID)
+        #expect(added == 1)
+        #expect(store.items.count == before)
+        #expect(store.plannedDay(of: 2) == day)
+    }
+
+    @Test func aDuplicateKeyErrorHasPlainCopy() {
+        let error = AppError(serverMessage: #"duplicate key value violates unique constraint "watch_plan_user_id_movie_id_key""#, code: "23505")
+        #expect(error == .alreadyPlanned)
+        #expect(!error.message.isEmpty)
+        #expect(AppError(serverMessage: "duplicate key value violates unique constraint \"profiles_username_key\"", code: "23505") != .alreadyPlanned)
+    }
+}
+
+@MainActor
+@Suite("Fill my plan skips planned films")
+struct PlanFillSkipTests {
+    @Test func everyPlannedFilmIsExcludedWhateverItsDay() async {
+        let store = PlanStore(data: SampleDataSource())
+        await store.load(userID: SampleDataSource.userID)
+        // The sample plan has film 2 two days ago, film 3 today and film 5 tomorrow.
+        #expect(store.allPlannedMovieIDs == [2, 3, 5])
+        #expect(store.plannedMovieIDs() == [3, 5])
+    }
+
+    @Test func aFailedFillReportsAndAddsNothing() async {
+        let data = SampleDataSource()
+        let store = PlanStore(data: data)
+        await store.load(userID: SampleDataSource.userID)
+        data.failure = .server("boom")
+        let added = await store.fill([PlanFiller.Assignment(movieID: 9, day: .today())], userID: SampleDataSource.userID)
+        #expect(added == 0)
+        #expect(store.actionError != nil)
+    }
+}
+
+@MainActor
+@Suite("Overlapping plan requests")
+struct PlanOverlapTests {
+    @Test func twoOverlappingAddsLeaveOneRow() async {
+        let store = PlanStore(data: SampleDataSource())
+        await store.load(userID: SampleDataSource.userID)
+        let before = store.items.count
+        async let first: Void = store.add(movieID: 9, on: .today(), userID: SampleDataSource.userID)
+        async let second: Void = store.add(movieID: 9, on: .today().adding(days: 2), userID: SampleDataSource.userID)
+        _ = await (first, second)
+        #expect(store.items.filter { $0.movieId == 9 }.count == 1)
+        #expect(store.items.count == before + 1)
     }
 }

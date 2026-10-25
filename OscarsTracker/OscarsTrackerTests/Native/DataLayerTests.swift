@@ -152,17 +152,12 @@ struct StoreTests {
         #expect(!SampleData.categories[0].leadsWithPerson)
     }
 
-    @Test func pastUnwatchedPlansGatherInOneRescheduleList() async throws {
+    @Test func upcomingDaysSkipPastPlans() async throws {
         let store = PlanStore(data: SampleDataSource())
         await store.load(userID: user)
         let today = PlanDay.today()
-        let overdue = store.toReschedule(watchedIDs: [], today: today)
-        #expect(overdue.map(\.movieId) == [2])
-        #expect(store.toReschedule(watchedIDs: [2], today: today).isEmpty)
         #expect(store.upcomingDays(today: today).map(\.day) == [today, today.adding(days: 1)])
-
-        await store.rescheduleAll(overdue, from: today)
-        #expect(store.toReschedule(watchedIDs: [], today: today).isEmpty)
+        #expect(store.pastDays(today: today).map(\.day) == [today.adding(days: -2)])
     }
 
     @Test func removingAPlanItemRollsBackOnFailure() async {
