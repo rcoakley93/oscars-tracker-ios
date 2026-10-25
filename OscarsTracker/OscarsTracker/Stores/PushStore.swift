@@ -20,10 +20,18 @@ nonisolated enum PushEnvironment: String, Sendable {
 /// Push notifications (P4-09). Permission is asked after your first saved
 /// pick or watched film, never at launch. Once allowed, the device registers
 /// with APNs and its token is saved to `devices`; signing out forgets it.
+///
+/// The reminders' switches, voice and time zone (P6-04) live on the server,
+/// which sends the reminders. The voice is picked on this device (Profile →
+/// Voice), so it and the time zone are sent up whenever they differ.
 @Observable
 final class PushStore {
     private(set) var status: UNAuthorizationStatus = .notDetermined
     private(set) var token: String?
+    private(set) var preferences = NotificationPreferences.defaults
+    /// A switch being saved.
+    private(set) var isSaving = false
+    var actionError: AppError?
 
     private let data: any AppDataSource
     /// Set once the question has been asked, so it's asked once.
@@ -75,7 +83,58 @@ final class PushStore {
 
     /// Before sign-out, so the next person on this phone doesn't get your pushes.
     func signingOut() async {
+        preferences = .defaults
         guard let token else { return }
         try? await data.removeDevice(token: token)
+    }
+
+    // MARK: - Reminders (P6-04)
+
+    /// The voice picked on this device.
+    private var deviceVoice: Voice {
+        UserDefaults.standard.string(forKey: Voice.storageKey).flatMap(Voice.init) ?? .host
+    }
+
+    /// Loads your preferences, then saves this device's voice and time zone
+    /// if the server has others, or no row yet. Offline, what's shown stays.
+    func loadPreferences(userID: String, timeZone: TimeZone = .current) async {
+        let stored: NotificationPreferences?
+        do {
+            stored = try await data.notificationPreferences(userID: userID)
+        } catch {
+            return
+        }
+        preferences = stored ?? .defaults
+        var wanted = preferences
+        wanted.voice = deviceVoice.rawValue
+        wanted.timeZone = timeZone.identifier
+        guard stored == nil || wanted != stored else { return }
+        if let saved = try? await data.saveNotificationPreferences(wanted) { preferences = saved }
+    }
+
+    /// Turns one reminder on or off; puts it back if the save fails.
+    func set(_ reminder: NotificationPreferences.Reminder, _ on: Bool) async {
+        let before = preferences
+        preferences[reminder] = on
+        await save(rollingBackTo: before)
+    }
+
+    /// Profile → Voice changed: reminders follow it.
+    func setVoice(_ voice: Voice) async {
+        guard preferences.voice != voice.rawValue else { return }
+        let before = preferences
+        preferences.voice = voice.rawValue
+        await save(rollingBackTo: before)
+    }
+
+    private func save(rollingBackTo before: NotificationPreferences) async {
+        isSaving = true
+        defer { isSaving = false }
+        do {
+            preferences = try await data.saveNotificationPreferences(preferences)
+        } catch {
+            preferences = before
+            actionError = AppError(error)
+        }
     }
 }

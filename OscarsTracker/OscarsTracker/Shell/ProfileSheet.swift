@@ -13,6 +13,7 @@ struct ProfileSheet: View {
 
     var body: some View {
         let profile = model.profile
+        @Bindable var push = model.push
         NavigationStack {
             Form {
                 Section("Account") {
@@ -72,10 +73,11 @@ struct ProfileSheet: View {
 
                 Section {
                     NotificationsRow()
+                    ForEach(NotificationPreferences.Reminder.allCases) { ReminderToggle(reminder: $0) }
                 } header: {
                     Text("Notifications")
                 } footer: {
-                    Text("Ballot lock reminders and the winners as they're announced.")
+                    Text("Reminders arrive in your voice.")
                 }
 
                 if !pastSeasons.isEmpty {
@@ -128,6 +130,8 @@ struct ProfileSheet: View {
                 }
             }
             .task { await profile.loadHistory() }
+            .onChange(of: voice) { Task { await model.push.setVoice(voice) } }
+            .errorAlert("Couldn't save that", error: $push.actionError)
             .sheet(isPresented: $deleting) {
                 DeleteAccountSheet { dismiss() }
             }
@@ -142,8 +146,7 @@ struct ProfileSheet: View {
     }
 }
 
-/// Whether notifications are on, with the way to turn them on. Settings
-/// per kind of push come in P6-04.
+/// Whether notifications are on, with the way to turn them on.
 private struct NotificationsRow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
@@ -161,6 +164,25 @@ private struct NotificationsRow: View {
         default:
             LabeledContent("Notifications", value: "On")
         }
+    }
+}
+
+/// One reminder's switch (P6-04), saved to the server, which sends it.
+private struct ReminderToggle: View {
+    @Environment(AppModel.self) private var model
+    let reminder: NotificationPreferences.Reminder
+
+    var body: some View {
+        let push = model.push
+        Toggle(isOn: Binding(get: { push.preferences[reminder] }, set: { on in Task { await push.set(reminder, on) } })) {
+            Label {
+                Text(reminder.title)
+                Text(reminder.detail)
+            } icon: {
+                Image(systemName: reminder.systemImage)
+            }
+        }
+        .tint(.gold)
     }
 }
 
@@ -358,6 +380,14 @@ extension Bundle {
 #Preview("Large text") {
     Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
         .environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
+
+#Preview("Notifications off, watch plan on") {
+    Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
+        .environment(AppModel.preview {
+            $0.preferences = NotificationPreferences(nominations: false, watchPlan: true, ballotLock: true, results: false)
+        })
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Sign in with Apple") {

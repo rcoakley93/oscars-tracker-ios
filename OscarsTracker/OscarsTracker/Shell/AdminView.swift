@@ -37,6 +37,7 @@ struct AdminView: View {
             if let ceremony = admin.ceremony {
                 CeremonySection(ceremony: ceremony)
             }
+            NominationsSection()
             PushSection()
         }
         .scrollContentBackground(.hidden)
@@ -193,6 +194,39 @@ private struct CeremonySection: View {
             ceremonyAt = ceremony.ceremonyAt
             ballotLockAt = ceremony.ballotLockAt
         }
+    }
+}
+
+/// The "Nominations are out" reminder (P6-04): each person gets it in their
+/// voice if they left it on, once per ceremony. Confirmed first.
+private struct NominationsSection: View {
+    @Environment(AppModel.self) private var model
+    @State private var confirming = false
+    @State private var sentTo: Int?
+
+    var body: some View {
+        let admin = model.admin
+        Section {
+            Button("Nominations are out", systemImage: sentTo == nil ? "envelope.open" : "checkmark") { confirming = true }
+                .disabled(admin.ceremony == nil || admin.isSendingNominations || sentTo != nil)
+                .confirmationDialog("Send \"Nominations are out\" for the \(admin.ceremony?.name ?? "ceremony")?",
+                                    isPresented: $confirming, titleVisibility: .visible) {
+                    Button("Send") {
+                        Task { sentTo = await admin.sendNominationsPush() }
+                    }
+                } message: {
+                    Text("It goes once per ceremony, to everyone who has it on.")
+                }
+        } header: {
+            Text("Reminders")
+        } footer: {
+            switch sentTo {
+            case nil: Text("Send it once the nominees are seeded. The ballot lock and results reminders go out on their own.")
+            case 0: Text("It had already gone out for this ceremony.")
+            case let count?: Text("Sent to ^[\(count) person](inflect: true).")
+            }
+        }
+        .onChange(of: admin.ceremonyID) { sentTo = nil }
     }
 }
 
