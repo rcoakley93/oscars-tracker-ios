@@ -110,8 +110,9 @@ final class BallotStore {
 
     /// Right or wrong once the category's winner is set; nil before, or with no pick.
     func outcome(for category: BallotCategory) -> Outcome? {
-        guard let picked = picks[category.id], let winner = category.nominations.first(where: \.isWinner) else { return nil }
-        return picked == winner.id ? .correct : .wrong
+        guard let picked = picks[category.id], !category.winnerIDs.isEmpty else { return nil }
+        // A tie has more than one winner; your pick is right if it's any of them.
+        return category.winnerIDs.contains(picked) ? .correct : .wrong
     }
 
     /// Saves a pick at once and rolls back if the server refuses it (for
