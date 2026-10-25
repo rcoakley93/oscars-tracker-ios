@@ -21,7 +21,7 @@ struct SignInView: View {
         ScrollView {
             VStack(spacing: Theme.Space.xl) {
                 VStack(spacing: Theme.Space.s) {
-                    BrandMark()
+                    BrandMark(size: 120)
                     Text("Oscars Tracker").displayFont(.largeTitle)
                         .foregroundStyle(.ink)
                     Text("Track the nominees, make your picks, beat your friends.")
