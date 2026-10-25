@@ -40,11 +40,12 @@ struct ShareCardView: View {
     private static let muted = Color(red: 0.96, green: 0.93, blue: 0.86).opacity(0.62)
 
     /// A full ballot (all 24 categories) doesn't fit with a credit line under
-    /// every pick, so a long card drops those lines and tightens up.
+    /// every pick, so a long card drops the credits (keeping an actor's film)
+    /// and tightens up.
     private var isCompact: Bool { card.lines.count > 16 }
 
     var body: some View {
-        VStack(spacing: isCompact ? 10 : 14) {
+        VStack(spacing: isCompact ? 8 : 14) {
             header.layoutPriority(1)
             posterStrip.layoutPriority(1)
             if card.kind == .results { summary.layoutPriority(1) }
@@ -93,7 +94,7 @@ struct ShareCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
         }
-        .frame(height: isCompact ? 64 : 78)
+        .frame(height: isCompact ? 56 : 78)
         .frame(maxWidth: .infinity)
     }
 
@@ -136,7 +137,9 @@ struct ShareCardView: View {
                 .foregroundStyle(color(for: line))
                 .strikethrough(line.isCorrect == false, color: Self.muted)
                 .lineLimit(1)
-            if !isCompact, let film = line.film {
+            // Compact cards keep the film under an actor (which performance)
+            // and drop only the credits under everything else.
+            if !isCompact || line.leadsWithPerson, let film = line.film {
                 Text(film)
                     .font(.system(size: 8))
                     .foregroundStyle(Self.muted).lineLimit(1)
