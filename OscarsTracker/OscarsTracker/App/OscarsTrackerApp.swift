@@ -27,6 +27,8 @@ struct OscarsTrackerApp: App {
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { Task { await model.foreground() } }
+                    // Watched toggles and plan changes since the last refresh.
+                    if phase == .background { model.saveWidgetSnapshot() }
                 }
         }
     }

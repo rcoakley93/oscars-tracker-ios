@@ -421,6 +421,7 @@
 				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/OscarsTrackerWidgets.entitlements;
 				INFOPLIST_FILE = OscarsTrackerWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -446,6 +447,7 @@
 				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/OscarsTrackerWidgets.entitlements;
 				INFOPLIST_FILE = OscarsTrackerWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
 				LD_RUNPATH_SEARCH_PATHS = (
