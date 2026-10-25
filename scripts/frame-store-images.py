@@ -9,9 +9,10 @@ set's exact App Store size, RGB with no alpha: a velvet gradient, the headline i
 Playfair Display (parchment, one gold word at most), and the screenshot in a device
 bezel that bleeds off the bottom edge. Sample data only; no Academy marks.
 
---creative also makes the iOS 27 creative asset into docs/app-store/creative/:
-one universal asset (16:9, 5244 x 2950, PNG) that fills both the product page
-header and search results, from the iphone-6.9 raw shots. The size is Apple's
+--creative also makes the iOS 27 creative assets into docs/app-store/creative/,
+from the iphone-6.9 raw shots: the universal asset (16:9, 5244 x 2950, PNG), used
+as the product page header, and a dedicated search results asset (3:2,
+3840 x 2560, PNG) with a big headline and phone that read at card size. The size is Apple's
 creative assets specifications; the safe area is the art-safe area of Apple's
 universal template (1402 x 962 at x 1921, y 660), and all focal art stays inside it.
 """
@@ -93,9 +94,9 @@ UNIVERSAL_SIZE, UNIVERSAL_SAFE = (5244, 2950), (1921, 660, 3323, 1622)
 UNIVERSAL_LINES = ["Track every nominee.", "Beat your friends."]
 
 
-def spotlight(w, h, centre):
+def spotlight(w, h, centre, spread=1.0):
     """Ink edges, velvet in a soft pool of light around the centre."""
-    glow = Image.radial_gradient("L").resize((w, int(h * 1.6)), Image.BILINEAR)
+    glow = Image.radial_gradient("L").resize((int(w * spread), int(h * 1.6 * spread)), Image.BILINEAR)
     mask = Image.new("L", (w, h), 255)
     mask.paste(glow, (centre[0] - glow.width // 2, centre[1] - glow.height // 2))
     mask = mask.point(lambda v: int(255 * (v / 255) ** 0.65 * 0.94))
@@ -140,6 +141,50 @@ def universal(raw_dir, out_path, wordmark=False):
     save(canvas, out_path)
 
 
+# Search results gets its own asset (3:2, 3840 x 2560), because the universal
+# asset's small centre safe area is unreadable at card size. The card shows
+# about a 16:9 band across the middle, so the headline and the top of the
+# phone sit in y 200-2360; the phone bleeds off the bottom edge.
+SEARCH_SIZE, SEARCH_BAND = (3840, 2560), (200, 2360)
+SEARCH_LINES = ["Track every", "nominee.", "Beat your", "friends."]
+
+
+def search(raw_dir, out_path, wordmark=False):
+    """A big headline on the left, a big phone with the real Films tab on the
+    right: the purpose reads at a glance in a search card."""
+    w, h = SEARCH_SIZE
+    top, bottom = SEARCH_BAND
+    phone = device(Image.open(raw_dir / "01-films.png"), 1180, 1320)
+    px, py = w - 340 - phone.width, 330
+    canvas = spotlight(w, h, (px + phone.width // 2, h // 2), spread=2.2)  # no edge inside the frame
+    canvas.paste(phone, (px, py), phone)  # bleeds off the bottom edge
+    draw = ImageDraw.Draw(canvas)
+    font = playfair(236)  # about 9% of the height
+    col_l, col_r = 330, px - 140
+    for line in SEARCH_LINES:
+        assert draw.textlength(line, font=font) <= col_r - col_l, "line runs out of its column"
+    line_h = int(font.size * 1.14)
+    if wordmark:
+        name = playfair(120)
+        mark_h = int(name.size * 1.25)
+    else:
+        mark_h = 300
+    gap = 90
+    block = mark_h + gap + len(SEARCH_LINES) * line_h
+    y = (top + bottom - block) // 2
+    if wordmark:
+        draw.text((col_l, y), "Oscars Tracker", font=name, fill=GOLD)
+    else:
+        logo = Image.open(LOGO).convert("RGBA").resize((mark_h, mark_h), Image.LANCZOS)
+        canvas.paste(logo, (col_l - int(mark_h * 0.06), y), logo)
+    y += mark_h + gap
+    for line in SEARCH_LINES:
+        draw.text((col_l, y), line, font=font, fill=PARCHMENT)
+        y += line_h
+    assert y <= bottom, "text runs out of the card band"
+    save(canvas, out_path)
+
+
 def save(canvas, out_path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(out_path, "PNG")  # RGB, so no alpha channel
@@ -150,14 +195,16 @@ def main():
     ap.add_argument("--raw", default=str(ROOT / "docs/app-store/screenshots/raw"))
     ap.add_argument("--out", default=str(ROOT / "docs/app-store/screenshots/draft"))
     ap.add_argument("--only", nargs="*", help="set names, e.g. iphone-6.9")
-    ap.add_argument("--creative", action="store_true", help="also make the universal header and search results asset")
+    ap.add_argument("--creative", action="store_true", help="also make the header and search results creative assets")
     a = ap.parse_args()
     if a.creative:
         out = ROOT / "docs/app-store/creative"
         raw = pathlib.Path(a.raw) / "iphone-6.9"
         universal(raw, out / "universal.png")
         universal(raw, out / "universal-wordmark.png", wordmark=True)
-        print(f"made the universal creative asset in {out}")
+        search(raw, out / "search.png")
+        search(raw, out / "search-wordmark.png", wordmark=True)
+        print(f"made the creative assets in {out}")
     frames = json.load(open(ROOT / "docs/app-store/screenshots/frames.json"))["frames"]
     made = 0
     for name, size in SIZES.items():
