@@ -80,22 +80,20 @@ final class SeasonStore {
         case after
     }
 
-    static let showLength: TimeInterval = 5 * 60 * 60
+    /// The season's phase by the server's clock; the hero and the ticker both read it.
+    func phase(hasNominees: Bool = true, now: Date? = nil) -> SeasonPhase {
+        SeasonPhase.resolve(ceremony: ceremony, nominationsAt: config.nominationsAt, hasNominees: hasNominees, now: now ?? serverNow())
+    }
 
     func ticker(filmsLeft: Int, hasNominees: Bool = true, now: Date? = nil) -> Ticker {
-        let now = now ?? serverNow()
-        guard let ceremony else { return .none }
-        if !hasNominees, now < ceremony.ballotLockAt { return .beforeNominations(config.nominationsAt) }
-        if now >= ceremony.ceremonyAt.addingTimeInterval(Self.showLength) {
-            return now < ceremony.ceremonyAt.addingTimeInterval(30 * 24 * 60 * 60) ? .after : .none
+        switch phase(hasNominees: hasNominees, now: now) {
+        case .none, .locked: .none
+        case .beforeNominations(let date): .beforeNominations(date)
+        case .season(let days), .finalWeek(let days): .season(days: days, filmsLeft: filmsLeft)
+        case .lockDay(let locksAt): .lockDay(locksAt: locksAt)
+        case .live: .live
+        case .after: .after
         }
-        if now >= ceremony.ceremonyAt { return .live }
-        guard now < ceremony.ballotLockAt else { return .none }
-        if ceremony.ballotLockAt.timeIntervalSince(now) < 24 * 60 * 60 {
-            return .lockDay(locksAt: ceremony.ballotLockAt)
-        }
-        guard let days = daysToCeremony(now: now) else { return .none }
-        return .season(days: days, filmsLeft: filmsLeft)
     }
 
     /// Whole days until the ceremony, in the viewer's time zone; nil once it's past.

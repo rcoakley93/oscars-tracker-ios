@@ -5,42 +5,66 @@ import SwiftUI
 /// The screen's one custom glass; a solid surface under Reduce Transparency
 /// or Increase Contrast.
 struct HeroCard: View {
+    /// What ceremony night and the weeks after show instead of films watched.
+    struct Results: Equatable {
+        let score: Int
+        let announced: Int
+        let categories: Int
+        var isFinal: Bool { categories > 0 && announced == categories }
+    }
+
     let watched: Int
     let total: Int
-    /// Whole days to the ceremony, nil once it's past.
-    let daysLeft: Int?
+    /// Where the season is (`SeasonPhase`); the hero's figures and line follow it.
+    var phase: SeasonPhase = .none
+    /// The clock the lock-day countdown reads.
+    var now: Date = .now
+    /// Your score and the winners announced, for the live and after phases.
+    var results: Results?
+    /// Starts the Live Activity (P6-03). Nil leaves the button as a placeholder.
+    var onFollow: (() -> Void)?
 
     @Environment(\.copy) private var copy
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 56
 
+    private var showsResults: Bool {
+        switch phase {
+        case .live, .after: results != nil
+        default: false
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.xs) {
-                Text("\(watched)")
-                    .font(.system(size: numberSize, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.goldGradient)
-                    .contentTransition(.numericText(value: Double(watched)))
-                Text("of \(total) films")
-                    .font(.title3.bold()).fontDesign(.rounded)
-                    .foregroundStyle(.ink)
+            if let results, showsResults {
+                number(results.score, label: results.score == 1 ? "point" : "points",
+                       spoken: "\(Copy.pointCount(results.score)) so far")
+            } else {
+                number(watched, label: "of \(total) films", spoken: "\(watched) of \(total) films watched")
             }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(watched) of \(total) films watched")
 
-            Text(watched == total && total > 0 ? copy.allWatched : copy.progressSummary(watched, total))
-                .font(.subheadline)
-                .foregroundStyle(.ink)
+            if let line {
+                Text(line).font(.subheadline).foregroundStyle(.ink)
+            }
 
-            FilmStrip(watched: watched, total: total)
-                .frame(height: 22)
-                .accessibilityHidden(true)
+            if !showsResults {
+                FilmStrip(watched: watched, total: total)
+                    .frame(height: 22)
+                    .accessibilityHidden(true)
+            }
 
-            if let daysLeft, watched < total {
+            if phase == .live {
+                Button(copy.heroFollow, systemImage: "dot.radiowaves.left.and.right") { onFollow?() }
+                    .buttonStyle(.bordered)
+                    .disabled(onFollow == nil)
+            }
+
+            if let days = figureDays, watched < total {
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: Theme.Space.xl) { figures(daysLeft) }
-                    VStack(alignment: .leading, spacing: Theme.Space.s) { figures(daysLeft) }
+                    HStack(spacing: Theme.Space.xl) { figures(days) }
+                    VStack(alignment: .leading, spacing: Theme.Space.s) { figures(days) }
                 }
             }
         }
@@ -49,10 +73,57 @@ struct HeroCard: View {
         .modifier(HeroSurface(solid: reduceTransparency || contrast == .increased))
     }
 
+    private func number(_ value: Int, label: String, spoken: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.xs) {
+            Text("\(value)")
+                .font(.system(size: numberSize, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.goldGradient)
+                .contentTransition(.numericText(value: Double(value)))
+            Text(label)
+                .font(.title3.bold()).fontDesign(.rounded)
+                .foregroundStyle(.ink)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken)
+    }
+
+    /// The voice's line for this phase; every film watched wins before the lock.
+    var line: String? {
+        let left = total - watched
+        switch phase {
+        case .none:
+            return watched == total && total > 0 ? copy.allWatched : copy.progressSummary(watched, total)
+        case .beforeNominations(let date):
+            return copy.heroTeaser(total, date?.formatted(.dateTime.month(.abbreviated).day()))
+        case .season(let days):
+            return copy.heroSeason(days, left)
+        case .finalWeek(let days):
+            return copy.heroFinalWeek(days, left)
+        case .lockDay(let locksAt):
+            return copy.heroLockDay(SeasonTicker.timeLeft(until: locksAt, now: now))
+        case .locked(let days):
+            return copy.heroLocked(days)
+        case .live:
+            return results.map { copy.heroLive($0.announced, $0.categories) }
+        case .after:
+            return results.map { copy.heroAfter($0.isFinal) }
+        }
+    }
+
+    /// Days to show as a figure: only while the ceremony is ahead and the ballot is open.
+    private var figureDays: Int? {
+        switch phase {
+        case .season(let days), .finalWeek(let days): days
+        default: nil
+        }
+    }
+
     @ViewBuilder
-    private func figures(_ daysLeft: Int) -> some View {
-        Figure(value: "\(daysLeft)", caption: daysLeft == 1 ? "day to the ceremony" : "days to the ceremony")
-        Figure(value: Self.pace(left: total - watched, days: daysLeft), caption: "films a day to finish")
+    private func figures(_ days: Int) -> some View {
+        Figure(value: "\(days)", caption: days == 1 ? "day to the ceremony" : "days to the ceremony")
+        if SeasonPhase.showsPace(phase, filmsLeft: total - watched, days: days) {
+            Figure(value: Self.pace(left: total - watched, days: days), caption: "films a day to finish")
+        }
     }
 
     /// Films a day to finish by the ceremony: "0.3", "2", "3.5".
@@ -114,15 +185,59 @@ struct FilmStrip: View {
     }
 }
 
+#if DEBUG
+private extension HeroCard {
+    static let anchor = Date(timeIntervalSince1970: 1_800_000_000)
+}
+
+private struct HeroPhases: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Theme.Space.m) {
+                HeroCard(watched: 0, total: 40, phase: .beforeNominations(HeroCard.anchor.addingTimeInterval(9 * 86400)))
+                HeroCard(watched: 12, total: 50, phase: .season(days: 33))
+                HeroCard(watched: 38, total: 50, phase: .finalWeek(days: 5))
+                HeroCard(watched: 44, total: 50, phase: .lockDay(locksAt: HeroCard.anchor.addingTimeInterval(3 * 3600)), now: HeroCard.anchor)
+                HeroCard(watched: 44, total: 50, phase: .locked(days: 4))
+                HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23))
+                HeroCard(watched: 44, total: 50, phase: .after, results: .init(score: 11, announced: 23, categories: 23))
+            }
+            .padding()
+        }
+        .background(.ground)
+    }
+}
+
+#Preview("Season phases · Dark") { HeroPhases().preferredColorScheme(.dark) }
+#Preview("Season phases · Light") { HeroPhases().preferredColorScheme(.light) }
+#Preview("Season phases · Large text") { HeroPhases().preferredColorScheme(.dark).dynamicTypeSize(.accessibility2) }
+#Preview("Before nominations") {
+    HeroCard(watched: 0, total: 40, phase: .beforeNominations(HeroCard.anchor)).padding().background(.ground)
+}
+#Preview("Nominations to final week") {
+    HeroCard(watched: 12, total: 50, phase: .season(days: 33)).padding().background(.ground)
+}
+#Preview("Final week") {
+    HeroCard(watched: 38, total: 50, phase: .finalWeek(days: 5)).padding().background(.ground)
+}
+#Preview("Lock day") {
+    HeroCard(watched: 44, total: 50, phase: .lockDay(locksAt: HeroCard.anchor.addingTimeInterval(3 * 3600)), now: HeroCard.anchor)
+        .padding().background(.ground)
+}
+#Preview("Ceremony night") {
+    HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23)).padding().background(.ground)
+}
+#Preview("Recap") {
+    HeroCard(watched: 44, total: 50, phase: .after, results: .init(score: 11, announced: 23, categories: 23)).padding().background(.ground)
+}
 #Preview("Dark") {
-    HeroCard(watched: 12, total: 50, daysLeft: 33).padding().background(.ground).preferredColorScheme(.dark)
+    HeroCard(watched: 12, total: 50, phase: .season(days: 33)).padding().background(.ground).preferredColorScheme(.dark)
 }
-
 #Preview("Light") {
-    HeroCard(watched: 12, total: 50, daysLeft: 33).padding().background(.ground).preferredColorScheme(.light)
+    HeroCard(watched: 12, total: 50, phase: .season(days: 33)).padding().background(.ground).preferredColorScheme(.light)
 }
-
 #Preview("Large text") {
-    HeroCard(watched: 12, total: 50, daysLeft: 33).padding().background(.ground)
+    HeroCard(watched: 12, total: 50, phase: .season(days: 33)).padding().background(.ground)
         .preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
 }
+#endif
