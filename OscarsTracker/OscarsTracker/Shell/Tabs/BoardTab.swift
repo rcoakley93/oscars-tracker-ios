@@ -124,6 +124,7 @@ private struct BoardList: View {
                         BoardRow(rank: place.rank, entry: place.entry, metric: metric, isYou: place.entry.userId == userID)
                             .tag(place.entry.userId)
                             .listRowBackground(Color.surface)
+                            .personActions(userID: place.entry.userId, name: place.entry.username)
                     }
                 }
             }
@@ -199,6 +200,7 @@ private struct Podium: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .personActions(userID: place.entry.userId, name: place.entry.username)
     }
 
     private func name(_ entry: BoardEntry) -> String {
@@ -305,6 +307,7 @@ private struct PersonDetail: View {
     @Environment(AppModel.self) private var model
     let entry: BoardEntry
     let metric: LeaderboardStore.Metric
+    @State private var confirmsBlock = false
 
     var body: some View {
         let isYou = entry.userId == model.session.userID
@@ -345,6 +348,14 @@ private struct PersonDetail: View {
         .background(.ground)
         .navigationTitle(isYou ? "You" : entry.username)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !isYou {
+                ToolbarOverflowMenu {
+                    PersonMenuItems(userID: entry.userId, name: entry.username, confirmsBlock: $confirmsBlock)
+                }
+            }
+        }
+        .blockConfirmation(isPresented: $confirmsBlock, userID: entry.userId, name: entry.username)
         // Again whenever a refresh clears the people loaded so far.
         .task(id: loaded == nil) { await model.leaderboard.loadPerson(entry.userId) }
     }
@@ -430,6 +441,13 @@ extension BoardEntry {
 #Preview("Predictions before the lock") {
     let model = AppModel.preview()
     model.navigation.boardMetric = .predictions
+    return BoardTab().environment(model).preferredColorScheme(.dark)
+}
+
+#Preview("Someone blocked") {
+    let model = AppModel.preview { data in
+        data.blocked = [BlockedUser(userId: "u-jordan", username: "Jordan", avatarUrl: nil, blockedAt: nil)]
+    }
     return BoardTab().environment(model).preferredColorScheme(.dark)
 }
 

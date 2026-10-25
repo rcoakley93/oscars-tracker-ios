@@ -17,6 +17,13 @@ struct GroupsTab: View {
                     GroupRow(group: group)
                         .tag(group.id)
                         .listRowBackground(Color.surface)
+                        .contextMenu {
+                            if group.createdBy != model.session.userID {
+                                Button("Report group", systemImage: "flag") {
+                                    navigation.sheet = .report(.group(id: group.id, name: group.name))
+                                }
+                            }
+                        }
                 }
             } placeholder: {
                 List(PoolGroup.placeholders) { GroupRow(group: $0).listRowBackground(Color.surface) }
@@ -90,8 +97,9 @@ private struct GroupRow: View {
 }
 
 /// One group: its board, the invite code, and Leave; for the creator,
-/// Remove (swipe) and Delete. Invite is pinned to the top bar so it never
-/// overflows on the Duo.
+/// Remove (swipe) and Delete; for everyone else, Report group. Each person
+/// has Report and Block in their context menu. Invite is pinned to the top
+/// bar so it never overflows on the Duo.
 private struct GroupDetail: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
@@ -129,6 +137,7 @@ private struct GroupDetail: View {
                                 Button("Remove \(place.entry.username)") { Task { await remove(place.entry.userId) } }
                             }
                         }
+                        .personActions(userID: place.entry.userId, name: place.entry.username)
                 }
             }
             Section {
@@ -165,9 +174,13 @@ private struct GroupDetail: View {
             ToolbarItem(placement: .topBarPinnedTrailing) {
                 InviteButton(group: group)
             }
-            if isCreator {
-                ToolbarOverflowMenu {
+            ToolbarOverflowMenu {
+                if isCreator {
                     Button("Delete group", systemImage: "trash", role: .destructive) { confirmsDelete = true }
+                } else {
+                    Button("Report group", systemImage: "flag") {
+                        model.navigation.sheet = .report(.group(id: group.id, name: group.name))
+                    }
                 }
             }
         }
@@ -247,4 +260,10 @@ extension PoolGroup {
     let model = AppModel.preview()
     model.navigation.selectedGroupID = 1
     return NavigationStack { GroupDetail(group: PoolGroup(id: 1, name: "Movies LLC", createdBy: SampleDataSource.userID, inviteCode: "OSCAR9", createdAt: nil)) }.environment(model).preferredColorScheme(.dark)
+}
+
+#Preview("Someone else's group") {
+    let model = AppModel.preview()
+    model.navigation.selectedGroupID = 2
+    return NavigationStack { GroupDetail(group: PoolGroup(id: 2, name: "Family pool", createdBy: "someone-else", inviteCode: "FAMILY", createdAt: nil)) }.environment(model).preferredColorScheme(.light)
 }

@@ -2,8 +2,9 @@ import AuthenticationServices
 import SwiftUI
 
 /// Profile (screens.md, 3.8): your account and the app's few settings.
-/// Account, Voice, Notifications (P4-09 and P6-04), Past seasons, About,
-/// Sign out and Delete account. A large sheet on compact widths, a page on
+/// Account, Voice, Notifications (P4-09 and P6-04), Past seasons, Blocked
+/// people (P6-16), About with support and the terms, Sign out and Delete
+/// account. A large sheet on compact widths, a page on
 /// regular ones.
 struct ProfileSheet: View {
     @Environment(AppModel.self) private var model
@@ -86,8 +87,14 @@ struct ProfileSheet: View {
                     }
                 }
 
+                BlockedPeopleSection()
+
                 Section("About") {
                     LabeledContent("Version", value: Bundle.main.versionLine)
+                    if let host = InviteLink.siteHost {
+                        Link("Help and support", destination: URL(string: "https://\(host)/support/")!)
+                        Link("Terms of use", destination: URL(string: "https://\(host)/terms/")!)
+                    }
                     VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                         Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")
                         Link("themoviedb.org", destination: URL(string: "https://www.themoviedb.org")!)
@@ -392,6 +399,14 @@ extension Bundle {
 #Preview("Sign in with Apple") {
     Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
         .environment(AppModel.preview { $0.accountProvider = .apple }).preferredColorScheme(.dark)
+}
+
+#Preview("Someone blocked") {
+    Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
+        .environment(AppModel.preview {
+            $0.blocked = [BlockedUser(userId: "u-chris", username: "Chris", avatarUrl: nil, blockedAt: nil)]
+        })
+        .preferredColorScheme(.light)
 }
 
 #Preview("Admin") {

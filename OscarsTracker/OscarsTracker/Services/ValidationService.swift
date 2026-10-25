@@ -6,26 +6,38 @@ nonisolated struct ValidationService {
 
     // MARK: - Profanity Filter
 
+    // The same lists and letter swaps as the server's filter
+    // (`blocked_terms` and `name_is_allowed`, P6-16), so a name passes here
+    // only if it passes there. Change them together.
+
     /// Blocked anywhere, even inside another word ("whatthefuck").
     static let blockedAnywhere: Set<String> = [
         "fuck", "shit", "bitch", "bastard", "pussy", "cunt", "whore", "slut",
-        "nigger", "nigga", "retard", "hitler"
+        "nigger", "nigga", "retard", "hitler", "faggot", "kike", "chink",
+        "wetback", "tranny", "rapist", "porn", "wank", "jizz", "dildo"
     ]
 
     /// Blocked only as a whole word, because they hide inside real words:
     /// "ass" in Glass and Classic, "cock" in Hitchcock, "dick" in Dickens.
     static let blockedAsWord: Set<String> = [
-        "ass", "damn", "crap", "dick", "cock", "fag", "nazi"
+        "ass", "damn", "crap", "dick", "cock", "fag", "nazi",
+        "spic", "rape", "kkk", "cum", "tits", "twat"
     ]
 
     /// Common profanity words to filter
     static var profanityList: Set<String> { blockedAnywhere.union(blockedAsWord) }
 
-    /// Check if text contains profanity
+    /// Digits and symbols people use for letters: "sh1t", "@ss".
+    static let letterSwaps: [Character: Character] = [
+        "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i"
+    ]
+
+    /// Check if text contains profanity, after the letter swaps.
     static func containsProfanity(_ text: String) -> Bool {
-        let lowercased = text.lowercased()
+        let swapped = String(text.map { letterSwaps[$0] ?? $0 })
+        let lowercased = swapped.lowercased()
         if blockedAnywhere.contains(where: lowercased.contains) { return true }
-        return !blockedAsWord.isDisjoint(with: words(in: text))
+        return !blockedAsWord.isDisjoint(with: words(in: swapped))
     }
 
     /// Lowercased words, split on anything that isn't a letter and at
@@ -98,7 +110,7 @@ nonisolated struct ValidationService {
             case .invalidFormat:
                 return "Username can only contain letters, numbers, and underscores."
             case .containsProfanity:
-                return "Username contains inappropriate content."
+                return "That name isn't allowed. Try another."
             }
         }
     }
@@ -159,7 +171,7 @@ nonisolated struct ValidationService {
             case .tooShort, .tooLong:
                 return "Group name must be 3-30 characters long."
             case .containsProfanity:
-                return "Group name contains inappropriate content."
+                return "That name isn't allowed. Try another."
             }
         }
     }

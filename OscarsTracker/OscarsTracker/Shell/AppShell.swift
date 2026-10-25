@@ -76,8 +76,11 @@ struct AppShell: View {
                 SearchSheet()
             case .shareCard:
                 ShareCardSheet()
+            case .report(let target):
+                ReportSheet(target: target)
             }
         }
+        .errorAlert("Couldn't change that", error: Bindable(model.moderation).actionError)
         // Oscar night: each winner's envelope (P6-02).
         .liveReveals()
     }

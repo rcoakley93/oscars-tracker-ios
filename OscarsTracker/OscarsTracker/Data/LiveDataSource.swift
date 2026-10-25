@@ -596,6 +596,67 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    // MARK: - Moderation (P6-16)
+
+    private nonisolated struct ReportUserParams: Encodable {
+        let p_user_id: String
+        let p_reason: String
+        let p_details: String?
+    }
+
+    private nonisolated struct ReportGroupParams: Encodable {
+        let p_group_id: Int
+        let p_reason: String
+        let p_details: String?
+    }
+
+    private nonisolated struct ResolveParams: Encodable {
+        let p_report_id: Int
+        let p_action: String
+    }
+
+    func reportUser(_ userID: String, reason: ReportReason, details: String?) async throws {
+        try await run {
+            try await client.rpc("report_user", params: ReportUserParams(p_user_id: userID, p_reason: reason.rawValue, p_details: details)).execute()
+        }
+    }
+
+    func reportGroup(_ groupID: Int, reason: ReportReason, details: String?) async throws {
+        try await run {
+            try await client.rpc("report_group", params: ReportGroupParams(p_group_id: groupID, p_reason: reason.rawValue, p_details: details)).execute()
+        }
+    }
+
+    func blockUser(_ userID: String) async throws {
+        try await run {
+            try await client.rpc("block_user", params: ["p_user_id": userID]).execute()
+        }
+    }
+
+    func unblockUser(_ userID: String) async throws {
+        try await run {
+            try await client.rpc("unblock_user", params: ["p_user_id": userID]).execute()
+        }
+    }
+
+    func blockedUsers() async throws -> [BlockedUser] {
+        try await run {
+            try await client.rpc("get_blocked_users").execute().value
+        }
+    }
+
+    func adminReports() async throws -> [ContentReport] {
+        try await run {
+            try await client.rpc("admin_reports").execute().value
+        }
+    }
+
+    func resolveReport(id: Int, action: ReportAction) async throws -> Int {
+        try await run {
+            try await client.rpc("admin_resolve_report", params: ResolveParams(p_report_id: id, p_action: action.rawValue)).execute().value
+        }
+    }
+
     // MARK: - Profile
 
     func profile(userID: String) async throws -> Profile? {
