@@ -55,6 +55,31 @@ struct ModerationTests {
         #expect(model.leaderboard.entries(nil).contains { $0.userId == "u-jordan" })
     }
 
+    @Test func hidingSomeoneClosesUpTheRanks() {
+        let store = LeaderboardStore(data: SampleDataSource())
+        store.restore(boards: ["global": [
+            .sample("a", "A", watched: 9, rank: 1), .sample("b", "B", watched: 9, rank: 1),
+            .sample("c", "C", watched: 5, rank: 3), .sample("d", "D", watched: 2, rank: 4),
+        ]], ceremonyID: 2)
+        store.hide("b")
+        #expect(store.entries(nil).map(\.userId) == ["a", "c", "d"])
+        #expect(store.entries(nil).map(\.rank) == [1, 2, 3])
+        store.hide("a")
+        #expect(store.entries(nil).map(\.rank) == [1, 2])
+    }
+
+    @Test func aRefusedResolutionLeavesOtherResolutionsAlone() async {
+        let data = SampleDataSource()
+        data.isAdmin = true
+        let admin = AdminStore(data: data)
+        await admin.loadReports()
+        await admin.resolve(admin.openReports.last!, .dismiss)
+        data.isAdmin = false
+        await admin.resolve(admin.openReports[0], .dismiss)
+        #expect(admin.reports.first { $0.id == 3 }?.status == .dismissed)
+        #expect(admin.openReports.map(\.id) == [1, 2])
+    }
+
     @Test func aBlockTheServerRefusesIsTakenBack() async {
         let data = SampleDataSource()
         let store = ModerationStore(data: data)

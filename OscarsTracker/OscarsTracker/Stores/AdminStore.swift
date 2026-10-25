@@ -258,11 +258,14 @@ final class AdminStore {
     /// also shows the cleared name.
     func resolve(_ report: ContentReport, _ action: ReportAction) async {
         guard !resolvingReports.contains(report.id) else { return }
-        let before = reports
         let status: ContentReport.Status = action == .dismiss ? .dismissed : .actioned
+        // Only these go back if the server refuses, so another resolution
+        // in flight keeps its result.
+        var previous: [Int: ContentReport.Status] = [:]
         for index in reports.indices where reports[index].id == report.id
             || (reports[index].status == .open && reports[index].kind == report.kind
                 && reports[index].reportedUserId == report.reportedUserId && reports[index].groupId == report.groupId) {
+            previous[reports[index].id] = reports[index].status
             reports[index].status = status
         }
         resolvingReports.insert(report.id)
@@ -271,7 +274,9 @@ final class AdminStore {
             _ = try await data.resolveReport(id: report.id, action: action)
             if action == .clearName { await loadReports() }
         } catch {
-            reports = before
+            for index in reports.indices {
+                if let old = previous[reports[index].id] { reports[index].status = old }
+            }
             actionError = AppError(error)
         }
     }

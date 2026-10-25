@@ -69,16 +69,19 @@ struct ReportSheet: View {
                     ToolbarItemGroup(placement: .confirmationAction) {
                         Button("Done", systemImage: "checkmark") { dismiss() }
                     }
+                    .visibilityPriority(.high)
                 } else {
                     ToolbarItemGroup(placement: .cancellationAction) {
                         Button("Cancel", systemImage: "xmark") { dismiss() }
                     }
+                    .visibilityPriority(.automatic)
                     ToolbarItemGroup(placement: .confirmationAction) {
                         Button("Send", systemImage: "paperplane") {
                             Task { sent = await moderation.report(target, reason: reason, details: details) }
                         }
                         .disabled(moderation.isWorking)
                     }
+                    .visibilityPriority(.high)
                 }
             }
             .onAppear { moderation.reportError = nil }

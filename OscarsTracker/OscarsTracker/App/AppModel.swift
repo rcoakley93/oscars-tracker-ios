@@ -212,13 +212,19 @@ final class AppModel {
     func block(_ userID: String, name: String) async -> Bool {
         guard await moderation.block(userID, name: name) else { return false }
         if navigation.selectedPersonID == userID { navigation.selectedPersonID = nil }
+        // Offline, the reload fails and keeps the old boards: drop them from
+        // what's on screen and from the offline copy, so they don't come back.
+        leaderboard.hide(userID)
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
+        leaderboard.hide(userID)
+        saveSnapshot()
         return true
     }
 
     func unblock(_ userID: String) async {
         guard await moderation.unblock(userID) else { return }
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
+        saveSnapshot()
     }
 
     func signOut() async {

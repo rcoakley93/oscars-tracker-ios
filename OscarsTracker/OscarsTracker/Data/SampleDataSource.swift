@@ -704,8 +704,5 @@ nonisolated extension BoardEntry {
                    correctCount: scoring == .traditional ? score : 0, points: score, score: score, scoring: scoring, isCreator: isCreator)
     }
 
-    func ranked(_ rank: Int) -> BoardEntry {
-        BoardEntry(rank: rank, userId: userId, username: username, avatarUrl: avatarUrl, watchedCount: watchedCount,
-                   correctCount: correctCount, points: points, score: score, scoring: scoring, isCreator: isCreator)
-    }
+    func ranked(_ rank: Int) -> BoardEntry { withRank(rank) }
 }
