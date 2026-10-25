@@ -83,6 +83,13 @@ nonisolated struct BallotNominee: Codable, Identifiable, Hashable, Sendable {
     let isWinner: Bool
 }
 
+/// One nominee's winner flag as it changes on ceremony night (P6-02).
+nonisolated struct WinnerUpdate: Equatable, Sendable {
+    let nominationID: Int
+    let categoryID: Int
+    let isWinner: Bool
+}
+
 /// Everything the app reads from and writes to the backend. `LiveDataSource`
 /// talks to Supabase; `SampleDataSource` serves fixed data to previews and
 /// tests, so neither needs a network.
@@ -162,6 +169,12 @@ protocol AppDataSource: AnyObject, Sendable {
     func setCeremonyDates(id: Int, ceremonyAt: Date, ballotLockAt: Date) async throws
     /// A push to every device, through send-push.
     func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws
+
+    // Live mode (P6-02)
+    /// Nominees whose `is_winner` changes, as it happens (Realtime on
+    /// `nominations`, P2-11). Ends when the subscription can't be made;
+    /// cancelling the loop that reads it unsubscribes.
+    func winnerUpdates() -> AsyncStream<WinnerUpdate>
 
     // Profile
     func profile(userID: String) async throws -> Profile?

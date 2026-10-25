@@ -560,4 +560,42 @@ final class LiveDataSource: AppDataSource {
             try? await client.auth.signOut()
         }
     }
+
+    // MARK: - Live mode
+
+    private nonisolated struct WinnerRow: Decodable {
+        let id: Int
+        let category_id: Int?
+        let is_winner: Bool?
+    }
+
+    /// Updates to `nominations` from Realtime. The server applies the table's
+    /// select policy, so a tester hears the rehearsal and everyone else the
+    /// real ceremony. The client rejoins the channel itself after a drop;
+    /// what changed meanwhile comes in with the next refresh.
+    func winnerUpdates() -> AsyncStream<WinnerUpdate> {
+        let client = client
+        let channel = client.channel("live-winners")
+        let changes = channel.postgresChange(UpdateAction.self, schema: "public", table: "nominations")
+        return AsyncStream { continuation in
+            let task = Task {
+                do {
+                    try await channel.subscribeWithError()
+                } catch {
+                    continuation.finish()
+                    return
+                }
+                for await change in changes {
+                    guard let row = try? change.decodeRecord(as: WinnerRow.self, decoder: JSONDecoder()),
+                          let categoryID = row.category_id else { continue }
+                    continuation.yield(WinnerUpdate(nominationID: row.id, categoryID: categoryID, isWinner: row.is_winner ?? false))
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in
+                task.cancel()
+                Task { await client.removeChannel(channel) }
+            }
+        }
+    }
 }

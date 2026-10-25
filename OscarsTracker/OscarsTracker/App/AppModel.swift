@@ -19,6 +19,8 @@ final class AppModel {
     let push: PushStore
     /// Ceremony night, for the admin only (P6-01).
     let admin: AdminStore
+    /// Oscar night: winners as they're announced (P6-02).
+    let live: LiveStore
     let navigation = AppNavigation()
     let connectivity = Connectivity()
     /// Watched toggles and picks made offline, oldest first (P4-11).
@@ -41,7 +43,12 @@ final class AppModel {
         profile = ProfileStore(data: data)
         push = PushStore(data: data)
         admin = AdminStore(data: data)
+        live = LiveStore(data: data, ballot: ballot)
         admin.onWinnersChanged = { [weak self] in self?.ballot.apply(winners: $0.current, in: $0.categoryID) }
+        live.onWinnersSettled = { [weak self] in
+            guard let self else { return }
+            Task { await self.leaderboard.reload(ceremonyID: self.season.ceremony?.id) }
+        }
         films.onOffline = { [weak self] in self?.enqueue($0) }
         ballot.onOffline = { [weak self] in self?.enqueue($0) }
     }
@@ -78,6 +85,7 @@ final class AppModel {
         _ = await (season, films, ballot)
         await loadPickShares()
         applyPending()
+        followLiveMode()
         saveSnapshot()
     }
 
@@ -155,6 +163,19 @@ final class AppModel {
         async let push: Void = push.refresh()
         _ = await (season, push)
         await loadPickShares()
+        guard live.isOn else { return followLiveMode() }
+        // Winners missed while the app was away.
+        await ballot.load(userID: session.userID)
+        applyPending()
+        followLiveMode()
+    }
+
+    /// Follows winners while `live_mode` is on and someone is signed in,
+    /// and plays the ones a reload found that Realtime didn't deliver.
+    private func followLiveMode() {
+        guard session.userID != nil, season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
+        live.start()
+        live.catchUp()
     }
 
     /// The group the Ballot's "62% of Movies LLC picked Hamnet" lines speak for.
@@ -207,6 +228,7 @@ final class AppModel {
         leaderboard.reset()
         profile.reset()
         admin.reset()
+        live.stop()
         navigation.reset()
     }
 }
