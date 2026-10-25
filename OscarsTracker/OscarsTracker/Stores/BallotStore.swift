@@ -152,6 +152,13 @@ final class BallotStore {
         picks[categoryID] = nominationID
     }
 
+    /// A category's winners as they change on ceremony night (the admin
+    /// screen, P6-01; live mode, P6-02).
+    func apply(winners: Set<Int>, in categoryID: Int) {
+        guard let index = categories.firstIndex(where: { $0.id == categoryID }) else { return }
+        categories[index] = categories[index].withWinners(winners)
+    }
+
     func reset() {
         categories = []
         picks = [:]

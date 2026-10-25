@@ -416,6 +416,105 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    // MARK: - Admin
+
+    private nonisolated struct WinnerParams: Encodable {
+        let p_nomination_id: Int
+        let p_tie: Bool
+    }
+
+    private nonisolated struct WinnersParams: Encodable {
+        let p_category_id: Int
+        let p_nomination_ids: [Int]
+    }
+
+    private nonisolated struct CeremonyDatesParams: Encodable {
+        let p_ceremony_id: Int
+        let p_ceremony_at: Date
+        let p_ballot_lock_at: Date
+    }
+
+    private nonisolated struct PushParams: Encodable {
+        let p_title: String
+        let p_body: String
+        let p_path: String
+    }
+
+    func adminStatus() async throws -> [AdminCeremony] {
+        try await run {
+            try await client.rpc("admin_status").execute().value
+        }
+    }
+
+    /// In `ceremony_order`, else the small categories first and Best Picture last.
+    func adminBallot(ceremonyID: Int) async throws -> [BallotCategory] {
+        try await run {
+            let categories: [Category] = try await client.from("categories")
+                .select()
+                .eq("ceremony_id", value: ceremonyID)
+                .order("ceremony_order", ascending: true, nullsFirst: false)
+                .order("points_value", ascending: true)
+                .order("name")
+                .execute()
+                .value
+            guard !categories.isEmpty else { return [] }
+            let nominations: [NominationRow] = try await client.from("nominations")
+                .select("id, category_id, detail_text, is_winner, movie:movies(*)")
+                .in("category_id", values: categories.map(\.id))
+                .order("id")
+                .execute()
+                .value
+            let byCategory = Dictionary(grouping: nominations, by: { $0.category_id ?? -1 })
+            return categories.map { category in
+                BallotCategory(
+                    id: category.id,
+                    name: category.name,
+                    pointsValue: category.pointsValue ?? 1,
+                    nominations: (byCategory[category.id] ?? [])
+                        .map { BallotNominee(id: $0.id, movie: $0.movie, personName: $0.detail_text, isWinner: $0.is_winner ?? false) }
+                )
+            }
+        }
+    }
+
+    func setWinner(nominationID: Int, tie: Bool) async throws -> Set<Int> {
+        try await run {
+            let winners: [Int] = try await client.rpc("admin_set_winner", params: WinnerParams(p_nomination_id: nominationID, p_tie: tie)).execute().value
+            return Set(winners)
+        }
+    }
+
+    func clearWinners(categoryID: Int) async throws {
+        try await run {
+            try await client.rpc("admin_clear_winners", params: ["p_category_id": categoryID]).execute()
+        }
+    }
+
+    func setWinners(categoryID: Int, nominationIDs: Set<Int>) async throws -> Set<Int> {
+        try await run {
+            let winners: [Int] = try await client.rpc("admin_set_winners", params: WinnersParams(p_category_id: categoryID, p_nomination_ids: nominationIDs.sorted())).execute().value
+            return Set(winners)
+        }
+    }
+
+    func setActiveCeremony(id: Int) async throws {
+        try await run {
+            try await client.rpc("admin_set_active_ceremony", params: ["p_ceremony_id": id]).execute()
+        }
+    }
+
+    func setCeremonyDates(id: Int, ceremonyAt: Date, ballotLockAt: Date) async throws {
+        try await run {
+            try await client.rpc("admin_set_ceremony_dates", params: CeremonyDatesParams(p_ceremony_id: id, p_ceremony_at: ceremonyAt, p_ballot_lock_at: ballotLockAt)).execute()
+        }
+    }
+
+    func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws {
+        try await run {
+            try await client.rpc("admin_send_push", params: PushParams(p_title: title, p_body: body, p_path: destination.rawValue)).execute()
+        }
+    }
+
     // MARK: - Profile
 
     func profile(userID: String) async throws -> Profile? {

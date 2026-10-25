@@ -28,14 +28,15 @@ struct OscarsTrackerApp: App {
 
     /// The live backend, or (debug builds only) the sample season when launched
     /// with `-sample-data`, for screenshots and demos without an account
-    /// (`-signed-out` too, for the sign-in screen, and `-full-ballot` for all
-    /// 24 categories). `-ballot-stage locked` or `winners` moves the season past
-    /// the lock.
+    /// (`-signed-out` too, for the sign-in screen, `-full-ballot` for all
+    /// 24 categories, and `-admin` for the Admin screen). `-ballot-stage locked`
+    /// or `winners` moves the season past the lock.
     private static func dataSource() -> any AppDataSource {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-sample-data") {
             let data = SampleDataSource(signedIn: !arguments.contains("-signed-out"), fullBallot: arguments.contains("-full-ballot"))
+            data.isAdmin = arguments.contains("-admin")
             switch UserDefaults.standard.string(forKey: "ballot-stage") {
             case "locked": data.passLock()
             case "winners": data.passLock(winners: true)
