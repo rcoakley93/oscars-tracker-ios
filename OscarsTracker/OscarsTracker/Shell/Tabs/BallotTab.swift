@@ -41,7 +41,6 @@ struct BallotTab: View {
                             model.ballotGroup?.id ?? 0
                         } set: { id in
                             navigation.ballotGroupID = id
-                            Task { await model.loadPickShares() }
                         }) {
                             ForEach(model.groups.groups) { Text($0.name).tag($0.id) }
                         }
@@ -50,6 +49,9 @@ struct BallotTab: View {
                 }
             }
             .safeAreaBar(edge: .top) { BallotStatusBar() }
+            // A new choice in the menu, or joining, leaving or deleting the
+            // group shown, reloads (or clears) the "62% picked" lines.
+            .task(id: model.ballotGroup?.id) { await model.loadPickShares() }
             // The Ballot is a task, so its bar actions win over the tab bar
             // when the Duo's outer screen is short of room.
             .prefersToolbarItemsWhenCompressed()
@@ -447,7 +449,9 @@ private struct GroupPickLine: View {
     let category: BallotCategory
 
     var body: some View {
-        if let group = model.ballot.sharesGroup, let top = model.ballot.topShare(for: category) {
+        // Only for the group the Ballot speaks for now, never one you just left.
+        if let group = model.ballot.sharesGroup, group.id == model.ballotGroup?.id,
+           let top = model.ballot.topShare(for: category) {
             Label {
                 Text(copy.groupPicked(top.percent, group.name, top.nominee.title(in: category) ?? "Nominee"))
             } icon: {

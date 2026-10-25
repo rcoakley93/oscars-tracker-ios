@@ -193,12 +193,16 @@ final class SampleDataSource: AppDataSource {
 
     /// Fixed shares to serve instead of the made-up ones.
     var shareRows: [PickShare]?
+    /// How long each group's shares take to arrive, for tests of answers
+    /// that come back out of order.
+    var shareDelays: [Int: Duration] = [:]
 
     /// After the lock, each category's nominees split six members 3, 2, 1
     /// (four in other groups: 2, 1, 1), starting from a different nominee
     /// in each category. Groups you're not in are refused.
     func pickShares(ceremonyID: Int, groupID: Int) async throws -> [PickShare] {
         _ = try requireUser()
+        if let delay = shareDelays[groupID] { try await Task.sleep(for: delay) }
         guard groups.contains(where: { $0.id == groupID }) else { throw AppError.server("Not a member of this group") }
         guard ceremony.isBallotLocked() else { return [] }
         if let shareRows { return shareRows }

@@ -127,6 +127,41 @@ struct BallotResultsTests {
         #expect(store.actionError == nil)
     }
 
+    @Test func aSlowerAnswerForTheOldGroupNeverReplacesTheNewOne() async {
+        let data = lockedData()
+        data.shareDelays = [1: .milliseconds(200)]
+        let store = BallotStore(data: data)
+        await store.load(userID: user)
+        let first = Task { await store.loadShares(ceremonyID: 2, group: data.groups[0]) }
+        await Task.yield()
+        await store.loadShares(ceremonyID: 2, group: data.groups[1])
+        await first.value
+        #expect(store.sharesGroup?.name == "Family pool")
+    }
+
+    @Test func clearingDropsAnAnswerStillOnItsWay() async {
+        let data = lockedData()
+        data.shareDelays = [1: .milliseconds(200)]
+        let store = BallotStore(data: data)
+        await store.load(userID: user)
+        let load = Task { await store.loadShares(ceremonyID: 2, group: data.groups[0]) }
+        await Task.yield()
+        store.clearShares()
+        await load.value
+        #expect(store.sharesGroup == nil)
+        #expect(store.shares.isEmpty)
+    }
+
+    @Test func leavingTheShownGroupMovesTheBallotToTheNextOne() async {
+        let model = await signedIn(lockedData())
+        #expect(model.ballot.sharesGroup?.id == 1)
+        await model.groups.leave(1, userID: user)
+        #expect(model.ballotGroup?.id == 2)
+        // BallotTab reloads on this change (`.task(id: ballotGroup?.id)`).
+        await model.loadPickShares()
+        #expect(model.ballot.sharesGroup?.name == "Family pool")
+    }
+
     @Test func aTieGoesToTheNomineeListedFirst() async throws {
         let data = lockedData()
         data.shareRows = [

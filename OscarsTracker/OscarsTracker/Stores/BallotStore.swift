@@ -16,6 +16,9 @@ final class BallotStore {
     private(set) var shares: [Int: [PickShare]] = [:]
     /// The group `shares` came from.
     private(set) var sharesGroup: PoolGroup?
+    /// Bumped by every share load and clear, so a slower, older answer never
+    /// lands over a newer one.
+    private var sharesRequest = 0
     /// Counts the saves that picked the last category, for the gold dust. It
     /// changes only once the save succeeds, so a rolled-back pick never celebrates.
     private(set) var completions = 0
@@ -79,16 +82,21 @@ final class BallotStore {
     /// Loads what `group` picked. Shares are a garnish, so a failure keeps
     /// what was there and says nothing.
     func loadShares(ceremonyID: Int, group: PoolGroup) async {
+        sharesRequest += 1
+        let request = sharesRequest
         do {
             let rows = try await data.pickShares(ceremonyID: ceremonyID, groupID: group.id)
+            guard request == sharesRequest else { return }
             shares = Dictionary(grouping: rows, by: \.categoryId)
             sharesGroup = group
         } catch {
+            guard request == sharesRequest else { return }
             if sharesGroup?.id != group.id { clearShares() }
         }
     }
 
     func clearShares() {
+        sharesRequest += 1
         shares = [:]
         sharesGroup = nil
     }
