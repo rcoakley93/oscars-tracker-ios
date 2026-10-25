@@ -75,12 +75,11 @@ nonisolated struct ShareCard: Equatable, Sendable {
         let hasWinners = categories.contains { $0.nominations.contains(where: \.isWinner) }
         let lines = categories.map { category -> Line in
             let nominee = picks[category.id].flatMap { id in category.nominations.first { $0.id == id } }
-            let person = nominee?.personName.flatMap { $0.isEmpty ? nil : $0 }
             let winner = category.nominations.first(where: \.isWinner)
             return Line(id: category.id,
                         category: category.name,
-                        pick: nominee.map { person ?? $0.movie?.title ?? "Unknown" },
-                        film: person == nil ? nil : nominee?.movie?.title,
+                        pick: nominee.map { $0.title(in: category) ?? "Unknown" },
+                        film: nominee?.detail(in: category),
                         posterURL: nominee?.movie?.posterUrl,
                         points: category.pointsValue,
                         isCorrect: nominee.flatMap { n in winner.map { $0.id == n.id } })

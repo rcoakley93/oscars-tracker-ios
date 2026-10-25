@@ -460,30 +460,6 @@ private struct GroupPickLine: View {
     }
 }
 
-extension BallotNominee {
-    /// The person for categories that lead with the person, else the film.
-    func title(in category: BallotCategory) -> String? {
-        if category.leadsWithPerson, let person = personName, !person.isEmpty { return person }
-        return movie?.title ?? personName
-    }
-
-    /// The line under the title: the film under the person, or the detail
-    /// (a song, a country) under the film.
-    func detail(in category: BallotCategory) -> String? {
-        let title = title(in: category)
-        let other = category.leadsWithPerson ? movie?.title : personName
-        guard let other, !other.isEmpty, other != title else { return nil }
-        return other
-    }
-
-    /// "Jessie Buckley, in Hamnet" for acting categories, else the film.
-    func spokenName(in category: BallotCategory) -> String {
-        guard let title = title(in: category) else { return "Nominee" }
-        guard let detail = detail(in: category) else { return title }
-        return category.leadsWithPerson ? "\(title), in \(detail)" : "\(title), \(detail)"
-    }
-}
-
 extension BallotCategory {
     /// Stand-ins for the redacted cards while the ballot loads.
     static let placeholders: [BallotCategory] = (1...3).map { id in
