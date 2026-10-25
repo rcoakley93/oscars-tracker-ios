@@ -130,14 +130,14 @@ Paste into App Review Information → Notes. Fill the two placeholders in App St
 > - Push notifications are optional and are asked for from Profile, never at launch.
 > - The app is an independent fan app. It is not affiliated with the Academy of Motion Picture Arts and Sciences. Film data: TMDB. Where-to-watch data: JustWatch. Attribution is in Profile → About.
 > - Support: https://oscarstracker.com/support. Privacy: https://oscarstracker.com/privacy.
-> - Contact for review questions: `<SUPPORT_EMAIL / phone, enter in App Store Connect>`
+> - Contact for review questions: support@oscarstracker.com (phone: `<PHONE, enter in App Store Connect>`)
 
 **Before submitting (user):**
 
 1. Create the demo account in the app (email sign-up), then set `profiles.is_tester = true` for it in the database (P2-13). Check it signs in and sees the rehearsal ceremony. Do not use Apple or Google sign-in for the demo account.
 2. Make sure the rehearsal ceremony's ballot is unlocked on Jan 8 and stays unlocked through review.
 3. Keep the account out of any real group and off the real leaderboard.
-4. Put the contact email and phone in App Review Information, and the real support email on the support page (the page currently has no address, so I left it out of this file too).
+4. Put the contact email (support@oscarstracker.com) and a phone number in App Review Information. The support page and privacy policy already show support@oscarstracker.com.
 
 ## Screenshots
 
