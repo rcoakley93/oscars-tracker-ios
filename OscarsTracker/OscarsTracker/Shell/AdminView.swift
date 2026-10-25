@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Admin (screens.md, 3.10; P6-01): ceremony night from the couch. The
+/// Admin (screens.md, 3.10; P6-01): ceremony night from the couch, with any
+/// open reports at the top (P6-16). The
 /// categories in ceremony order, each a `Menu` of its nominees where one tap
 /// marks the winner, with Undo in the top bar. The ceremony, its seed status
 /// and "Send a push" below. 56 pt rows and no sheets, for one hand.
@@ -10,6 +11,9 @@ struct AdminView: View {
     var body: some View {
         @Bindable var admin = model.admin
         List {
+            if !admin.openReports.isEmpty {
+                ReportsSection()
+            }
             if admin.categories.isEmpty, let error = admin.state.error {
                 ContentUnavailableView {
                     Label("Couldn't load", systemImage: "wifi.exclamationmark")
@@ -45,9 +49,77 @@ struct AdminView: View {
         .safeAreaBar(edge: .top) { UndoBar() }
         .navigationTitle("Admin")
         .navigationBarTitleDisplayMode(.inline)
-        .refreshable { await admin.load() }
-        .task { await admin.load() }
+        .refreshable {
+            await admin.load()
+            await admin.loadReports()
+        }
+        .task {
+            await admin.load()
+            await admin.loadReports()
+        }
         .errorAlert("Couldn't save that", error: $admin.actionError)
+    }
+}
+
+/// Open reports (P6-16), oldest first: what was reported, why, and by whom.
+/// Each row's menu clears the name or dismisses the report; either closes
+/// every open report on the same person or group.
+private struct ReportsSection: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let admin = model.admin
+        Section {
+            ForEach(admin.openReports) { report in
+                Menu {
+                    if !report.targetIsGone, report.currentName != nil {
+                        Button(report.kind == .user ? "Clear username" : "Rename to \"Group \(report.groupId ?? 0)\"",
+                               systemImage: "eraser", role: .destructive) {
+                            Task { await admin.resolve(report, .clearName) }
+                        }
+                    }
+                    Button("Dismiss", systemImage: "xmark") { Task { await admin.resolve(report, .dismiss) } }
+                } label: {
+                    ReportRow(report: report)
+                }
+                .disabled(admin.resolvingReports.contains(report.id))
+                .frame(minHeight: 56)
+            }
+        } header: {
+            Text("Reports · \(admin.openReports.count) open")
+        } footer: {
+            Text("Clearing a username asks its owner for a new one. Act within a day.")
+        }
+    }
+}
+
+private struct ReportRow: View {
+    let report: ContentReport
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+            Label(report.reportedName, systemImage: report.kind == .user ? "person" : "person.3")
+                .font(.headline)
+                .foregroundStyle(.ink)
+            Text(line).font(.subheadline).foregroundStyle(.inkMuted)
+            if let details = report.details {
+                Text(details).font(.footnote).foregroundStyle(.inkMuted).lineLimit(3)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// "Offensive name · from Sam · now Chris2".
+    private var line: String {
+        var parts = [report.reason.title]
+        if let reporter = report.reporterName { parts.append("from \(reporter)") }
+        if report.targetIsGone {
+            parts.append(report.kind == .user ? "account deleted" : "group deleted")
+        } else if report.currentName != report.reportedName {
+            parts.append(report.currentName.map { "now \($0)" } ?? "name cleared")
+        }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -321,6 +393,10 @@ private func adminPreview(_ configure: @escaping (SampleDataSource) -> Void = { 
         data.categories = SampleData.fullBallot
     }
     .preferredColorScheme(.dark)
+}
+
+#Preview("No reports") {
+    adminPreview { $0.reports = [] }.preferredColorScheme(.light)
 }
 
 #Preview("Nothing seeded") {

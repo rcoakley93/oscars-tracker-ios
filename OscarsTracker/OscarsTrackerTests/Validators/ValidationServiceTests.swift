@@ -238,7 +238,7 @@ nonisolated final class ValidationServiceTests: XCTestCase {
     func testInvalidUsername_containsProfanity() {
         let result = ValidationService.validateUsername("fuckuser")
         XCTAssertEqual(result, .containsProfanity)
-        XCTAssertEqual(result.errorMessage, "Username contains inappropriate content.")
+        XCTAssertEqual(result.errorMessage, "That name isn't allowed. Try another.")
     }
 
     @MainActor
@@ -352,7 +352,7 @@ nonisolated final class ValidationServiceTests: XCTestCase {
     func testInvalidGroupName_containsProfanity() {
         let result = ValidationService.validateGroupName("The Shit Show")
         XCTAssertEqual(result, .containsProfanity)
-        XCTAssertEqual(result.errorMessage, "Group name contains inappropriate content.")
+        XCTAssertEqual(result.errorMessage, "That name isn't allowed. Try another.")
     }
 
     @MainActor

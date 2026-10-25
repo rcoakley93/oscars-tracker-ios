@@ -34,7 +34,8 @@ struct OscarsTrackerApp: App {
     /// The live backend, or (debug builds only) the sample season when launched
     /// with `-sample-data`, for screenshots and demos without an account
     /// (`-signed-out` too, for the sign-in screen, `-full-ballot` for all
-    /// 24 categories, `-admin` for the Admin screen, and `-live` for live
+    /// 24 categories, `-admin` for the Admin screen, `-blocked` with Chris
+    /// blocked (P6-16), and `-live` for live
     /// mode on the rehearsal, with Best Picture announced three seconds in;
     /// add `-live-activity` to start the Live Activity a second later).
     /// `-ballot-stage locked` or `winners` moves the season past the lock.
@@ -44,6 +45,9 @@ struct OscarsTrackerApp: App {
         if arguments.contains("-sample-data") {
             let data = SampleDataSource(signedIn: !arguments.contains("-signed-out"), fullBallot: arguments.contains("-full-ballot"))
             data.isAdmin = arguments.contains("-admin")
+            if arguments.contains("-blocked") {
+                data.blocked = [BlockedUser(userId: "u-chris", username: "Chris", avatarUrl: nil, blockedAt: nil)]
+            }
             switch UserDefaults.standard.string(forKey: "ballot-stage") {
             case "locked": data.passLock()
             case "winners": data.passLock(winners: true)
@@ -77,7 +81,7 @@ struct OscarsTrackerApp: App {
 
     /// Opens a tab, a film or a debug gallery from launch arguments, so
     /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
-    /// `-group 1`, `-sheet profile`, `-gallery tokens`.
+    /// `-group 1`, `-sheet profile` (or `report`, `report-group`), `-gallery tokens`.
     private static func openScreenshotRoute(in model: AppModel) {
         let defaults = UserDefaults.standard
         if let tab = defaults.string(forKey: "tab").flatMap(AppNavigation.Tab.init(rawValue:)) {
@@ -94,8 +98,13 @@ struct OscarsTrackerApp: App {
         }
         switch defaults.string(forKey: "sheet") {
         case "profile": model.navigation.sheet = .profile
+<<<<<<< HEAD
         case "recap": model.navigation.sheet = .recap
         case "share": model.navigation.sheet = .shareCard
+=======
+        case "report": model.navigation.sheet = .report(.person(id: "u-chris", name: "Chris"))
+        case "report-group": model.navigation.sheet = .report(.group(id: 2, name: "Family pool"))
+>>>>>>> origin/main
         default: break
         }
         model.navigation.debugGallery = defaults.string(forKey: "gallery")

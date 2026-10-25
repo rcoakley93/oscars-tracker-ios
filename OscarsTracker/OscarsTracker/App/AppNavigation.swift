@@ -26,8 +26,13 @@ final class AppNavigation {
         case search
         /// The ballot or score as an image to share (P6-08).
         case shareCard
+<<<<<<< HEAD
         /// The results recap, after the show (P6-10).
         case recap
+=======
+        /// Report a person or a group (P6-16).
+        case report(ReportTarget)
+>>>>>>> origin/main
 
         var id: String {
             switch self {
@@ -41,7 +46,11 @@ final class AppNavigation {
             case .fillPlan: "fill-plan"
             case .search: "search"
             case .shareCard: "share-card"
+<<<<<<< HEAD
             case .recap: "recap"
+=======
+            case .report(let target): "report-\(target.id)"
+>>>>>>> origin/main
             }
         }
     }

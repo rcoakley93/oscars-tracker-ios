@@ -21,6 +21,8 @@ final class AppModel {
     let admin: AdminStore
     /// Oscar night: winners as they're announced (P6-02).
     let live: LiveStore
+    /// Reports and blocks (guideline 1.2, P6-16).
+    let moderation: ModerationStore
     /// Ceremony night on the Lock Screen and in the Dynamic Island (P6-03).
     let liveActivity: LiveActivityStore
     let navigation = AppNavigation()
@@ -46,6 +48,7 @@ final class AppModel {
         push = PushStore(data: data)
         admin = AdminStore(data: data)
         live = LiveStore(data: data, ballot: ballot)
+        moderation = ModerationStore(data: data)
         liveActivity = LiveActivityStore(data: data)
         admin.onWinnersChanged = { [weak self] in self?.ballot.apply(winners: $0.current, in: $0.categoryID) }
         live.onWinnersSettled = { [weak self] in
@@ -87,7 +90,8 @@ final class AppModel {
             async let profile: Void = profile.load(userID: userID)
             async let push: Void = push.signedIn()
             async let reminders: Void = self.push.loadPreferences(userID: userID)
-            _ = await (plan, groups, profile, push, reminders)
+            async let blocked: Void = moderation.load()
+            _ = await (plan, groups, profile, push, reminders, blocked)
         }
         _ = await (season, films, ballot)
         await loadPickShares()
@@ -246,6 +250,26 @@ final class AppModel {
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
     }
 
+    /// Blocks someone, then reloads the boards and your groups, which the
+    /// server now shows without them.
+    func block(_ userID: String, name: String) async -> Bool {
+        guard await moderation.block(userID, name: name) else { return false }
+        if navigation.selectedPersonID == userID { navigation.selectedPersonID = nil }
+        // Offline, the reload fails and keeps the old boards: drop them from
+        // what's on screen and from the offline copy, so they don't come back.
+        leaderboard.hide(userID)
+        await leaderboard.reload(ceremonyID: season.ceremony?.id)
+        leaderboard.hide(userID)
+        saveSnapshot()
+        return true
+    }
+
+    func unblock(_ userID: String) async {
+        guard await moderation.unblock(userID) else { return }
+        await leaderboard.reload(ceremonyID: season.ceremony?.id)
+        saveSnapshot()
+    }
+
     func signOut() async {
         await push.signingOut()
         await liveActivity.stop()
@@ -274,6 +298,7 @@ final class AppModel {
         leaderboard.reset()
         profile.reset()
         admin.reset()
+        moderation.reset()
         live.stop()
         navigation.reset()
     }
