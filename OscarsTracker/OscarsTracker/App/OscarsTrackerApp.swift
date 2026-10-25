@@ -15,6 +15,10 @@ struct OscarsTrackerApp: App {
                 #endif
                 .task {
                     delegate.model = model
+                    #if DEBUG
+                    // Before start() too, so a slow first load (a busy Mac) can't delay the route.
+                    Self.openScreenshotRoute(in: model)
+                    #endif
                     await model.start()
                     #if DEBUG
                     Self.openScreenshotRoute(in: model)

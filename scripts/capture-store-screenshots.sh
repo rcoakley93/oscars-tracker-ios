@@ -1,6 +1,6 @@
 #!/bin/zsh
 # Captures App Store screenshots from the simulators with the sample season.
-# Usage: scripts/capture-store-screenshots.sh [shot-name ...]   (default: all shots)
+# Usage: [ONLY_SETS="ipad-13 iphone-6.9"] scripts/capture-store-screenshots.sh [shot-name ...]   (default: all sets, all shots)
 # Output: docs/app-store/screenshots/raw/<set>/<nn-name>.png  (PNG, no alpha; raw is gitignored; scripts/frame-store-images.py frames them)
 # Plan and sizes: docs/app-store/submission-checklist.md, "Screenshots".
 set -euo pipefail
@@ -35,6 +35,7 @@ APP="$DD/Build/Products/Debug-iphonesimulator/OscarsTracker.app"
 
 for set in "${SETS[@]}"; do
   IFS='|' read -r name device os size <<<"$set"
+  [[ -n "${ONLY_SETS:-}" && ! " $ONLY_SETS " == *" $name "* ]] && continue
   # Dedicated simulators, so other sessions' booted devices are never touched.
   sim="Store shots $name"
   udid=$(xcrun simctl list devices | grep -F "    $sim (" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/' || true)
@@ -66,6 +67,7 @@ for set in "${SETS[@]}"; do
     (( ok )) && { sleep 2; xcrun simctl io "$udid" screenshot --type=png "$OUT/$name/$id.png" 2>/dev/null; } || echo "WARN $name/$id never showed a real screen"
   done
   xcrun simctl status_bar "$udid" clear
+  xcrun simctl shutdown "$udid" 2>/dev/null || true   # one simulator at a time
   # Verify the pixel size App Store Connect expects.
   for f in "$OUT/$name"/*.png; do
     got=$(sips -g pixelWidth -g pixelHeight "$f" | awk '/pixel/{a[++i]=$2} END{print a[1]"x"a[2]}')
