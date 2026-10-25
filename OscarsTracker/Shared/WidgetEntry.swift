@@ -1,9 +1,10 @@
 import Foundation
+import WidgetKit
 
 /// One moment of a widget's timeline: what it shows from `date` until the
 /// next entry. The provider hands WidgetKit one per local midnight, so the
 /// day count and tonight's film roll over without the app running.
-nonisolated struct WidgetEntry: Equatable, Sendable {
+nonisolated struct WidgetEntry: TimelineEntry, Equatable, Sendable {
     let date: Date
     /// Whole days to the ceremony; nil when there's no ceremony or it's past.
     let daysToCeremony: Int?

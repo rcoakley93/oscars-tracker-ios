@@ -8,5 +8,6 @@ import WidgetKit
 struct OscarsTrackerWidgets: WidgetBundle {
     var body: some Widget {
         CeremonyLiveActivity()
+        CeremonyCountdownWidget()
     }
 }
