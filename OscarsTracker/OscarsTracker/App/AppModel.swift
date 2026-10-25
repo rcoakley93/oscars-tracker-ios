@@ -21,6 +21,8 @@ final class AppModel {
     let admin: AdminStore
     /// Oscar night: winners as they're announced (P6-02).
     let live: LiveStore
+    /// Ceremony night on the Lock Screen and in the Dynamic Island (P6-03).
+    let liveActivity: LiveActivityStore
     let navigation = AppNavigation()
     let connectivity = Connectivity()
     /// Watched toggles and picks made offline, oldest first (P4-11).
@@ -44,10 +46,14 @@ final class AppModel {
         push = PushStore(data: data)
         admin = AdminStore(data: data)
         live = LiveStore(data: data, ballot: ballot)
+        liveActivity = LiveActivityStore(data: data)
         admin.onWinnersChanged = { [weak self] in self?.ballot.apply(winners: $0.current, in: $0.categoryID) }
         live.onWinnersSettled = { [weak self] in
             guard let self else { return }
-            Task { await self.leaderboard.reload(ceremonyID: self.season.ceremony?.id) }
+            Task {
+                await self.leaderboard.reload(ceremonyID: self.season.ceremony?.id)
+                await self.updateLiveActivity()
+            }
         }
         films.onOffline = { [weak self] in self?.enqueue($0) }
         ballot.onOffline = { [weak self] in self?.enqueue($0) }
@@ -87,6 +93,7 @@ final class AppModel {
         await loadPickShares()
         applyPending()
         followLiveMode()
+        await followLiveActivity()
         saveSnapshot()
     }
 
@@ -169,6 +176,7 @@ final class AppModel {
         await ballot.load(userID: session.userID)
         applyPending()
         followLiveMode()
+        await followLiveActivity()
     }
 
     /// Follows winners while `live_mode` is on and someone is signed in,
@@ -177,6 +185,41 @@ final class AppModel {
         guard session.userID != nil, self.season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
         live.start()
         live.catchUp()
+    }
+
+    // MARK: - Live Activity (P6-03)
+
+    /// What the Live Activity shows now.
+    var liveActivityState: CeremonyActivityAttributes.ContentState {
+        LiveActivityStore.state(categories: ballot.categories, picks: ballot.picks, latestCategoryID: live.latestCategoryID,
+                                board: leaderboard.entries(nil), userID: session.userID)
+    }
+
+    /// The hero's "Follow the ceremony" button shows: ceremony night, signed
+    /// in, the flag on and Live Activities allowed.
+    var canFollowCeremony: Bool {
+        session.userID != nil && season.ceremony != nil && liveActivity.canFollow(config: season.config)
+    }
+
+    /// The hero's button: starts the Live Activity.
+    func followCeremony() async {
+        guard let ceremony = season.ceremony, canFollowCeremony else { return }
+        let voice = UserDefaults.standard.string(forKey: Voice.storageKey).flatMap(Voice.init) ?? .host
+        await liveActivity.follow(ceremony: ceremony, voice: voice, state: liveActivityState)
+    }
+
+    /// Picks up running activities and the push-to-start token while the
+    /// flag is on, and brings a running activity up to date.
+    private func followLiveActivity() async {
+        guard session.userID != nil, season.config.isEnabled(AppConfig.liveActivity) else { return }
+        liveActivity.start(ceremonyID: season.ceremony?.id)
+        await liveActivity.sendUnsentTokens()
+        await updateLiveActivity()
+    }
+
+    private func updateLiveActivity() async {
+        guard liveActivity.isFollowing, !ballot.categories.isEmpty else { return }
+        await liveActivity.update(liveActivityState, knowsLatest: live.latestCategoryID != nil)
     }
 
     /// The group the Ballot's "62% of Movies LLC picked Hamnet" lines speak for.
@@ -205,6 +248,7 @@ final class AppModel {
 
     func signOut() async {
         await push.signingOut()
+        await liveActivity.stop()
         if let userID = session.userID { cache.clear(for: userID) }
         await session.signOut()
         clearUserData()
@@ -214,6 +258,7 @@ final class AppModel {
     func deleteAccount(appleAuthorizationCode: String? = nil) async -> Bool {
         let userID = session.userID
         guard await profile.deleteAccount(appleAuthorizationCode: appleAuthorizationCode) else { return false }
+        await liveActivity.stop()
         if let userID { cache.clear(for: userID) }
         session.didDeleteAccount()
         clearUserData()

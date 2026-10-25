@@ -28,6 +28,9 @@ final class LiveStore {
     private(set) var isOn = false
     /// Categories with a winner still to reveal, oldest first.
     private(set) var queue: [Int] = []
+    /// The category that last gained a winner while following, for the Live
+    /// Activity (P6-03).
+    private(set) var latestCategoryID: Int?
     /// Called once a burst of winner changes settles, so the boards reload.
     var onWinnersSettled: (() -> Void)?
 
@@ -107,6 +110,7 @@ final class LiveStore {
         settling = nil
         isOn = false
         queue = []
+        latestCategoryID = nil
         winners = [:]
         revealed = [:]
         touched = []
@@ -168,8 +172,9 @@ final class LiveStore {
             let now = winners[id] ?? []
             if now.isEmpty {
                 queue.removeAll { $0 == id }
-            } else if !now.isSubset(of: revealed[id] ?? []), !queue.contains(id) {
-                queue.append(id)
+            } else if !now.isSubset(of: revealed[id] ?? []) {
+                if !queue.contains(id) { queue.append(id) }
+                latestCategoryID = id
             }
             revealed[id] = now
         }
