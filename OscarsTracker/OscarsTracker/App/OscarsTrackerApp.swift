@@ -98,13 +98,10 @@ struct OscarsTrackerApp: App {
         }
         switch defaults.string(forKey: "sheet") {
         case "profile": model.navigation.sheet = .profile
-<<<<<<< HEAD
         case "recap": model.navigation.sheet = .recap
         case "share": model.navigation.sheet = .shareCard
-=======
         case "report": model.navigation.sheet = .report(.person(id: "u-chris", name: "Chris"))
         case "report-group": model.navigation.sheet = .report(.group(id: 2, name: "Family pool"))
->>>>>>> origin/main
         default: break
         }
         model.navigation.debugGallery = defaults.string(forKey: "gallery")
