@@ -177,6 +177,23 @@ protocol AppDataSource: AnyObject, Sendable {
     /// per ceremony (P6-04); returns how many people it went to.
     func sendNominationsPush(ceremonyID: Int) async throws -> Int
 
+    // Moderation (guideline 1.2, P6-16)
+    func reportUser(_ userID: String, reason: ReportReason, details: String?) async throws
+    /// For a group you're in.
+    func reportGroup(_ groupID: Int, reason: ReportReason, details: String?) async throws
+    /// Hides you from each other on every board and takes them out of the
+    /// groups you created, which they can't join again.
+    func blockUser(_ userID: String) async throws
+    func unblockUser(_ userID: String) async throws
+    /// The people you've blocked, newest first.
+    func blockedUsers() async throws -> [BlockedUser]
+    /// The admin's report queue: open reports first, oldest first, then the
+    /// last resolved ones.
+    func adminReports() async throws -> [ContentReport]
+    /// Closes the report and every other open one on the same person or
+    /// group; returns how many closed.
+    func resolveReport(id: Int, action: ReportAction) async throws -> Int
+
     // Live mode (P6-02)
     /// Nominees whose `is_winner` changes, as it happens (Realtime on
     /// `nominations`, P2-11). Ends when the subscription can't be made;

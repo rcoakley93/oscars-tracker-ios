@@ -236,7 +236,49 @@ final class AdminStore {
         }
     }
 
+    // MARK: - Reports (P6-16)
+
+    /// The report queue: open reports first, oldest first, then the last
+    /// resolved ones.
+    private(set) var reports: [ContentReport] = []
+    private(set) var resolvingReports: Set<Int> = []
+
+    var openReports: [ContentReport] { reports.filter { $0.status == .open } }
+
+    func loadReports() async {
+        do {
+            reports = try await data.adminReports()
+        } catch {
+            actionError = AppError(error)
+        }
+    }
+
+    /// Closes the report, and every other open one on the same person or
+    /// group, at once; puts them back if the server refuses. Clearing a name
+    /// also shows the cleared name.
+    func resolve(_ report: ContentReport, _ action: ReportAction) async {
+        guard !resolvingReports.contains(report.id) else { return }
+        let before = reports
+        let status: ContentReport.Status = action == .dismiss ? .dismissed : .actioned
+        for index in reports.indices where reports[index].id == report.id
+            || (reports[index].status == .open && reports[index].kind == report.kind
+                && reports[index].reportedUserId == report.reportedUserId && reports[index].groupId == report.groupId) {
+            reports[index].status = status
+        }
+        resolvingReports.insert(report.id)
+        defer { resolvingReports.remove(report.id) }
+        do {
+            _ = try await data.resolveReport(id: report.id, action: action)
+            if action == .clearName { await loadReports() }
+        } catch {
+            reports = before
+            actionError = AppError(error)
+        }
+    }
+
     func reset() {
+        reports = []
+        resolvingReports = []
         ceremonies = []
         ceremonyID = nil
         categories = []

@@ -291,7 +291,8 @@ final class SampleDataSource: AppDataSource {
     /// The global board is everyone; Movies LLC the top six; any other group just you.
     func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry] {
         _ = try requireUser()
-        let board = scoredBoard
+        let board = scoredBoard.filter { entry in !blocked.contains { $0.userId == entry.userId } }
+            .enumerated().map { $0.element.ranked($0.offset + 1) }
         switch groupID {
         case nil: return board
         case 1: return Array(board.prefix(6))
@@ -318,7 +319,9 @@ final class SampleDataSource: AppDataSource {
     func boardPerson(ceremonyID: Int, userID: String) async throws -> BoardPerson {
         let me = try requireUser()
         if userID == me { return BoardPerson(watchedMovieIDs: watched, picks: savedPicks) }
-        guard let entry = board.first(where: { $0.userId == userID }) else { throw AppError.server("Not in a group with this person") }
+        guard let entry = board.first(where: { $0.userId == userID }), !blocked.contains(where: { $0.userId == userID }) else {
+            throw AppError.server("Not in a group with this person")
+        }
         let films = Set(movieList.prefix(entry.watchedCount).map(\.id))
         let picks = ceremony.isBallotLocked() ? Dictionary(uniqueKeysWithValues: categories.compactMap { c in c.nominations.first.map { (c.id, $0.id) } }) : [:]
         return BoardPerson(watchedMovieIDs: films, picks: picks)
@@ -500,6 +503,67 @@ final class SampleDataSource: AppDataSource {
         return devices.count
     }
 
+    // MARK: - Moderation
+
+    /// Reports sent, newest last; the admin's queue.
+    var reports: [ContentReport] = SampleData.reports
+    var blocked: [BlockedUser] = []
+
+    func reportUser(_ userID: String, reason: ReportReason, details: String?) async throws {
+        let me = try requireUser()
+        guard userID != me else { throw AppError.server("You can't report yourself") }
+        let name = board.first { $0.userId == userID }?.username ?? "Someone"
+        file(.user, reason: reason, details: details, name: name, userID: userID, groupID: nil)
+    }
+
+    func reportGroup(_ groupID: Int, reason: ReportReason, details: String?) async throws {
+        _ = try requireUser()
+        guard let group = groups.first(where: { $0.id == groupID }) else { throw AppError.server("Nothing to report") }
+        file(.group, reason: reason, details: details, name: group.name, userID: nil, groupID: groupID)
+    }
+
+    private func file(_ kind: ContentReport.Kind, reason: ReportReason, details: String?, name: String, userID: String?, groupID: Int?) {
+        reports.append(ContentReport(id: (reports.map(\.id).max() ?? 0) + 1, kind: kind, reason: reason, details: details,
+                                     reportedName: name, currentName: name, reportedUserId: userID, groupId: groupID,
+                                     reporterName: userProfile?.username, status: .open, createdAt: .now))
+    }
+
+    func blockUser(_ userID: String) async throws {
+        let me = try requireUser()
+        guard userID != me else { throw AppError.server("You can't block yourself") }
+        guard !blocked.contains(where: { $0.userId == userID }) else { return }
+        let name = board.first { $0.userId == userID }?.username
+        blocked.insert(BlockedUser(userId: userID, username: name, avatarUrl: nil, blockedAt: .now), at: 0)
+    }
+
+    func unblockUser(_ userID: String) async throws {
+        _ = try requireUser()
+        blocked.removeAll { $0.userId == userID }
+    }
+
+    func blockedUsers() async throws -> [BlockedUser] {
+        _ = try requireUser()
+        return blocked
+    }
+
+    func adminReports() async throws -> [ContentReport] {
+        try requireAdmin()
+        return reports.filter { $0.status == .open } + reports.filter { $0.status != .open }
+    }
+
+    func resolveReport(id: Int, action: ReportAction) async throws -> Int {
+        try requireAdmin()
+        guard let report = reports.first(where: { $0.id == id }) else { throw AppError.server("Unknown report") }
+        var closed = 0
+        for index in reports.indices where reports[index].id == id
+            || (reports[index].status == .open && reports[index].kind == report.kind
+                && reports[index].reportedUserId == report.reportedUserId && reports[index].groupId == report.groupId) {
+            reports[index].status = action == .dismiss ? .dismissed : .actioned
+            closed += 1
+        }
+        return closed
+    }
+
     // MARK: - Profile
 
     func profile(userID: String) async throws -> Profile? {
@@ -609,6 +673,19 @@ nonisolated enum SampleData {
         item.movie = film(movieID)
         return item
     }
+
+    /// Two open reports on the same person and one on a group, for the admin.
+    static let reports: [ContentReport] = [
+        ContentReport(id: 1, kind: .user, reason: .offensiveName, details: "Not something I want my kids to see.",
+                      reportedName: "Chris", currentName: "Chris", reportedUserId: "u-chris", groupId: nil,
+                      reporterName: "Sam", status: .open, createdAt: Date(timeIntervalSince1970: 1_792_900_000)),
+        ContentReport(id: 2, kind: .user, reason: .harassment, details: nil,
+                      reportedName: "Chris", currentName: "Chris", reportedUserId: "u-chris", groupId: nil,
+                      reporterName: "Priya", status: .open, createdAt: Date(timeIntervalSince1970: 1_792_903_600)),
+        ContentReport(id: 3, kind: .group, reason: .spam, details: nil,
+                      reportedName: "Free tickets here", currentName: "Free tickets here", reportedUserId: nil, groupId: 7,
+                      reporterName: "Jordan", status: .open, createdAt: Date(timeIntervalSince1970: 1_792_907_200)),
+    ]
 
     static let leaderboard: [BoardEntry] = [
         BoardEntry.sample("u-sam", "Sam", watched: 31, rank: 1),

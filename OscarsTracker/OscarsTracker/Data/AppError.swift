@@ -23,6 +23,13 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case offlinePickLocked
     /// An admin call (P6-01) from an account that isn't the admin.
     case adminsOnly
+    /// The server's name filter refused a username or group name (P6-16).
+    case nameNotAllowed
+    /// A name broke the length or character rules on the server.
+    case nameInvalid
+    /// The group's creator blocked you.
+    case blockedFromGroup
+    case tooManyReports
     /// The person closed the Apple or Google sheet: show nothing.
     case cancelled
     case server(String)
@@ -44,6 +51,10 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .linkExpired: "That link has expired or was already used. Ask for a new one."
         case .offlinePickLocked: "A pick you made offline reached us after the ballot locked, so it wasn't saved."
         case .adminsOnly: "Only the admin can do that."
+        case .nameNotAllowed: "That name isn't allowed. Try another."
+        case .nameInvalid: "That name doesn't fit the rules. Try another."
+        case .blockedFromGroup: "You can't join that group."
+        case .tooManyReports: "You've sent a lot of reports today. Try again tomorrow, or email support@oscarstracker.com."
         case .cancelled: ""
         case .server: "Something went wrong on our side. Please try again."
         }
@@ -87,14 +98,19 @@ nonisolated enum AppError: Error, Equatable, Sendable {
 
     /// The `raise exception` messages from supabase/migrations (Phase 1). The
     /// group limits are matched by SQLSTATE (`GRP01` group full, `GRP02` too
-    /// many groups; hints `group_full` and `group_limit`), never by their
-    /// numbers, so the server can change them (P6-07). The message still
-    /// carries the number in use.
+    /// many groups; hints `group_full` and `group_limit`), as are moderation's
+    /// (`GRP03` blocked, `NAM01` and `NAM02` names, `RPT01` reports; P6-16),
+    /// never by their numbers, so the server can change them (P6-07). The
+    /// message still carries the number in use.
     init(serverMessage: String, code: String? = nil, hint: String? = nil) {
         let text = serverMessage.lowercased()
         let limit = text.firstMatch(of: /limit of (\d+)/).flatMap { Int($0.1) }
         if code == "GRP01" || hint == "group_full" { self = .groupFull(limit: limit) }
         else if code == "GRP02" || hint == "group_limit" { self = .tooManyGroups(limit: limit) }
+        else if code == "GRP03" || hint == "blocked" { self = .blockedFromGroup }
+        else if code == "NAM01" || hint == "name_not_allowed" { self = .nameNotAllowed }
+        else if code == "NAM02" || hint == "name_invalid" { self = .nameInvalid }
+        else if code == "RPT01" || hint == "report_limit" { self = .tooManyReports }
         else if text.contains("ballot is locked") { self = .ballotLocked }
         else if text.contains("invalid invite code") { self = .invalidInviteCode }
         else if text.contains("already a member") { self = .alreadyInGroup }

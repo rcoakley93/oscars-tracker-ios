@@ -97,7 +97,7 @@ The questionnaire (as of the Jan 2026 revision, with the 13+, 16+ and 18+ tiers)
 
 Expected result: **4+**. If the user-generated-content answer lifts it, 12+ is still fine for the audience. Film posters can carry R-rated artwork, but the content descriptors above are about the app's own content.
 
-**Guideline 1.2 (user-generated content).** Group names and usernames are the only user text. There is no report or block action in the app today and nothing in the code filters them (`Services/ValidationService.swift` checks shape only). Reviewers do sometimes ask. Options if they do: add "Report" on a group and a member (a `reports` table plus email), or filter names. Not in scope for this draft; flagged for the user.
+**Guideline 1.2 (user-generated content).** Group names and usernames are the only user text (no group descriptions, messages or uploads; avatars come only from Apple or Google at sign-up). Since P6-16 the app has all four things 1.2 asks for: a filter on names when they're chosen (in the app and again on the server), Report on a person or a group, Block on a person, and a published contact (support@oscarstracker.com, oscarstracker.com/support). The terms say there's no tolerance for objectionable content and that reports are reviewed within 24 hours. Reports land in the admin's queue at the top of the Admin screen.
 
 ## Content Rights
 
@@ -128,6 +128,7 @@ Paste into App Review Information → Notes. Fill the two placeholders in App St
 > NOTES
 > - Sign-in options: Sign in with Apple, Google and email and password (guideline 4.8).
 > - Push notifications are optional and are asked for from Profile, never at launch.
+> - User content (guideline 1.2): the only user text is usernames and group names. Both go through a filter when they're chosen, in the app and on our server. Touch and hold anyone on the Board or in a group (or open them and use the ••• menu) to Report or Block them; a group's ••• menu has Report group. Blocking hides you from each other on every board, takes them out of groups you created and stops them joining again; Profile → Blocked people lists them with Unblock. Reports come to us with the name as it was, and we act within 24 hours: we clear the name or remove the account. Our terms (https://oscarstracker.com/terms) say there's no tolerance for objectionable content.
 > - The app is an independent fan app. It is not affiliated with the Academy of Motion Picture Arts and Sciences. Film data: TMDB. Where-to-watch data: JustWatch. Attribution is in Profile → About.
 > - Support: https://oscarstracker.com/support. Privacy: https://oscarstracker.com/privacy.
 > - Contact for review questions: support@oscarstracker.com (phone: `<PHONE, enter in App Store Connect>`)
@@ -136,8 +137,9 @@ Paste into App Review Information → Notes. Fill the two placeholders in App St
 
 1. Create the demo account in the app (email sign-up), then set `profiles.is_tester = true` for it in the database (P2-13). Check it signs in and sees the rehearsal ceremony. Do not use Apple or Google sign-in for the demo account.
 2. Make sure the rehearsal ceremony's ballot is unlocked on Jan 8 and stays unlocked through review.
-3. Keep the account out of any real group and off the real leaderboard.
+3. Keep the account out of any real group and off the real leaderboard. Do put it in one demo group with a second tester account, so the reviewer has someone to report and block.
 4. Put the contact email (support@oscarstracker.com) and a phone number in App Review Information. The support page and privacy policy already show support@oscarstracker.com.
+5. Check the admin's report queue (Admin screen) daily while the app is in review, and act on reports within 24 hours, as the terms promise.
 
 ## Screenshots
 
