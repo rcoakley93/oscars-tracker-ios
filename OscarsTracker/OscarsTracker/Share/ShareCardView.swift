@@ -129,6 +129,11 @@ struct ShareCardView: View {
                 .foregroundStyle(color(for: line))
                 .strikethrough(line.isCorrect == false, color: Self.muted)
                 .lineLimit(1)
+            if let film = line.film {
+                Text(film)
+                    .font(.system(size: 8))
+                    .foregroundStyle(Self.muted).lineLimit(1)
+            }
         }
     }
 

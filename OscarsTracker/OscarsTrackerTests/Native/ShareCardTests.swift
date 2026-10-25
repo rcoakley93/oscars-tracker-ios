@@ -44,7 +44,23 @@ struct ShareCardTests {
         #expect(card.lines.map(\.isCorrect) == [true, false, nil])
         #expect(card.rank == 3)
         #expect(card.rankText?.hasPrefix("#3 of 1") == true)
+        #expect(card.isFinal)
         #expect(card.title == "My final score")
+    }
+
+    @Test func finalOnceEveryCategoryHasAWinner() throws {
+        let card = try #require(ShareCard.make(categories: [category(1, points: 5, winner: 11), category(2, points: 3, winner: 22)],
+                                               picks: [1: 11], seasonName: "99th", username: nil, standing: nil))
+        #expect(card.isFinal)
+        #expect(card.title == "My final score")
+    }
+
+    @Test func partialResultsSayScoreSoFar() throws {
+        let card = try #require(ShareCard.make(categories: [category(1, points: 5, winner: 11), category(2, points: 3)],
+                                               picks: [1: 11], seasonName: "99th", username: nil, standing: nil))
+        #expect(card.kind == .results)
+        #expect(!card.isFinal)
+        #expect(card.title == "My score so far")
     }
 
     @Test func actingCategoriesLeadWithThePerson() throws {

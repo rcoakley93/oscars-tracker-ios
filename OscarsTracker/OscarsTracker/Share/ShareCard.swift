@@ -25,6 +25,8 @@ nonisolated struct ShareCard: Equatable, Sendable {
     }
 
     let kind: Kind
+    /// Every category has a winner, so the score can't change.
+    let isFinal: Bool
     let seasonName: String
     let username: String?
     let lines: [Line]
@@ -52,8 +54,13 @@ nonisolated struct ShareCard: Equatable, Sendable {
             .map { $0 }
     }
 
-    /// "Ballot" or "Final score".
-    var title: String { kind == .ballot ? "My ballot" : "My final score" }
+    /// "My ballot", "My score so far" while winners are coming in, "My final score".
+    var title: String {
+        switch kind {
+        case .ballot: "My ballot"
+        case .results: isFinal ? "My final score" : "My score so far"
+        }
+    }
 
     /// "#3 of 1,204".
     var rankText: String? {
@@ -80,6 +87,7 @@ nonisolated struct ShareCard: Equatable, Sendable {
         }
         let correct = lines.filter { $0.isCorrect == true }
         return ShareCard(kind: hasWinners ? .results : .ballot,
+                         isFinal: categories.allSatisfy { $0.nominations.contains(where: \.isWinner) },
                          seasonName: seasonName,
                          username: username,
                          lines: lines,
