@@ -135,6 +135,14 @@ private struct FilmsGrid: View {
     var open: (Movie) -> Void
     var onWatched: (String) -> Void
 
+    /// Your score and the winners in, once the show has started.
+    private var heroResults: HeroCard.Results? {
+        let ballot = model.ballot
+        guard !ballot.categories.isEmpty else { return nil }
+        let announced = ballot.categories.count { $0.nominations.contains(where: \.isWinner) }
+        return .init(score: ballot.score, announced: announced, categories: ballot.categories.count)
+    }
+
     private nonisolated struct Metrics: Equatable {
         var width: CGFloat = 0
         var fold: CGRect?
@@ -147,10 +155,15 @@ private struct FilmsGrid: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.xl) {
                 if isPlaceholder {
-                    HeroCard(watched: 0, total: Movie.placeholders.count, daysLeft: nil)
+                    HeroCard(watched: 0, total: Movie.placeholders.count)
                     section(copy.toWatchHeading, Movie.placeholders)
                 } else {
-                    HeroCard(watched: films.watchedCount, total: films.movies.count, daysLeft: model.season.daysToCeremony())
+                    TimelineView(.everyMinute) { context in
+                        let now = context.date.addingTimeInterval(model.season.clockOffset)
+                        HeroCard(watched: films.watchedCount, total: films.movies.count,
+                                 phase: model.season.phase(hasNominees: !films.movies.isEmpty, now: now),
+                                 now: now, results: heroResults)
+                    }
                         .goldDust(trigger: films.completions)
                         .moment(.allWatched, trigger: films.completions)
                     section(copy.toWatchHeading, sort.sorted(films.toWatch))

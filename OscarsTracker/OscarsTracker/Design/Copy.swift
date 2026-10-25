@@ -90,6 +90,23 @@ struct Copy {
     /// You're `points` behind `name` on predictions.
     let scoreGap: (_ points: Int, _ name: String) -> String
 
+    // Hero (P6-06): the line under the number follows the season.
+    /// Before nominations: the shortlist teaser; `date` ("Jan 21") when known.
+    let heroTeaser: (_ films: Int, _ date: String?) -> String
+    /// "38 films, 33 days."
+    let heroSeason: (_ days: Int, _ filmsLeft: Int) -> String
+    /// The last seven days: a push to finish.
+    let heroFinalWeek: (_ days: Int, _ filmsLeft: Int) -> String
+    /// `left` is already formatted ("3 hours").
+    let heroLockDay: (_ left: String) -> String
+    /// Locked, waiting for the show; 0 days is the day itself.
+    let heroLocked: (_ days: Int) -> String
+    /// The show is on: winners announced so far.
+    let heroLive: (_ announced: Int, _ total: Int) -> String
+    let heroFollow: String
+    /// After the show; `isFinal` once every winner is in.
+    let heroAfter: (_ isFinal: Bool) -> String
+
     // Season ticker (screens.md, section 2)
     let tickerSeason: (_ days: Int, _ filmsLeft: Int) -> String
     /// The last seven days.
@@ -187,6 +204,20 @@ extension Copy {
         boardEmpty: "No one is on the board yet.",
         boardPredictionsLocked: "Predictions open when the ballot locks.",
         scoreGap: { points, name in "You're \(pointCount(points)) behind \(name)." },
+        heroTeaser: { films, date in
+            "\(Copy.filmCount(films)) on the shortlist" + (date.map { " · Nominations announced \($0)." } ?? ".")
+        },
+        heroSeason: { days, left in
+            left == 0 ? "All films watched · \(Copy.days(days)) to the ceremony." : "\(Copy.filmCount(left)) left · \(Copy.days(days)) to the ceremony."
+        },
+        heroFinalWeek: { days, left in
+            left == 0 ? "Final week · All films watched." : "Final week · \(Copy.filmCount(left)) left in \(Copy.days(days))."
+        },
+        heroLockDay: { left in "Ballot locks in \(left)." },
+        heroLocked: { days in days == 0 ? "The ceremony is today." : "Ballot locked · \(Copy.days(days)) to the ceremony." },
+        heroLive: { announced, total in "\(announced) of \(total) winners announced." },
+        heroFollow: "Follow the ceremony",
+        heroAfter: { isFinal in isFinal ? "Your final score." : "Your score so far." },
         tickerSeason: classicCountdown,
         tickerFinalWeek: classicCountdown,
         tickerLockDay: { left in "Ballot locks in \(left)." },
@@ -284,6 +315,23 @@ extension Copy {
         boardEmpty: "The red carpet's empty. Be the first to arrive.",
         boardPredictionsLocked: "Ballots stay sealed until the lock. No peeking.",
         scoreGap: { points, name in "\(pointCount(points)) behind \(name). It's not over till the last envelope." },
+        heroTeaser: { films, date in
+            "\(Copy.filmCount(films)) on the shortlist. " + (date.map { "Nominations \($0). Get a head start." } ?? "Get a head start.")
+        },
+        heroSeason: { days, left in
+            left == 0 ? "Every film watched, \(Copy.days(days)) early. Smug is allowed."
+                : "\(Copy.filmCount(left)). \(Copy.days(days)). Do the math, or don't."
+        },
+        heroFinalWeek: { days, left in
+            left == 0 ? "Every film watched. Use the week to rehearse your face." :
+                days <= 1 ? "Tomorrow night. \(Copy.filmCount(left)) to go. Iron something."
+                : "\(Copy.days(days)), \(Copy.filmCount(left)). Time to become a morning person."
+        },
+        heroLockDay: { left in "Pens down in \(left). Last call for your ballot." },
+        heroLocked: { days in days == 0 ? "Tonight's the night. Ballot sealed." : "Ballot sealed. \(Copy.days(days)) to go. Watch something." },
+        heroLive: { announced, total in "\(announced) of \(total) envelopes opened. Breathe." },
+        heroFollow: "Follow the ceremony",
+        heroAfter: { isFinal in isFinal ? "Final score. No appeals." : "Score so far. The envelopes aren't done." },
         tickerSeason: { days, left in
             left == 0
                 ? "\(Copy.days(days)). Every film watched. Smug is allowed."
