@@ -38,7 +38,7 @@ struct ModerationTests {
     @Test func blockingHidesThemFromTheBoards() async {
         let data = SampleDataSource()
         let model = AppModel(data: data)
-        await model.refresh()
+        await model.start()
         #expect(model.leaderboard.entries(nil).contains { $0.userId == "u-jordan" })
         model.navigation.selectedPersonID = "u-jordan"
 
@@ -104,7 +104,7 @@ struct ModerationTests {
         let data = SampleDataSource()
         data.blocked = [BlockedUser(userId: "u-sam", username: "Sam", avatarUrl: nil, blockedAt: nil)]
         let model = AppModel(data: data)
-        await model.refresh()
+        await model.start()
         #expect(model.moderation.blocked.map(\.name) == ["Sam"])
         await model.signOut()
         #expect(model.moderation.blocked.isEmpty)
