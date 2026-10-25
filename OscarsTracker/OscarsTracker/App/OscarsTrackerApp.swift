@@ -6,6 +6,10 @@ struct OscarsTrackerApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        FilmsTab.clearCatchUpHidesWatched()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

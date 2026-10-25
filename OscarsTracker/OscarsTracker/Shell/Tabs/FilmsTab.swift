@@ -38,7 +38,7 @@ struct FilmsTab: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @AppStorage("films.mode") private var mode: Mode = .all
     @AppStorage("films.sort") private var sort: Sort = .shortest
-    @AppStorage("films.hidesWatched") private var hidesWatched = false
+    @AppStorage(Self.hidesWatchedKey) private var hidesWatched = false
     /// The last film marked watched, and a counter that tears its stub. The
     /// stub is drawn over the screen, because the tile moves to Watched at once.
     @State private var stubTitle = ""
@@ -52,7 +52,8 @@ struct FilmsTab: View {
             LoadStateView(state: films.state, isEmpty: films.movies.isEmpty, empty: preseason) {
                 switch mode {
                 case .all:
-                    FilmsGrid(sort: sort, hidesWatched: hidesWatched, open: open, onWatched: watched)
+                    FilmsGrid(sort: sort, hidesWatched: hidesWatched, open: open, onWatched: watched,
+                              showWatched: { hidesWatched = false })
                 case .byCategory:
                     FilmsByCategory(open: open, onWatched: watched)
                 }
@@ -107,6 +108,18 @@ struct FilmsTab: View {
         }
     }
 
+    static let hidesWatchedKey = "films.hidesWatched"
+
+    /// Build 182 and earlier: the Board's "Catch up" turned Hide watched on
+    /// and nothing turned it off, so All films lost its Watched section for
+    /// good. Clears it once; after that it's only the toggle's to change.
+    static func clearCatchUpHidesWatched(in defaults: UserDefaults = .standard) {
+        let key = "films.hidesWatched.cleared"
+        guard !defaults.bool(forKey: key) else { return }
+        defaults.removeObject(forKey: hidesWatchedKey)
+        defaults.set(true, forKey: key)
+    }
+
     /// Before nominations: no films yet, with the date when `app_config` has it.
     private var preseason: ContentUnavailableView<Label<Text, Image>, Text?, EmptyView> {
         let empty = copy.filmsPreseason(model.season.config.nominationsAt?.formatted(.dateTime.month(.abbreviated).day()))
@@ -135,6 +148,8 @@ private struct FilmsGrid: View {
     var isPlaceholder = false
     var open: (Movie) -> Void
     var onWatched: (String) -> Void
+    /// Turns Hide watched off, from the note that stands in for the section.
+    var showWatched: () -> Void = {}
 
     /// Your score and the winners in, once the show has started.
     private var heroResults: HeroCard.Results? {
@@ -173,6 +188,12 @@ private struct FilmsGrid: View {
                     GroupComparisonCard()
                     if !hidesWatched {
                         section(copy.watchedHeading, sort.sorted(films.watched))
+                    } else if !films.watched.isEmpty {
+                        // Hidden watched films stay one tap away, not only in the overflow menu.
+                        Button("Show watched films (\(films.watched.count))", systemImage: "eye", action: showWatched)
+                            .buttonStyle(.bordered)
+                            .foregroundStyle(.ink)
+                            .frame(maxWidth: .infinity)
                     }
                 }
             }

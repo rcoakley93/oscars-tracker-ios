@@ -109,6 +109,13 @@ private struct TabChrome: ViewModifier {
         content
             .navigationTitle(title)
             .navigationSubtitle(subtitle ?? model.season.ceremony?.name ?? "")
+            // Large, but beside the toolbar rather than collapsing with the
+            // scroll. A collapsing large title fights a top `safeAreaBar`
+            // (Films, Board, Ballot, Plan): as the title grows back on a flick
+            // to the top, the bar moves down, the scroll view's top inset
+            // grows, the title reads as scrolled and shrinks, and round it
+            // goes, so the header shakes until the scroll settles.
+            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button("Profile", systemImage: "person.crop.circle") {
