@@ -74,6 +74,8 @@ struct AppShell: View {
                 CreateGroupSheet()
             case .search:
                 SearchSheet()
+            case .shareCard:
+                ShareCardSheet()
             }
         }
     }

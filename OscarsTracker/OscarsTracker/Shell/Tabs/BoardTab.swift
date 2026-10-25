@@ -42,6 +42,7 @@ struct BoardTab: View {
                     }
                 }
                 .visibilityPriority(.high)
+                if model.ballot.hasWinners { ShareCardToolbar() }
             }
             .navigationSplitViewColumnWidth(min: 320, ideal: 380)
             .task(id: BoardKey(ceremonyID: model.season.ceremony?.id, groupID: groupID)) {
