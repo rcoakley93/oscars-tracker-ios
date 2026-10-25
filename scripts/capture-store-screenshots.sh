@@ -25,6 +25,8 @@ SHOTS=(
   "05-board|-tab board"
   "06-film|-tab films -movie 3"
   "07-live|-tab ballot -live"
+  "08-share-ballot|-tab ballot -sheet share-card"
+  "09-share-results|-tab board -ballot-stage winners -sheet share-card"
 )
 
 xcodebuild build -project OscarsTracker/OscarsTracker.xcodeproj -scheme OscarsTracker \
