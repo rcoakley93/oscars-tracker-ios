@@ -146,41 +146,50 @@ private struct BallotCards: View {
     var body: some View {
         let ballot = model.ballot
         let locked = model.season.isBallotLocked()
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: Theme.Space.m) {
-                BallotIntro()
-                if isPlaceholder {
-                    ForEach(BallotCategory.placeholders) { CategoryCard(category: $0, isOpen: true, toggle: {}) }
-                } else {
-                    ForEach(ballot.categories) { category in
-                        let picked = ballot.pick(for: category.id) != nil
-                        CategoryCard(category: category,
-                                     isOpen: !picked && !locked && !ballot.hasWinners || opened.contains(category.id)) {
-                            withAnimation(.smooth) {
-                                if opened.contains(category.id) { opened.remove(category.id) } else { opened.insert(category.id) }
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: Theme.Space.m) {
+                    BallotIntro()
+                    if isPlaceholder {
+                        ForEach(BallotCategory.placeholders) { CategoryCard(category: $0, isOpen: true, toggle: {}) }
+                    } else {
+                        ForEach(ballot.categories) { category in
+                            let picked = ballot.pick(for: category.id) != nil
+                            CategoryCard(category: category,
+                                         isOpen: !picked && !locked && !ballot.hasWinners || opened.contains(category.id)) {
+                                withAnimation(.smooth) {
+                                    if opened.contains(category.id) { opened.remove(category.id) } else { opened.insert(category.id) }
+                                }
                             }
+                            .id(category.id)
                         }
-                        .id(category.id)
                     }
                 }
+                .scrollTargetLayout()
+                .padding(.horizontal, Theme.Space.m)
+                .padding(.bottom, Theme.Space.xxl)
             }
-            .scrollTargetLayout()
-            .padding(.horizontal, Theme.Space.m)
-            .padding(.bottom, Theme.Space.xxl)
-        }
-        .scrollPosition(id: $scrolledID, anchor: .top)
-        .overlay { GoldDust(trigger: ballot.completions).allowsHitTesting(false) }
-        .moment(.ballotComplete, trigger: ballot.completions)
-        .onAppear {
-            if scrolledID == nil, let id = model.navigation.selectedCategoryID { scrolledID = id }
-        }
-        .onChange(of: scrolledID) { _, id in
-            if let id { model.navigation.selectedCategoryID = id }
-        }
-        .onChange(of: ballot.picks) { old, new in
-            // A fresh pick in an opened card closes it again.
-            let changed = new.filter { old[$0.key] != $0.value }.map(\.key)
-            withAnimation(.smooth) { opened.subtract(changed) }
+            .scrollPosition(id: $scrolledID, anchor: .top)
+            .overlay { GoldDust(trigger: ballot.completions).allowsHitTesting(false) }
+            .moment(.ballotComplete, trigger: ballot.completions)
+            // A category chosen elsewhere (a notification, search, a link) scrolls
+            // to its card, at launch or while the Ballot is already open. After a
+            // yield, so the lazy cards exist to scroll to.
+            .onChange(of: model.navigation.selectedCategoryID, initial: true) { _, id in
+                guard let id, id != scrolledID else { return }
+                Task {
+                    await Task.yield()
+                    withAnimation(.smooth) { proxy.scrollTo(id, anchor: .top) }
+                }
+            }
+            .onChange(of: scrolledID) { _, id in
+                if let id { model.navigation.selectedCategoryID = id }
+            }
+            .onChange(of: ballot.picks) { old, new in
+                // A fresh pick in an opened card closes it again.
+                let changed = new.filter { old[$0.key] != $0.value }.map(\.key)
+                withAnimation(.smooth) { opened.subtract(changed) }
+            }
         }
     }
 }

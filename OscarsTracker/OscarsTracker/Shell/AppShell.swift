@@ -2,8 +2,8 @@ import SwiftUI
 
 /// The app's chrome (P3-05, P3-10): a tab view with the system's Liquid Glass
 /// tab bar, which minimises on scroll and becomes a sidebar on regular widths
-/// (iPhone Duo inner screen, iPad), the search tab, and the season ticker
-/// above the bar.
+/// (iPhone Duo inner screen, iPad), and the season ticker above the bar.
+/// Search is a sheet from the Films toolbar, so the five tabs fit an iPhone.
 ///
 /// Films, Ballot, Board and Groups are master and detail, so they're split
 /// views: one column on compact widths (iPhone, the Duo's outer screen), two
@@ -31,9 +31,6 @@ struct AppShell: View {
             }
             SwiftUI.Tab("Groups", systemImage: "person.3", value: AppNavigation.Tab.groups) {
                 GroupsTab()
-            }
-            SwiftUI.Tab(value: AppNavigation.Tab.search, role: .search) {
-                SearchTab()
             }
         }
         .tabViewStyle(.sidebarAdaptable)
@@ -74,6 +71,8 @@ struct AppShell: View {
                 JoinGroupSheet(code: code)
             case .createGroup:
                 CreateGroupSheet()
+            case .search:
+                SearchSheet()
             }
         }
     }

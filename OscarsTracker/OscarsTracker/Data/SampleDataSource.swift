@@ -21,7 +21,9 @@ final class SampleDataSource: AppDataSource {
     /// Makes every call fail with this error, to preview error states.
     var failure: AppError?
 
-    init(signedIn: Bool = true, now: Date = .now) {
+    /// `fullBallot` adds the rest of a real ballot's 24 categories, to check
+    /// scrolling and deep links on a long ballot.
+    init(signedIn: Bool = true, fullBallot: Bool = false, now: Date = .now) {
         self.signedIn = signedIn
         ceremony = Ceremony(
             id: 2,
@@ -33,7 +35,7 @@ final class SampleDataSource: AppDataSource {
         )
         movieList = SampleData.movies
         watched = [1, 4, 7]
-        categories = SampleData.categories
+        categories = fullBallot ? SampleData.fullBallot : SampleData.categories
         savedPicks = [1: 103, 2: 201]
         let today = PlanDay.today(now: now)
         planItems = [
@@ -381,6 +383,21 @@ nonisolated enum SampleData {
             BallotNominee(id: 301, movie: film(3), personName: nil, isWinner: false),
         ]),
     ]
+
+    /// The three categories above, then 21 more with the sample films as nominees.
+    static let fullBallot: [BallotCategory] = categories + [
+        "Director", "Actor in a Leading Role", "Actor in a Supporting Role", "Actress in a Supporting Role",
+        "Original Screenplay", "Adapted Screenplay", "International Feature", "Documentary Feature",
+        "Cinematography", "Film Editing", "Production Design", "Costume Design", "Makeup and Hairstyling",
+        "Original Score", "Original Song", "Sound", "Visual Effects", "Casting", "Animated Short",
+        "Live Action Short", "Documentary Short",
+    ].enumerated().map { index, name in
+        let id = index + 4
+        let films = (0..<5).compactMap { film((id + $0 * 3) % movies.count + 1) }
+        return BallotCategory(id: id, name: name, pointsValue: 1, nominations: films.enumerated().map { n, movie in
+            BallotNominee(id: id * 100 + n + 1, movie: movie, personName: nil, isWinner: false)
+        })
+    }
 
     static func planItem(id: Int, movieID: Int, day: PlanDay) -> WatchPlanItem {
         var item = WatchPlanItem(id: id, userId: SampleDataSource.userID, movieId: movieID, plannedDate: day.description, createdAt: nil)

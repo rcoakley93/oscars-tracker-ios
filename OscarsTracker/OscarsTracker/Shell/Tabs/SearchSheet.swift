@@ -1,13 +1,15 @@
 import SwiftUI
 
-/// Search (screens.md, 3.3): films and nominees by name from any tab, over
-/// the data already loaded, no network. Films are film rows (opening one
-/// opens it in Films); people come under their own header ("Jessie Buckley ·
-/// Actress in a Leading Role · Hamnet") and open their category on the
-/// ballot. Before typing, the categories are suggestions.
-struct SearchTab: View {
+/// Search (screens.md, 3.3): films and nominees by name, over the data
+/// already loaded, no network. A sheet from the Films toolbar, so the tab bar
+/// holds the five destinations on an iPhone (P4-14). Films are film rows
+/// (opening one opens it); people come under their own header ("Jessie
+/// Buckley · Actress in a Leading Role · Hamnet") and open their category on
+/// the ballot. Before typing, the categories are suggestions.
+struct SearchSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
+    @FocusState private var isSearching: Bool
 
     var body: some View {
         @Bindable var navigation = model.navigation
@@ -19,8 +21,7 @@ struct SearchTab: View {
                     Section("Categories") {
                         ForEach(results.categories) { category in
                             Button {
-                                navigation.selectedCategoryID = category.id
-                                navigation.tab = .ballot
+                                openBallot(at: category.id)
                             } label: {
                                 Label(category.name, systemImage: "checkmark.seal")
                                     .foregroundStyle(.ink)
@@ -35,10 +36,7 @@ struct SearchTab: View {
                 if !results.films.isEmpty {
                     Section("Films") {
                         ForEach(results.films) { movie in
-                            FilmListRow(movie: movie) {
-                                navigation.selectedMovieID = movie.id
-                                navigation.tab = .films
-                            }
+                            FilmListRow(movie: movie) { open(movie) }
                         }
                     }
                     .listRowBackground(Color.surface)
@@ -47,8 +45,7 @@ struct SearchTab: View {
                     Section("People") {
                         ForEach(results.people, id: \.nominee.id) { result in
                             PersonRow(nominee: result.nominee, category: result.category) {
-                                navigation.selectedCategoryID = result.category.id
-                                navigation.tab = .ballot
+                                openBallot(at: result.category.id)
                             }
                         }
                     }
@@ -65,7 +62,14 @@ struct SearchTab: View {
             .navigationTitle("Search")
             .scrollContentBackground(.hidden)
             .background { AmbientBackground(posters: results.films.compactMap(\.posterUrl)) }
-            .searchable(text: $navigation.searchText, prompt: "Films and nominees")
+            .toolbar {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button("Close", systemImage: "xmark") { navigation.sheet = nil }
+                }
+                .visibilityPriority(.high)
+            }
+            .searchable(text: $navigation.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Films and nominees")
+            .searchFocused($isSearching)
             .searchSuggestions {
                 if results.query.isEmpty {
                     ForEach(model.ballot.categories) { category in
@@ -73,8 +77,22 @@ struct SearchTab: View {
                     }
                 }
             }
-            .searchToolbarBehavior(.minimize)
+            .onAppear { isSearching = true }
         }
+    }
+
+    /// Through Films' selection, so Films shows it as a sheet or in the detail
+    /// column for the size class, and keeps it across a fold.
+    private func open(_ movie: Movie) {
+        model.navigation.sheet = nil
+        model.navigation.tab = .films
+        model.navigation.selectedMovieID = movie.id
+    }
+
+    private func openBallot(at categoryID: Int) {
+        model.navigation.sheet = nil
+        model.navigation.selectedCategoryID = categoryID
+        model.navigation.tab = .ballot
     }
 }
 
@@ -139,19 +157,19 @@ private struct PersonRow: View {
 }
 
 #Preview("Dark") {
-    SearchTab().environment(AppModel.preview()).preferredColorScheme(.dark)
+    SearchSheet().environment(AppModel.preview()).preferredColorScheme(.dark)
 }
 
 #Preview("Light") {
-    SearchTab().environment(AppModel.preview()).preferredColorScheme(.light)
+    SearchSheet().environment(AppModel.preview()).preferredColorScheme(.light)
 }
 
 #Preview("Large text") {
-    SearchTab().environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+    SearchSheet().environment(AppModel.preview()).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
 }
 
 #Preview("Results") {
     let model = AppModel.preview()
     model.navigation.searchText = "a"
-    return SearchTab().environment(model).preferredColorScheme(.dark)
+    return SearchSheet().environment(model).preferredColorScheme(.dark)
 }

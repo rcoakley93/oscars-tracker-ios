@@ -35,7 +35,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -projec
 - Every screen runs on the stores; the old `ViewModels/` and `Views/` are gone (P4-11).
 
 ## Conventions
-- Prefer system components and their iOS 27 behaviour: `TabView` with `Tab` (plus the search tab and the season ticker in `tabViewBottomAccessory`), `NavigationStack` and `NavigationSplitView`, toolbars, sheets with detents, `Menu`, `.buttonStyle(.glass)` and `.glassProminent`, SF Symbols.
+- Prefer system components and their iOS 27 behaviour: `TabView` with five `Tab`s (search is a sheet from the Films toolbar, so the five fit on an iPhone; the season ticker is in `tabViewBottomAccessory`), `NavigationStack` and `NavigationSplitView`, toolbars, sheets with detents, `Menu`, `.buttonStyle(.glass)` and `.glassProminent`, SF Symbols.
 - Custom glass is counted: at most one `glassEffect` element per screen (the hero) plus one `GlassEffectContainer` of chips. Never on list content, never with its own shadow, stroke or highlight. Under Reduce Transparency or Increase Contrast it becomes `solidSurface`.
 - The ambient layer is one `MeshGradient` per screen, behind the scroll view, coloured from the posters on screen; static under Reduce Motion, flat under Reduce Transparency.
 - Every toolbar item has a title and a symbol, sits in a `ToolbarItemGroup` and carries a `visibilityPriority`; sorting and filtering go in `ToolbarOverflowMenu`. On the iPhone Duo's outer display the bars are vertical and items overflow bottom to top.

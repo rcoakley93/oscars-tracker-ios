@@ -7,7 +7,7 @@ import Observation
 @Observable
 final class AppNavigation {
     enum Tab: String, CaseIterable, Identifiable {
-        case films, plan, ballot, board, groups, search
+        case films, plan, ballot, board, groups
         var id: String { rawValue }
     }
 
@@ -22,6 +22,8 @@ final class AppNavigation {
         case reschedule(itemID: Int)
         case whatCanIWatch
         case fillPlan
+        /// Films and nominees by name, from the Films toolbar.
+        case search
 
         var id: String {
             switch self {
@@ -33,6 +35,7 @@ final class AppNavigation {
             case .reschedule(let id): "reschedule-\(id)"
             case .whatCanIWatch: "what-can-i-watch"
             case .fillPlan: "fill-plan"
+            case .search: "search"
             }
         }
     }
@@ -49,7 +52,7 @@ final class AppNavigation {
     /// The person whose picks or watched films the Board shows on wide layouts.
     var selectedPersonID: String?
     var sheet: Sheet?
-    /// The search tab's query, kept across a fold like everything else here.
+    /// The search sheet's query, kept across a fold like everything else here.
     var searchText = ""
     #if DEBUG
     /// A debug gallery opened from launch arguments for screenshots ("tokens", "moments").
@@ -73,7 +76,7 @@ final class AppNavigation {
             tab = .groups
             selectedGroupID = id
         default:
-            if let tab = Tab(rawValue: first), tab != .search { self.tab = tab }
+            if let tab = Tab(rawValue: first) { self.tab = tab }
         }
     }
 

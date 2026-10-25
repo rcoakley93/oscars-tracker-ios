@@ -1,8 +1,8 @@
 # Phase 4 visual QA matrix (P4-14)
 
-Sample data (`-sample-data`), captured Oct 24, 2026 from `main` plus this PR. "large" is `accessibility-large` (SwiftUI `.accessibility2`), dark. Each cell links the shot; half resolution JPEG.
+Sample data (`-sample-data`), recaptured Oct 24, 2026 with the five-tab bar (Search in the Films toolbar). "large" is `accessibility-large` (SwiftUI `.accessibility2`), dark. Each cell links the shot; half resolution JPEG.
 
-| Screen | iPhone 18 Pro (27.0) | Duo outer (27.1) | Duo inner (27.1) | iPad Pro 11" portrait (27.0) | iPad landscape |
+| Screen | iPhone 18 Pro (27.0) | Duo outer (27.1) | Duo inner (27.1): pending | iPad Pro 11" portrait (27.0) | iPad landscape |
 |---|---|---|---|---|---|
 | Films | [dark](films-iphone-dark.jpg) · [light](films-iphone-light.jpg) · [large](films-iphone-large.jpg) | [dark](films-duo-outer-dark.jpg) · [light](films-duo-outer-light.jpg) | — | [dark](films-ipad-dark.jpg) · [light](films-ipad-light.jpg) | [dark](films-ipad-landscape-dark.jpg) |
 | Movie sheet (KPop Demon Hunters) | [dark](movie-iphone-dark.jpg) · [light](movie-iphone-light.jpg) · [large](movie-iphone-large.jpg) | [dark](movie-duo-outer-dark.jpg) · [light](movie-duo-outer-light.jpg) | — | [dark](movie-ipad-dark.jpg) · [light](movie-ipad-light.jpg) | [dark](movie-ipad-landscape-dark.jpg) |
@@ -13,13 +13,13 @@ Sample data (`-sample-data`), captured Oct 24, 2026 from `main` plus this PR. "l
 | Profile | [dark](profile-iphone-dark.jpg) · [light](profile-iphone-light.jpg) · [large](profile-iphone-large.jpg) | [dark](profile-duo-outer-dark.jpg) · [light](profile-duo-outer-light.jpg) | — | [dark](profile-ipad-dark.jpg) · [light](profile-ipad-light.jpg) | [dark](profile-ipad-landscape-dark.jpg) |
 | Sign-in | [dark](signin-iphone-dark.jpg) · [light](signin-iphone-light.jpg) · [large](signin-iphone-large.jpg) | [dark](signin-duo-outer-dark.jpg) · [light](signin-duo-outer-light.jpg) | — | [dark](signin-ipad-dark.jpg) · [light](signin-ipad-light.jpg) | [dark](signin-ipad-landscape-dark.jpg) |
 
-Duo inner: pending the Simulator unfold (Device Hub's fold control can't be driven from the command line). The P3-11 inner set is in [`../p3-11/`](../p3-11/).
+**Duo inner: pending: needs the Simulator unfolded in Device Hub.** There's no supported command-line fold control. Meanwhile, the P3-11 inner-display shots of the same screens are in [`../p3-11/`](../p3-11/) (`inner-*-dark.jpg`, `inner-*-light.jpg`).
 
 ## Findings for review
 
-1. **iPhone tab bar overflows into More.** On the iPhone 18 Pro (27.0), five tabs plus Search don't fit, so the system shows Films, Plan, Ballot, Board and **More**, with Groups and Search inside More. Groups' detail then shows two back buttons (More's and the split view's): see [groups-iphone-dark](groups-iphone-dark.jpg). The Duo outer display (vertical bar) and iPad (top bar) show all six. `screens.md` asks for five tabs plus the search tab, so this needs a design call (for example, Groups inside Board, or Search as a toolbar button).
+1. **iPhone tab bar overflowed into More (fixed).** Five tabs plus a search tab didn't fit an iPhone, so Groups and Search sat under More, and Groups' detail showed two back buttons. Search is now a sheet from a Films toolbar button, so the five tabs fit everywhere and Groups has one back button.
 2. **Notification taps crashed the app (fixed here).** Tapping any notification closed the app: the `nonisolated async` `didReceive` returned to UIKit off the main thread. Build `testflight/2026-10-24.2` has this bug; the next build has the fix.
-3. **Compact Ballot and `/category/<id>`.** A push or link to a category opens the Ballot tab on the iPhone but doesn't scroll to or open that category when every card fits on screen (sample data has three). Worth rechecking with the full 24-category ballot.
+3. **Compact Ballot didn't scroll to a category (fixed).** A push, link or search result for a category opened the Ballot but stayed at the top. Checked with `-full-ballot` (24 categories): launch at category 15, a push to `/category/19` from Films, and a push to `/category/13` with the Ballot open all land on their card now.
 
 ## iPad: rotation, Split View and Stage Manager widths
 
@@ -44,13 +44,13 @@ Excused in the audit, on purpose: the season ticker and the ballot status bar st
 
 ## Notification tap routing
 
-`xcrun simctl push` with send-push's payload (`{"aps": {"alert": …}, "path": …}`) on the iPhone 18 Pro, app in the background, banner tapped. Every path send-push accepts lands on its screen: [proof sheet](push-routing-iphone.jpg).
+`xcrun simctl push` with send-push's payload (`{"aps": {"alert": …}, "path": …}`) on the iPhone 18 Pro, app in the background, banner tapped. Every path send-push accepts lands on its screen: [proof sheet](push-routing-iphone.jpg) (taken before the tab bar change, so it still shows More).
 
 | path | Lands on |
 |---|---|
 | `/films`, `/plan`, `/ballot`, `/board`, `/groups` | That tab |
 | `/movie/3` | The film's sheet over the current tab |
-| `/category/2` | Ballot tab (see finding 3) |
+| `/category/2` | Ballot tab, scrolled to the category (see finding 3) |
 | `/group/2` | Groups, that group's detail |
 | `/` | The app as it was |
 
@@ -58,4 +58,4 @@ A banner tapped with the app open (the `willPresent` path) routes the same way.
 
 ## How to recapture
 
-Debug builds take `-sample-data`, `-signed-out`, `-appearance light|dark`, `-tab`, `-movie`, `-category`, `-group` and `-sheet profile`. The iPad and Duo simulators ignore `simctl ui appearance`, hence `-appearance`.
+Debug builds take `-sample-data`, `-signed-out`, `-full-ballot`, `-appearance light|dark`, `-tab`, `-movie`, `-category`, `-group` and `-sheet profile`. The iPad and Duo simulators ignore `simctl ui appearance`, hence `-appearance`.
