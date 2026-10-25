@@ -24,6 +24,8 @@ final class AppNavigation {
         case fillPlan
         /// Films and nominees by name, from the Films toolbar.
         case search
+        /// The ballot or score as an image to share (P6-08).
+        case shareCard
 
         var id: String {
             switch self {
@@ -36,6 +38,7 @@ final class AppNavigation {
             case .whatCanIWatch: "what-can-i-watch"
             case .fillPlan: "fill-plan"
             case .search: "search"
+            case .shareCard: "share-card"
             }
         }
     }

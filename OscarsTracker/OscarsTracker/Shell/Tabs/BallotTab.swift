@@ -37,6 +37,7 @@ struct BallotTab: View {
             // The Ballot is a task, so its bar actions win over the tab bar
             // when the Duo's outer screen is short of room.
             .prefersToolbarItemsWhenCompressed()
+            .toolbar { ShareCardToolbar() }
             .navigationSplitViewColumnWidth(min: 320, ideal: 360)
             .errorAlert("Couldn't save your pick", error: $ballot.actionError)
         } detail: {
