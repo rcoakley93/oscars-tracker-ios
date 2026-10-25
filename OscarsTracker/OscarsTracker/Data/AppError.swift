@@ -20,6 +20,8 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case linkExpired
     /// A pick made offline reached the server after the lock.
     case offlinePickLocked
+    /// An admin call (P6-01) from an account that isn't the admin.
+    case adminsOnly
     /// The person closed the Apple or Google sheet: show nothing.
     case cancelled
     case server(String)
@@ -39,6 +41,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .weakPassword: "Use at least 8 characters, with a lowercase letter, an uppercase letter and a number."
         case .linkExpired: "That link has expired or was already used. Ask for a new one."
         case .offlinePickLocked: "A pick you made offline reached us after the ballot locked, so it wasn't saved."
+        case .adminsOnly: "Only the admin can do that."
         case .cancelled: ""
         case .server: "Something went wrong on our side. Please try again."
         }
@@ -90,6 +93,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         else if text.contains("maximum limit of 12 members") { self = .groupFull }
         else if text.contains("maximum limit of 5 groups") { self = .tooManyGroups }
         else if text.contains("not authenticated") { self = .notSignedIn }
+        else if text.contains("admins only") { self = .adminsOnly }
         else { self = .server(serverMessage) }
     }
 }

@@ -7,6 +7,15 @@ nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     let pointsValue: Int
     let nominations: [BallotNominee]
 
+    /// The same category with `winners` as its winners and nobody else.
+    func withWinners(_ winners: Set<Int>) -> BallotCategory {
+        BallotCategory(id: id, name: name, pointsValue: pointsValue, nominations: nominations.map {
+            BallotNominee(id: $0.id, movie: $0.movie, personName: $0.personName, isWinner: winners.contains($0.id))
+        })
+    }
+
+    var winnerIDs: Set<Int> { Set(nominations.filter(\.isWinner).map(\.id)) }
+
     /// Acting categories lead with the person and show the film underneath.
     var leadsWithPerson: Bool {
         nominations.contains { !($0.personName ?? "").isEmpty }
@@ -81,6 +90,23 @@ protocol AppDataSource: AnyObject, Sendable {
     func registerDevice(token: String, environment: PushEnvironment) async throws
     /// Forgets this device, at sign-out.
     func removeDevice(token: String) async throws
+
+    // Admin (P6-01). For `Profile.isAdmin` only: the server refuses everyone else.
+    /// Every ceremony with its seed counts, newest first.
+    func adminStatus() async throws -> [AdminCeremony]
+    /// A ceremony's categories in the order they're announced.
+    func adminBallot(ceremonyID: Int) async throws -> [BallotCategory]
+    /// Marks a nominee as its category's winner, replacing any other unless
+    /// `tie`; returns the category's winners.
+    func setWinner(nominationID: Int, tie: Bool) async throws -> Set<Int>
+    func clearWinners(categoryID: Int) async throws
+    /// Sets a category's winners to exactly `nominationIDs` in one write (an
+    /// empty set clears them); returns the category's winners.
+    func setWinners(categoryID: Int, nominationIDs: Set<Int>) async throws -> Set<Int>
+    func setActiveCeremony(id: Int) async throws
+    func setCeremonyDates(id: Int, ceremonyAt: Date, ballotLockAt: Date) async throws
+    /// A push to every device, through send-push.
+    func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws
 
     // Profile
     func profile(userID: String) async throws -> Profile?
