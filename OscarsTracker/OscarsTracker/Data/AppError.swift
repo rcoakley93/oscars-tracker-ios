@@ -23,6 +23,8 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case offlinePickLocked
     /// An admin call (P6-01) from an account that isn't the admin.
     case adminsOnly
+    /// Live Activities are switched off for the app in Settings (P6-03).
+    case liveActivitiesOff
     /// The person closed the Apple or Google sheet: show nothing.
     case cancelled
     case server(String)
@@ -44,6 +46,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .linkExpired: "That link has expired or was already used. Ask for a new one."
         case .offlinePickLocked: "A pick you made offline reached us after the ballot locked, so it wasn't saved."
         case .adminsOnly: "Only the admin can do that."
+        case .liveActivitiesOff: "Live Activities are off for Oscars Tracker. Turn them on in Settings."
         case .cancelled: ""
         case .server: "Something went wrong on our side. Please try again."
         }
