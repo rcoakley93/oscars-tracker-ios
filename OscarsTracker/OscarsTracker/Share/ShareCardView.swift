@@ -162,11 +162,11 @@ struct ShareCardView: View {
             // Whoever sees the card can tell where it came from and find it.
             HStack(spacing: 8) {
                 Image("BrandLogo").resizable().scaledToFit().frame(width: 36, height: 36)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("Oscars Tracker").font(.playfair(18)).foregroundStyle(Self.gold)
-                    Text("Free on the App Store").font(.system(size: 9, weight: .medium)).tracking(0.4)
-                        .foregroundStyle(Self.cream)
-                }
+                Text("Oscars Tracker").font(.playfair(18)).foregroundStyle(Self.gold)
+                // Apple's official badge, unaltered, with clear space of at
+                // least a quarter of its height (App Store marketing guidelines).
+                Image("AppStoreBadge").resizable().scaledToFit().frame(height: 28)
+                    .padding(.leading, 10)
             }
             Text("Posters and film data from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.")
                 .font(.system(size: 5.5)).foregroundStyle(Self.muted).multilineTextAlignment(.center)
