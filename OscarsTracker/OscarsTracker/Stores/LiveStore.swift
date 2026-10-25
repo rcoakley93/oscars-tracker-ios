@@ -42,6 +42,8 @@ final class LiveStore {
     private var revealed: [Int: Set<Int>] = [:]
     private var touched: Set<Int> = []
     private var listening: Task<Void, Never>?
+    /// Tells a finished subscription from the one that replaced it.
+    private var subscription = 0
     private var settling: Task<Void, Never>?
 
     init(data: any AppDataSource, ballot: BallotStore, settleDelay: Duration = .milliseconds(400)) {
@@ -72,25 +74,33 @@ final class LiveStore {
 
     // MARK: - Following
 
-    /// Starts following winners from what the ballot holds now. Does nothing
-    /// if it's already on.
+    /// Starts following winners from what the ballot holds now. Once on,
+    /// it only resubscribes if the last subscription ended (it couldn't be
+    /// made, or dropped for good), keeping the winners it has heard.
     func start() {
-        guard !isOn else { return }
-        isOn = true
-        for category in ballot.categories where winners[category.id] == nil {
-            winners[category.id] = category.winnerIDs
-            revealed[category.id] = category.winnerIDs
+        if !isOn {
+            isOn = true
+            for category in ballot.categories where winners[category.id] == nil {
+                winners[category.id] = category.winnerIDs
+                revealed[category.id] = category.winnerIDs
+            }
         }
+        guard listening == nil else { return }
+        subscription += 1
+        let current = subscription
         let updates = data.winnerUpdates()
         listening = Task { [weak self] in
             for await update in updates {
                 self?.receive(update)
             }
+            // Ended: the next refresh or return to the foreground subscribes again.
+            if self?.subscription == current { self?.listening = nil }
         }
     }
 
     /// Stops following and forgets the queue (the flag went off, or sign-out).
     func stop() {
+        subscription += 1
         listening?.cancel()
         settling?.cancel()
         listening = nil

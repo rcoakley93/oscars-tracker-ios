@@ -163,8 +163,8 @@ final class AppModel {
         async let push: Void = push.refresh()
         _ = await (season, push)
         await loadPickShares()
-        guard live.isOn else { return followLiveMode() }
-        // Winners missed while the app was away.
+        guard session.userID != nil, self.season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
+        // Winners missed while the app was away, or announced before live mode came on.
         await ballot.load(userID: session.userID)
         applyPending()
         followLiveMode()
@@ -173,7 +173,7 @@ final class AppModel {
     /// Follows winners while `live_mode` is on and someone is signed in,
     /// and plays the ones a reload found that Realtime didn't deliver.
     private func followLiveMode() {
-        guard session.userID != nil, season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
+        guard session.userID != nil, self.season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
         live.start()
         live.catchUp()
     }

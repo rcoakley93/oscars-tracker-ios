@@ -126,6 +126,22 @@ struct LiveModeTests {
         #expect(live.queue == [1])
     }
 
+    @Test func aSubscriptionThatEndsIsMadeAgainOnTheNextStart() async {
+        let data = SampleDataSource()
+        let ballot = BallotStore(data: data)
+        await ballot.load(userID: SampleDataSource.userID)
+        let live = LiveStore(data: data, ballot: ballot, settleDelay: .zero)
+        // The first subscription can't be made, so its stream ends at once.
+        data.failure = .offline
+        live.start()
+        try? await Task.sleep(for: .milliseconds(100))
+        data.failure = nil
+        live.start()
+        data.announce([103], inCategory: 1)
+        await until { ballot.categories.first { $0.id == 1 }?.winnerIDs == [103] }
+        #expect(ballot.categories.first { $0.id == 1 }?.winnerIDs == [103])
+    }
+
     @Test func offIgnoresUpdates() async {
         let (live, ballot) = await store()
         live.stop()
@@ -188,6 +204,16 @@ struct LiveModeTests {
         data.config.featureFlags[AppConfig.liveMode] = false
         await model.refresh()
         #expect(!model.live.isOn)
+    }
+
+    @Test func theFlagComingOnWhileAwayReloadsTheBallot() async {
+        let (model, data) = await model(live: false)
+        data.config.featureFlags[AppConfig.liveMode] = true
+        // Announced while the app was in the background, before anyone listened.
+        data.announce([104], inCategory: 1)
+        await model.foreground()
+        #expect(model.live.isOn)
+        #expect(model.ballot.categories.first { $0.id == 1 }?.winnerIDs == [104])
     }
 
     @Test func signingOutStopsIt() async {
