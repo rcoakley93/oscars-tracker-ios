@@ -125,10 +125,12 @@ Paste into App Review Information → Notes. Fill the two placeholders in App St
 > 4. Groups tab: create a group or join one with an invite code.
 > 5. Profile (person icon, top right): sign out, change voice, and Delete account (Profile → scroll to the bottom → Delete account → confirm). Deletion removes the account, picks, watched films, plan and created groups.
 >
+> MODERATION (guideline 1.2)
+> The only user text is usernames and group names. Both go through a filter when they're chosen, in the app and on our server. Touch and hold anyone on the Board or in a group (or open them and use the ••• menu) to Report or Block them; a group's ••• menu has Report group. Blocking hides you from each other on every board, takes them out of groups you created and stops them joining again; Profile → Blocked people lists them with Unblock. Reports come to us with the name as it was, and we act within 24 hours: we clear the name or remove the account. Our terms (https://oscarstracker.com/terms) say there's no tolerance for objectionable content.
+>
 > NOTES
 > - Sign-in options: Sign in with Apple, Google and email and password (guideline 4.8).
 > - Push notifications are optional and are asked for from Profile, never at launch.
-> - User content (guideline 1.2): the only user text is usernames and group names. Both go through a filter when they're chosen, in the app and on our server. Touch and hold anyone on the Board or in a group (or open them and use the ••• menu) to Report or Block them; a group's ••• menu has Report group. Blocking hides you from each other on every board, takes them out of groups you created and stops them joining again; Profile → Blocked people lists them with Unblock. Reports come to us with the name as it was, and we act within 24 hours: we clear the name or remove the account. Our terms (https://oscarstracker.com/terms) say there's no tolerance for objectionable content.
 > - The app is an independent fan app. It is not affiliated with the Academy of Motion Picture Arts and Sciences. Film data: TMDB. Where-to-watch data: JustWatch. Attribution is in Profile → About.
 > - Support: https://oscarstracker.com/support. Privacy: https://oscarstracker.com/privacy.
 > - Contact for review questions: support@oscarstracker.com (phone: `<PHONE, enter in App Store Connect>`)
@@ -194,3 +196,21 @@ On the simulator (iPhone 18 Pro, iOS 27.0, `-sample-data` build from this branch
 Before submission (user): delete a throwaway email account and a throwaway Apple account against the real backend on TestFlight, and confirm in Supabase that the user, profile, picks and groups are gone. If the Apple path fails on a device, check that `revoke-apple` has the Sign in with Apple key configured.
 
 Not found, worth a look: the support and privacy pages should repeat the deletion steps (P5-02 says they will).
+
+## What's New (version 2.0, or the number chosen; 4000 max)
+
+> Oscars Tracker is now a native app, rebuilt for iPhone and iPad.
+>
+> - Watch the nominees, mark what you've seen and plan your viewing by the day.
+> - Make your picks and change them until the ballot locks.
+> - Start a group and see who's ahead.
+> - On the night, winners appear as they're announced.
+> - Reminders for the ballot lock and results, only if you turn them on.
+> - Choose the Host or Classic voice in Profile.
+> - You can report and block people and report groups, and delete your account from Profile.
+
+Check before pasting: cut any line for a feature that did not ship by Jan 8 (live mode, reminders, plan filler, report and block). Voice rules applied: short sentences, sentence case, digits, no jokes about people.
+
+## Final review notes status
+
+The review notes above are the final text. Remaining placeholders: demo email and password, and phone. Never commit credentials.
