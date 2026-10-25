@@ -15,6 +15,10 @@ struct OscarsTrackerApp: App {
                 #endif
                 .task {
                     delegate.model = model
+                    #if DEBUG
+                    // Before start() too, so a slow first load (a busy Mac) can't delay the route.
+                    Self.openScreenshotRoute(in: model)
+                    #endif
                     await model.start()
                     #if DEBUG
                     Self.openScreenshotRoute(in: model)
@@ -83,7 +87,8 @@ struct OscarsTrackerApp: App {
 
     /// Opens a tab, a film or a debug gallery from launch arguments, so
     /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
-    /// `-group 1`, `-sheet profile` (or `report`, `report-group`), `-gallery tokens`.
+    /// `-group 1`, `-sheet profile` (or `report`, `report-group`, `share-card`, the
+    /// results card with `-ballot-stage winners`), `-gallery tokens`.
     private static func openScreenshotRoute(in model: AppModel) {
         let defaults = UserDefaults.standard
         if let tab = defaults.string(forKey: "tab").flatMap(AppNavigation.Tab.init(rawValue:)) {
@@ -100,6 +105,7 @@ struct OscarsTrackerApp: App {
         }
         switch defaults.string(forKey: "sheet") {
         case "profile": model.navigation.sheet = .profile
+        case "share-card": model.navigation.sheet = .shareCard
         case "report": model.navigation.sheet = .report(.person(id: "u-chris", name: "Chris"))
         case "report-group": model.navigation.sheet = .report(.group(id: 2, name: "Family pool"))
         default: break
