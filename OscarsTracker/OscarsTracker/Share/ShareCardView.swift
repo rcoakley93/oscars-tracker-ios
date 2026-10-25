@@ -27,6 +27,13 @@ private enum PlayfairDisplay {
 /// your picks and, once winners are in, your wins and score.
 struct ShareCardView: View {
     static let size = CGSize(width: 360, height: 640)
+    #if DEBUG
+    /// Off for App Store captures (`-store-shots`): store images can't show
+    /// another marketplace's logo, and that includes Apple's own badge.
+    static let showsStoreBadge = !ProcessInfo.processInfo.arguments.contains("-store-shots")
+    #else
+    static let showsStoreBadge = true
+    #endif
 
     let card: ShareCard
     /// Posters by URL string, loaded before the card is drawn (an
@@ -165,8 +172,10 @@ struct ShareCardView: View {
                 Text("Oscars Tracker").font(.playfair(18)).foregroundStyle(Self.gold)
                 // Apple's official badge, unaltered, with clear space of at
                 // least a quarter of its height (App Store marketing guidelines).
-                Image("AppStoreBadge").resizable().scaledToFit().frame(height: 28)
-                    .padding(.leading, 10)
+                if Self.showsStoreBadge {
+                    Image("AppStoreBadge").resizable().scaledToFit().frame(height: 28)
+                        .padding(.leading, 10)
+                }
             }
             Text("Posters and film data from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.")
                 .font(.system(size: 5.5)).foregroundStyle(Self.muted).multilineTextAlignment(.center)

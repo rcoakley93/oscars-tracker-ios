@@ -197,6 +197,31 @@ final class SampleDataSource: AppDataSource {
         }
     }
 
+    /// Sample films whose posters don't suit a 4+ store image (a gun aimed,
+    /// a face dripping like a wound, a skull in hand).
+    static let storeUnsafeFilms: Set<Int> = [2, 5, 7]
+
+    /// The season for App Store captures (`-store-shots`): the same story with
+    /// the films above left out of the season (films, ballot, plan, everyone's
+    /// watched lists), so no screen can show their posters. The posters
+    /// themselves are untouched.
+    func useStoreSafeSeason() {
+        let unsafe = Self.storeUnsafeFilms
+        movieList.removeAll { unsafe.contains($0.id) }
+        watched = [1, 4, 6]
+        categories = categories.map { category in
+            BallotCategory(id: category.id, name: category.name, pointsValue: category.pointsValue,
+                           nominations: category.nominations.filter { !unsafe.contains($0.movie?.id ?? 0) },
+                           displayMode: category.displayMode)
+        }
+        savedPicks[1] = 104  // Sentimental Value, not Sinners
+        let swaps = [2: 8, 5: 9]  // Frankenstein and Sinners leave the plan for It Was Just an Accident and Marty Supreme
+        planItems = planItems.map { item in
+            guard let movieID = swaps[item.movieId], let day = PlanDay(item.plannedDate) else { return item }
+            return SampleData.planItem(id: item.id, movieID: movieID, day: day)
+        }
+    }
+
     /// Fixed shares to serve instead of the made-up ones.
     var shareRows: [PickShare]?
     /// How long each group's shares take to arrive, for tests of answers

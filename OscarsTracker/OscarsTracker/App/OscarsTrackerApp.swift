@@ -49,6 +49,8 @@ struct OscarsTrackerApp: App {
     /// mode on the rehearsal, with Best Picture announced three seconds in;
     /// add `-live-activity` to start the Live Activity a second later).
     /// `-ballot-stage locked` or `winners` moves the season past the lock.
+    /// `-store-shots` is for App Store captures: posters that don't suit a 4+
+    /// store image stay off screen, and share cards leave off the App Store badge.
     private static func dataSource() -> any AppDataSource {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
@@ -58,6 +60,8 @@ struct OscarsTrackerApp: App {
             if arguments.contains("-blocked") {
                 data.blocked = [BlockedUser(userId: "u-chris", username: "Chris", avatarUrl: nil, blockedAt: nil)]
             }
+            let storeShots = arguments.contains("-store-shots")
+            if storeShots { data.useStoreSafeSeason() }
             switch UserDefaults.standard.string(forKey: "ballot-stage") {
             case "locked": data.passLock()
             case "winners": data.passLock(winners: true)
@@ -69,7 +73,7 @@ struct OscarsTrackerApp: App {
                 data.config.featureFlags[AppConfig.liveActivity] = arguments.contains("-live-activity")
                 Task {
                     try? await Task.sleep(for: .seconds(3))
-                    data.announce([103], inCategory: 1)
+                    data.announce([storeShots ? 104 : 103], inCategory: 1)
                 }
             }
             return data

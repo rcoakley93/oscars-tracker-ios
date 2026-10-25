@@ -1,6 +1,7 @@
 #!/bin/zsh
 # Captures App Store screenshots from the simulators with the sample season.
 # Usage: [ONLY_SETS="ipad-13 iphone-6.9"] scripts/capture-store-screenshots.sh [shot-name ...]   (default: all sets, all shots)
+# -store-shots keeps posters unfit for a 4+ store image off screen and the App Store badge off share cards.
 # Output: docs/app-store/screenshots/raw/<set>/<nn-name>.png  (PNG, no alpha; raw is gitignored; scripts/frame-store-images.py frames them)
 # Plan and sizes: docs/app-store/submission-checklist.md, "Screenshots".
 set -euo pipefail
@@ -53,7 +54,7 @@ for set in "${SETS[@]}"; do
     id=${shot%%|*}; args=${shot#*|}
     [[ $# -gt 0 && ! " $* " == *" $id "* ]] && continue
     xcrun simctl terminate "$udid" $BUNDLE 2>/dev/null || true
-    xcrun simctl launch "$udid" $BUNDLE -sample-data ${=args} >/dev/null
+    xcrun simctl launch "$udid" $BUNDLE -sample-data -store-shots ${=args} >/dev/null
     # Wait for a real screen, not a splash or a black frame (the ambient MeshGradient
     # drifts, so frames are never byte-identical). Live mode announces at +3 s and the
     # reveal runs about 3 s more; a busy Mac is slower, so the checks are generous.

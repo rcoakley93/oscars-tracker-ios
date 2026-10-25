@@ -2,7 +2,7 @@
 
 Status: **draft for review** (Oct 24, 2026). Claude drafted it; the user reviews it and enters it in App Store Connect (P6-12 submits, target Jan 8, 2027). Voice follows the backend's `docs/design/voice.md`: Host-flavoured, short sentences, sentence case, digits for numbers, no jokes about real people. Store copy is the one place the Host speaks to people who haven't picked a voice yet, so the cheek stays light and every line still carries its facts.
 
-Trademark rule (P5-00, guideline 5.2.1): the *name* is "Oscars Tracker" and stays so. The icon has no statuette. The description says the app tracks "the Academy Awards" once, in plain words, and never claims to be official. No Oscar marks in the subtitle, keywords, screenshots' captions or the promo text.
+Trademark rule (P5-00, guideline 5.2.1): the *name* is "Oscars Tracker" and stays so. The brand logo (`BrandLogo`) carries a statuette silhouette inside the film reel; the user accepts it (Oct 25), consistent with the app icon, so it stays in the creative asset and the share-card shots. If App Review objects under 5.2.1, swap in `docs/app-store/creative/universal-wordmark.png`. The description says the app tracks "the Academy Awards" once, in plain words, and never claims to be official. No Oscar marks in the subtitle, keywords, screenshots' captions or the promo text.
 
 ## App information
 
@@ -217,18 +217,20 @@ The review notes above are the final text. Remaining placeholders: demo email an
 
 ## Framed screenshot headlines (P6-17)
 
-Source of truth is `docs/app-store/screenshots/frames.json`; this table mirrors it. Host voice, sentence case, no Oscar marks, no jokes about people. Gold marks the one earned word, if any.
+Source of truth is `docs/app-store/screenshots/frames.json`; this table mirrors it. Each headline sells the moment instead of describing the screen (Apple's App Store asset best practices, rewritten Oct 25). Host voice, sentence case, no Oscar marks, no jokes about people. Gold marks the one earned word, if any.
 
 | Shot | Headline | Gold word |
 |---|---|---|
-| 01 Films | Every nominee, one list. | none |
-| 02 Ballot | One pick per category. | pick |
-| 03 Full ballot | Change your mind until it locks. | locks. |
-| 04 Plan | Plan your watching, day by day. | none |
-| 05 Board | Beat your friends. | none |
-| 06 Film sheet | Know where it's streaming. | none |
-| 07 Live mode | Follow the night as it happens. | none |
-| 08 Ballot share card | Share your ballot. | none |
-| 09 Results share card | Share your score. | none |
+| 01 Films | Every nominee. No excuses. | none |
+| 02 Ballot | Call every category. | Call |
+| 03 Full ballot | Waffle until it locks. | locks. |
+| 04 Plan | The couch has a schedule now. | none |
+| 05 Board | Bragging rights, ranked. | none |
+| 06 Film sheet | Tonight's film, sorted. | none |
+| 07 Live mode | Gloat in real time. | none |
+| 08 Ballot share card | Put your picks on the record. | picks |
+| 09 Results share card | Prove you called it. | called |
 
-Pipeline: `scripts/capture-store-screenshots.sh` (raw, `-sample-data`, dedicated "Store shots" simulators) → `scripts/frame-store-images.py` (velvet gradient, Playfair Display headline, device bezel; exact App Store size, RGB, no alpha) → `docs/app-store/screenshots/draft/<set>/` for review, `final/<set>/` after the Phase 6 merge. Set sizes: iPhone 6.9" 1320 × 2868, iPhone 6.3" 1206 × 2622 (Apple now labels this the required medium Dynamic Island set), iPad 13" 2064 × 2752. Duo sizes are skipped until April 2027.
+Pipeline: `scripts/capture-store-screenshots.sh` (raw, `-sample-data -store-shots`, dedicated "Store shots" simulators) → `scripts/frame-store-images.py` (velvet gradient, Playfair Display headline, device bezel; exact App Store size, RGB, no alpha) → `docs/app-store/screenshots/draft/<set>/` for review → `final/<set>/` (promoted Oct 25 after the user's review; upload these). Set sizes: iPhone 6.9" 1320 × 2868, iPhone 6.3" 1206 × 2622 (Apple now labels this the required medium Dynamic Island set), iPad 13" 2064 × 2752. Duo sizes are skipped until April 2027.
+
+Store images must suit a 4+ rating even though the app is rated higher, and can't show another marketplace's logo (Apple's asset best practices). `-store-shots` handles both: the Sinners (a gun aimed), Bugonia (a face dripping like a wound) and Frankenstein (a skull) posters stay off screen through the sample data (left out of the sample season: films, ballot, plan and watched lists), and share cards leave off the App Store badge. The posters themselves are never edited. The iOS 27 creative asset (one universal image for the product page header and search results) is in `docs/app-store/creative/` (see its README).
