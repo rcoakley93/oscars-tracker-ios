@@ -9,6 +9,7 @@ struct RecapSheet: View {
     @Environment(\.copy) private var copy
     @Environment(\.dismiss) private var dismiss
     @State private var burst = 0
+    @ScaledMetric(relativeTo: .largeTitle) private var scoreSize: CGFloat = 72
 
     private var decided: [BallotCategory] { model.ballot.categories.filter { !$0.winnerIDs.isEmpty } }
     private var isFinal: Bool { !model.ballot.categories.isEmpty && decided.count == model.ballot.categories.count }
@@ -34,13 +35,17 @@ struct RecapSheet: View {
             .navigationSubtitle(model.season.ceremony?.name ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItemGroup(placement: .cancellationAction) {
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                }
+                .visibilityPriority(.high)
+                ToolbarItemGroup(placement: .confirmationAction) {
                     Button("Share score", systemImage: "square.and.arrow.up") {
                         model.navigation.sheet = .shareCard
                     }
                     .disabled(model.shareCard == nil)
                 }
+                .visibilityPriority(.low)
             }
         }
         .presentationDetents([.large])
@@ -54,9 +59,9 @@ struct RecapSheet: View {
 
     private var header: some View {
         VStack(spacing: Theme.Space.xs) {
-            Text(copy.recapEyebrow(isFinal)).font(.playfair(20)).foregroundStyle(.goldText)
+            Text(copy.recapEyebrow(isFinal)).font(.system(.title3, design: .serif)).foregroundStyle(.goldText)
             Text(model.ballot.score, format: .number)
-                .font(.system(size: 72, weight: .bold, design: .rounded))
+                .font(.system(size: scoreSize, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.5)
                 .foregroundStyle(Theme.goldGradient)
                 .goldDust(trigger: burst)
