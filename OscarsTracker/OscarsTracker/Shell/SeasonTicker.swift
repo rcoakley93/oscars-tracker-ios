@@ -35,7 +35,9 @@ struct SeasonTicker: View {
 
                     if placement != .inline, !model.isOffline, let button = button(for: ticker) {
                         Button(button.title, systemImage: button.symbol) {
-                            if ticker == .after, model.live.decidedCount > 0 {
+                            if ticker == .live, button.title == "Follow" {
+                                Task { await model.followCeremony() }
+                            } else if ticker == .after, model.live.decidedCount > 0 {
                                 model.navigation.sheet = .recap
                             } else {
                                 model.navigation.tab = destination(for: ticker)
@@ -88,6 +90,8 @@ struct SeasonTicker: View {
 
     private func button(for ticker: SeasonStore.Ticker) -> (title: String, symbol: String)? {
         switch ticker {
+        case .live where model.canFollowCeremony && !model.liveActivity.isFollowing:
+            ("Follow", "dot.radiowaves.left.and.right")
         case .lockDay, .live: ("Ballot", "checkmark.seal")
         case .after: ("Recap", "trophy")
         default: nil

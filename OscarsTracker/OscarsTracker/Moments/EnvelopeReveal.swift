@@ -2,7 +2,7 @@ import SwiftUI
 
 /// How a winner is revealed on Oscar night (P3-08; live mode uses it in
 /// P6-02): a velvet envelope with a gold seal. The flap opens, the card rises
-/// with "And the Oscar goes to…" and the winner, then your pick is marked
+/// with "And the winner is…" and the winner, then your pick is marked
 /// right or wrong in your voice. With Reduce Motion the card simply fades in.
 struct EnvelopeReveal: View {
     enum Outcome { case correct, wrong }
@@ -105,7 +105,7 @@ struct EnvelopeReveal: View {
 
     private var card: some View {
         VStack(spacing: Theme.Space.xxs) {
-            Text("And the Oscar goes to…")
+            Text("And the winner is…")
                 .font(.system(.body, design: .serif).italic())
                 .foregroundStyle(.inkMuted)
             if stage >= 2 {
