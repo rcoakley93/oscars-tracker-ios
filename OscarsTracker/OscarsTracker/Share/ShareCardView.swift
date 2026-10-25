@@ -158,8 +158,16 @@ struct ShareCardView: View {
     }
 
     private var footer: some View {
-        VStack(spacing: 2) {
-            Text("Oscars Tracker").font(.playfair(13)).foregroundStyle(Self.gold)
+        VStack(spacing: 3) {
+            // Whoever sees the card can tell where it came from and find it.
+            HStack(spacing: 8) {
+                Image("BrandLogo").resizable().scaledToFit().frame(width: 36, height: 36)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Oscars Tracker").font(.playfair(18)).foregroundStyle(Self.gold)
+                    Text("Free on the App Store").font(.system(size: 9, weight: .medium)).tracking(0.4)
+                        .foregroundStyle(Self.cream)
+                }
+            }
             Text("Posters and film data from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.")
                 .font(.system(size: 5.5)).foregroundStyle(Self.muted).multilineTextAlignment(.center)
         }
