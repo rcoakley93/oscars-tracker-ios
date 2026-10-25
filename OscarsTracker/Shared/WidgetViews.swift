@@ -26,8 +26,13 @@ enum WidgetCopy {
 /// rendering recolour it themselves.
 private struct DaysNumber: View {
     let entry: WidgetEntry
-    var size: CGFloat = 48
+    @ScaledMetric private var size: CGFloat
     @Environment(\.widgetRenderingMode) private var mode
+
+    init(entry: WidgetEntry, size: CGFloat = 48) {
+        self.entry = entry
+        _size = ScaledMetric(wrappedValue: size, relativeTo: .largeTitle)
+    }
 
     var body: some View {
         Text(verbatim: WidgetCopy.days(entry))

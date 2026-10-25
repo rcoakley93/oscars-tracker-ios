@@ -126,7 +126,8 @@ final class AppModel {
     /// What the widgets show (P6-09), written to the App Group when the stores
     /// refresh; widgets reload only if it changed. Cleared at sign-out.
     func saveWidgetSnapshot() {
-        guard session.userID != nil, !films.movies.isEmpty else { return }
+        // Before nominations there are no films, but the countdown still counts.
+        guard session.userID != nil, season.ceremony != nil || !films.movies.isEmpty else { return }
         let titles = Dictionary(films.movies.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
         let snapshot = WidgetSnapshot(ceremonyAt: season.ceremony?.ceremonyAt, filmsTotal: films.movies.count,
                                       filmsWatched: films.watchedCount,
