@@ -44,6 +44,8 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
 
     /// Oscar night: winners revealed as they're announced (P6-02).
     static let liveMode = "live_mode"
+    /// The ceremony on the Lock Screen and in the Dynamic Island (P6-03).
+    static let liveActivity = "live_activity"
 
     func isEnabled(_ flag: String) -> Bool {
         featureFlags[flag] ?? false

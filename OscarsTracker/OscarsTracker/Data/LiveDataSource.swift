@@ -420,6 +420,46 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    // MARK: - Live Activity (P6-03)
+
+    private nonisolated struct LiveActivityParams: Encodable {
+        let p_ceremony_id: Int
+        let p_token: String
+        let p_environment: String
+    }
+
+    private nonisolated struct TokenParams: Encodable {
+        let p_token: String
+    }
+
+    func registerLiveActivity(ceremonyID: Int, token: String, environment: PushEnvironment) async throws {
+        try await run {
+            try await client.rpc("register_live_activity",
+                                 params: LiveActivityParams(p_ceremony_id: ceremonyID, p_token: token, p_environment: environment.rawValue))
+                .execute()
+        }
+    }
+
+    func endLiveActivity(ceremonyID: Int) async throws {
+        try await run {
+            try await client.rpc("end_live_activity", params: CeremonyParams(p_ceremony_id: ceremonyID)).execute()
+        }
+    }
+
+    func registerLiveActivityStartToken(_ token: String, environment: PushEnvironment) async throws {
+        try await run {
+            try await client.rpc("register_live_activity_start_token",
+                                 params: DeviceParams(p_token: token, p_environment: environment.rawValue))
+                .execute()
+        }
+    }
+
+    func removeLiveActivityStartToken(_ token: String) async throws {
+        try await run {
+            try await client.rpc("remove_live_activity_start_token", params: TokenParams(p_token: token)).execute()
+        }
+    }
+
     private nonisolated struct PreferencesParams: Encodable {
         let p_nominations: Bool
         let p_watch_plan: Bool

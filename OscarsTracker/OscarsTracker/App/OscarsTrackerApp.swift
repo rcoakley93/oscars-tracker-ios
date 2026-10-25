@@ -18,6 +18,11 @@ struct OscarsTrackerApp: App {
                     await model.start()
                     #if DEBUG
                     Self.openScreenshotRoute(in: model)
+                    if ProcessInfo.processInfo.arguments.contains("-live-activity") {
+                        // After Best Picture is announced, so the activity shows a winner.
+                        try? await Task.sleep(for: .seconds(4))
+                        await model.followCeremony()
+                    }
                     #endif
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -30,7 +35,8 @@ struct OscarsTrackerApp: App {
     /// with `-sample-data`, for screenshots and demos without an account
     /// (`-signed-out` too, for the sign-in screen, `-full-ballot` for all
     /// 24 categories, `-admin` for the Admin screen, and `-live` for live
-    /// mode on the rehearsal, with Best Picture announced three seconds in).
+    /// mode on the rehearsal, with Best Picture announced three seconds in;
+    /// add `-live-activity` to start the Live Activity a second later).
     /// `-ballot-stage locked` or `winners` moves the season past the lock.
     private static func dataSource() -> any AppDataSource {
         #if DEBUG
@@ -46,6 +52,7 @@ struct OscarsTrackerApp: App {
             if arguments.contains("-live") {
                 data.isRehearsal = true
                 data.config.featureFlags[AppConfig.liveMode] = true
+                data.config.featureFlags[AppConfig.liveActivity] = arguments.contains("-live-activity")
                 Task {
                     try? await Task.sleep(for: .seconds(3))
                     data.announce([103], inCategory: 1)

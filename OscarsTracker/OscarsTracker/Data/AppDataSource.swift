@@ -183,6 +183,17 @@ protocol AppDataSource: AnyObject, Sendable {
     /// cancelling the loop that reads it unsubscribes.
     func winnerUpdates() -> AsyncStream<WinnerUpdate>
 
+    // Live Activity (P6-03)
+    /// Saves a ceremony's Live Activity push token, so send-push can update it.
+    func registerLiveActivity(ceremonyID: Int, token: String, environment: PushEnvironment) async throws
+    /// The Live Activity ended or was dismissed: no more updates, and
+    /// push-to-start leaves this ceremony alone.
+    func endLiveActivity(ceremonyID: Int) async throws
+    /// Saves this device's push-to-start token, so the first winner can start the activity.
+    func registerLiveActivityStartToken(_ token: String, environment: PushEnvironment) async throws
+    /// Forgets it, at sign-out.
+    func removeLiveActivityStartToken(_ token: String) async throws
+
     // Profile
     func profile(userID: String) async throws -> Profile?
     func updateUsername(_ username: String, userID: String) async throws
