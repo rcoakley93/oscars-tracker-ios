@@ -12,8 +12,9 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case invalidInviteCode
     case alreadyInGroup
     case ownGroup
-    case groupFull
-    case tooManyGroups
+    /// The limits come from the server (`app_config`, P6-07); nil if it didn't say.
+    case groupFull(limit: Int?)
+    case tooManyGroups(limit: Int?)
     case invalidCredentials
     case emailInUse
     case weakPassword
@@ -34,8 +35,9 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .invalidInviteCode: "That invite code didn't match a group. Check it and try again."
         case .alreadyInGroup: "You're already in that group."
         case .ownGroup: "That's your own group, so you're already in it."
-        case .groupFull: "That group is full (12 members)."
-        case .tooManyGroups: "You're in 5 groups already, the most you can join."
+        case .groupFull(let limit): limit.map { "That group is full (\($0) members)." } ?? "That group is full."
+        case .tooManyGroups(let limit):
+            limit.map { "You're in \($0) groups already, the most you can join." } ?? "You're in as many groups as you can join."
         case .invalidCredentials: "That email and password don't match."
         case .emailInUse: "There's already an account with that email. Try signing in."
         case .weakPassword: "Use at least 8 characters, with a lowercase letter, an uppercase letter and a number."
@@ -67,7 +69,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
             return
         }
         if let error = error as? PostgrestError {
-            self = AppError(serverMessage: error.message)
+            self = AppError(serverMessage: error.message, code: error.code, hint: error.hint)
             return
         }
         if let error = error as? AuthError {
@@ -83,15 +85,23 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         self = .server(String(describing: error))
     }
 
-    /// The `raise exception` messages from supabase/migrations (Phase 1).
-    init(serverMessage: String) {
+    /// The `raise exception` messages from supabase/migrations (Phase 1). The
+    /// group limits are matched by SQLSTATE (`GRP01` group full, `GRP02` too
+    /// many groups; hints `group_full` and `group_limit`), never by their
+    /// numbers, so the server can change them (P6-07). The message still
+    /// carries the number in use.
+    init(serverMessage: String, code: String? = nil, hint: String? = nil) {
         let text = serverMessage.lowercased()
-        if text.contains("ballot is locked") { self = .ballotLocked }
+        let limit = text.firstMatch(of: /limit of (\d+)/).flatMap { Int($0.1) }
+        if code == "GRP01" || hint == "group_full" { self = .groupFull(limit: limit) }
+        else if code == "GRP02" || hint == "group_limit" { self = .tooManyGroups(limit: limit) }
+        else if text.contains("ballot is locked") { self = .ballotLocked }
         else if text.contains("invalid invite code") { self = .invalidInviteCode }
         else if text.contains("already a member") { self = .alreadyInGroup }
         else if text.contains("creator of this group") { self = .ownGroup }
-        else if text.contains("maximum limit of 12 members") { self = .groupFull }
-        else if text.contains("maximum limit of 5 groups") { self = .tooManyGroups }
+        // Before the server sent codes: "maximum limit of N members/groups".
+        else if text.contains("maximum limit of"), text.contains("members") { self = .groupFull(limit: limit) }
+        else if text.contains("maximum limit of"), text.contains("groups") { self = .tooManyGroups(limit: limit) }
         else if text.contains("not authenticated") { self = .notSignedIn }
         else if text.contains("admins only") { self = .adminsOnly }
         else { self = .server(serverMessage) }

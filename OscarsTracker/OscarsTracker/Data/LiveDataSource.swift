@@ -115,6 +115,10 @@ final class LiveDataSource: AppDataSource {
                         return bounds.compactMap { if case .integer(let n) = $0 { n } else { nil } }
                     })
                     if !parsed.isEmpty { config.runtimeBuckets = parsed }
+                case ("group_member_limit", .integer(let limit)) where limit > 0:
+                    config.groupMemberLimit = limit
+                case ("user_group_limit", .integer(let limit)) where limit > 0:
+                    config.userGroupLimit = limit
                 case ("nominations_at", .string(let date)):
                     config.nominationsAt = try? Date(date, strategy: .iso8601)
                 default:

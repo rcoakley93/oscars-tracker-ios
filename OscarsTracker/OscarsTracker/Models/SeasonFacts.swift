@@ -35,6 +35,10 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
     var runtimeBuckets = RuntimeBucket.defaults
     /// When the nominations are announced, for the ticker before them; optional.
     var nominationsAt: Date?
+    /// Most people in a group, creator included; `group_member_limit`.
+    var groupMemberLimit = 50
+    /// Most groups a person creates or joins; `user_group_limit`.
+    var userGroupLimit = 5
 
     static let defaults = AppConfig()
 
