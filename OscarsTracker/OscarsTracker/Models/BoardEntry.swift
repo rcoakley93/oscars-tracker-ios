@@ -11,6 +11,12 @@ nonisolated struct BoardEntry: Codable, Identifiable, Hashable, Sendable {
         case weighted
     }
 
+    /// The same row at another place, when someone above leaves the board.
+    func withRank(_ rank: Int) -> BoardEntry {
+        BoardEntry(rank: rank, userId: userId, username: username, avatarUrl: avatarUrl, watchedCount: watchedCount,
+                   correctCount: correctCount, points: points, score: score, scoring: scoring, isCreator: isCreator)
+    }
+
     var id: String { userId }
     let rank: Int
     let userId: String

@@ -98,7 +98,7 @@ struct CreateGroupSheet: View {
                     if let message = groups.actionError?.message ?? (edited ? problem : nil) {
                         Text(message).foregroundStyle(.dangerText)
                     } else {
-                        Text("You can invite up to 11 friends.")
+                        Text("You can invite up to \(model.season.config.groupMemberLimit - 1) friends.")
                     }
                 }
                 .listRowBackground(Color.surface)

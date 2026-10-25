@@ -71,6 +71,16 @@ final class LeaderboardStore {
         Dictionary(uniqueKeysWithValues: boards.map { ($0.key.map(String.init) ?? "global", $0.value) })
     }
 
+    /// Takes someone off every board, with the ranks closed up behind
+    /// them, as the server does once you've blocked them (P6-16).
+    func hide(_ userID: String) {
+        for (groupID, entries) in boards where entries.contains(where: { $0.userId == userID }) {
+            let others = entries.filter { $0.userId != userID }
+            boards[groupID] = others.map { entry in entry.withRank(others.count { $0.rank < entry.rank } + 1) }
+        }
+        people[userID] = nil
+    }
+
     func loadPerson(_ userID: String) async {
         guard let ceremonyID, people[userID] == nil else { return }
         people[userID] = .some(try? await data.boardPerson(ceremonyID: ceremonyID, userID: userID))
