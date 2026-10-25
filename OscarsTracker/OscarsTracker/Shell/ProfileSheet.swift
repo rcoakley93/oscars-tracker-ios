@@ -55,6 +55,21 @@ struct ProfileSheet: View {
                         .padding(.top, Theme.Space.xs)
                 }
 
+                if model.isAdmin {
+                    Section {
+                        NavigationLink {
+                            AdminView()
+                        } label: {
+                            Label("Ceremony night", systemImage: "trophy")
+                        }
+                        .accessibilityIdentifier("admin")
+                    } header: {
+                        Text("Admin")
+                    } footer: {
+                        Text("Winners, the season's dates and a push to everyone.")
+                    }
+                }
+
                 Section {
                     NotificationsRow()
                 } header: {
@@ -348,4 +363,9 @@ extension Bundle {
 #Preview("Sign in with Apple") {
     Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
         .environment(AppModel.preview { $0.accountProvider = .apple }).preferredColorScheme(.dark)
+}
+
+#Preview("Admin") {
+    Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
+        .environment(AppModel.preview { $0.isAdmin = true }).preferredColorScheme(.dark)
 }

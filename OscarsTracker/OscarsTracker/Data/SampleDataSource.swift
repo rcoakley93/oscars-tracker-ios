@@ -18,6 +18,10 @@ final class SampleDataSource: AppDataSource {
     /// Where to watch, by film; films not listed have no offers.
     var offerList: [Int: [WatchOffer]] = SampleData.offers
     var userProfile: Profile?
+    /// The admin screen's account (P6-01); the admin calls refuse anyone else.
+    var isAdmin = false
+    /// Pushes sent to everyone, newest last.
+    var sentPushes: [String] = []
     /// Makes every call fail with this error, to preview error states.
     var failure: AppError?
 
@@ -297,11 +301,77 @@ final class SampleDataSource: AppDataSource {
         revokedAppleCodes.append(authorizationCode)
     }
 
+    // MARK: - Admin
+
+    private func requireAdmin() throws {
+        _ = try requireUser()
+        guard isAdmin else { throw AppError.adminsOnly }
+    }
+
+    func adminStatus() async throws -> [AdminCeremony] {
+        try requireAdmin()
+        let past = Ceremony(id: 1, number: 98, name: "98th Academy Awards", ceremonyAt: Date(timeIntervalSince1970: 1_773_615_600),
+                            ballotLockAt: Date(timeIntervalSince1970: 1_773_615_600), isActive: false)
+        return [ceremony, past].map { ceremony in
+            let isCurrent = ceremony.id == self.ceremony.id
+            return AdminCeremony(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremony.ceremonyAt,
+                                 ballotLockAt: ceremony.ballotLockAt, isActive: ceremony.isActive, isRehearsal: false,
+                                 categories: isCurrent ? categories.count : 24,
+                                 nominations: isCurrent ? categories.map(\.nominations.count).reduce(0, +) : 120,
+                                 winners: isCurrent ? categories.count { !$0.winnerIDs.isEmpty } : 24,
+                                 filmsWithoutPosters: isCurrent ? 1 : 0, devices: 3)
+        }
+    }
+
+    /// The current ceremony's categories, small ones first and Best Picture last.
+    func adminBallot(ceremonyID: Int) async throws -> [BallotCategory] {
+        try requireAdmin()
+        guard ceremonyID == ceremony.id else { return [] }
+        return categories.sorted { ($0.pointsValue, $0.name) < ($1.pointsValue, $1.name) }
+    }
+
+    func setWinner(nominationID: Int, tie: Bool) async throws -> Set<Int> {
+        try requireAdmin()
+        guard let index = categories.firstIndex(where: { $0.nominations.contains { $0.id == nominationID } }) else {
+            throw AppError.server("Unknown nomination \(nominationID)")
+        }
+        let winners = (tie ? categories[index].winnerIDs : []).union([nominationID])
+        categories[index] = categories[index].withWinners(winners)
+        return winners
+    }
+
+    func clearWinners(categoryID: Int) async throws {
+        try requireAdmin()
+        guard let index = categories.firstIndex(where: { $0.id == categoryID }) else { return }
+        categories[index] = categories[index].withWinners([])
+    }
+
+    func setActiveCeremony(id: Int) async throws {
+        try requireAdmin()
+        ceremony = Ceremony(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremony.ceremonyAt,
+                            ballotLockAt: ceremony.ballotLockAt, isActive: id == ceremony.id)
+    }
+
+    func setCeremonyDates(id: Int, ceremonyAt: Date, ballotLockAt: Date) async throws {
+        try requireAdmin()
+        guard ballotLockAt <= ceremonyAt else { throw AppError.server("The ballot must lock before the ceremony starts") }
+        guard id == ceremony.id else { return }
+        ceremony = Ceremony(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremonyAt,
+                            ballotLockAt: ballotLockAt, isActive: ceremony.isActive)
+    }
+
+    func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws {
+        try requireAdmin()
+        sentPushes.append(title)
+    }
+
     // MARK: - Profile
 
     func profile(userID: String) async throws -> Profile? {
         _ = try requireUser()
-        return userProfile
+        guard var profile = userProfile else { return nil }
+        if isAdmin { profile.isAdmin = true }
+        return profile
     }
 
     func updateUsername(_ username: String, userID: String) async throws {

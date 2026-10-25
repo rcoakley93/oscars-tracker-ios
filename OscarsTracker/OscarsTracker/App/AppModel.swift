@@ -17,6 +17,8 @@ final class AppModel {
     let leaderboard: LeaderboardStore
     let profile: ProfileStore
     let push: PushStore
+    /// Ceremony night, for the admin only (P6-01).
+    let admin: AdminStore
     let navigation = AppNavigation()
     let connectivity = Connectivity()
     /// Watched toggles and picks made offline, oldest first (P4-11).
@@ -38,6 +40,8 @@ final class AppModel {
         leaderboard = LeaderboardStore(data: data)
         profile = ProfileStore(data: data)
         push = PushStore(data: data)
+        admin = AdminStore(data: data)
+        admin.onWinnersChanged = { [weak self] in self?.ballot.apply(winners: $0.current, in: $0.categoryID) }
         films.onOffline = { [weak self] in self?.enqueue($0) }
         ballot.onOffline = { [weak self] in self?.enqueue($0) }
     }
@@ -151,6 +155,9 @@ final class AppModel {
         _ = await (season, push)
     }
 
+    /// Whether this account runs ceremony night (P6-01).
+    var isAdmin: Bool { profile.profile?.isAdmin == true }
+
     /// The boards need the ceremony's id.
     private func loadSeasonAndBoards() async {
         await season.load()
@@ -183,6 +190,7 @@ final class AppModel {
         groups.reset()
         leaderboard.reset()
         profile.reset()
+        admin.reset()
         navigation.reset()
     }
 }
