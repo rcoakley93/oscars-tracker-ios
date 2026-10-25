@@ -39,14 +39,22 @@ struct ShareCardView: View {
     private static let cream = Color(red: 0.96, green: 0.93, blue: 0.86)
     private static let muted = Color(red: 0.96, green: 0.93, blue: 0.86).opacity(0.62)
 
+    /// A full ballot (all 24 categories) doesn't fit with a credit line under
+    /// every pick, so a long card drops the credits (keeping an actor's film)
+    /// and tightens up.
+    private var isCompact: Bool { card.lines.count > 16 }
+
     var body: some View {
-        VStack(spacing: 14) {
-            header
-            posterStrip
-            if card.kind == .results { summary }
+        VStack(spacing: isCompact ? 8 : 14) {
+            header.layoutPriority(1)
+            posterStrip.layoutPriority(1)
+            if card.kind == .results { summary.layoutPriority(1) }
+            // The picks take what's left and never push the title or the TMDB
+            // credit off the card.
             picks
-            Spacer(minLength: 0)
-            footer
+                .frame(maxHeight: .infinity, alignment: .top)
+                .clipped()
+            footer.layoutPriority(1)
         }
         .padding(20)
         .frame(width: Self.size.width, height: Self.size.height)
@@ -86,7 +94,7 @@ struct ShareCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
         }
-        .frame(height: 78)
+        .frame(height: isCompact ? 56 : 78)
         .frame(maxWidth: .infinity)
     }
 
@@ -129,7 +137,9 @@ struct ShareCardView: View {
                 .foregroundStyle(color(for: line))
                 .strikethrough(line.isCorrect == false, color: Self.muted)
                 .lineLimit(1)
-            if let film = line.film {
+            // Compact cards keep the film under an actor (which performance)
+            // and drop only the credits under everything else.
+            if !isCompact || line.leadsWithPerson, let film = line.film {
                 Text(film)
                     .font(.system(size: 8))
                     .foregroundStyle(Self.muted).lineLimit(1)
@@ -148,8 +158,16 @@ struct ShareCardView: View {
     }
 
     private var footer: some View {
-        VStack(spacing: 2) {
-            Text("Oscars Tracker").font(.playfair(13)).foregroundStyle(Self.gold)
+        VStack(spacing: 3) {
+            // Whoever sees the card can tell where it came from and find it.
+            HStack(spacing: 8) {
+                Image("BrandLogo").resizable().scaledToFit().frame(width: 36, height: 36)
+                Text("Oscars Tracker").font(.playfair(18)).foregroundStyle(Self.gold)
+                // Apple's official badge, unaltered, with clear space of at
+                // least a quarter of its height (App Store marketing guidelines).
+                Image("AppStoreBadge").resizable().scaledToFit().frame(height: 28)
+                    .padding(.leading, 10)
+            }
             Text("Posters and film data from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.")
                 .font(.system(size: 5.5)).foregroundStyle(Self.muted).multilineTextAlignment(.center)
         }

@@ -68,6 +68,8 @@ struct ShareCardTests {
                                                seasonName: "99th", username: nil, standing: nil))
         #expect(card.lines[0].pick == "Jessie Buckley")
         #expect(card.lines[0].film == "Film 11")
+        // A compact card keeps this line: it says which performance.
+        #expect(card.lines[0].leadsWithPerson)
     }
 
     @Test func postersAreDistinctAndLedByPoints() throws {

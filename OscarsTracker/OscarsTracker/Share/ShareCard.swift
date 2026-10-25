@@ -18,6 +18,9 @@ nonisolated struct ShareCard: Equatable, Sendable {
         let pick: String?
         /// The film under a person's name.
         let film: String?
+        /// An acting category: the pick is a person and `film` says which
+        /// performance, so it always shows.
+        let leadsWithPerson: Bool
         let posterURL: String?
         let points: Int
         /// Nil until the category's winner is set, or with no pick.
@@ -80,6 +83,7 @@ nonisolated struct ShareCard: Equatable, Sendable {
                         category: category.name,
                         pick: nominee.map { $0.title(in: category) ?? "Unknown" },
                         film: nominee?.detail(in: category),
+                        leadsWithPerson: category.leadsWithPerson,
                         posterURL: nominee?.movie?.posterUrl,
                         points: category.pointsValue,
                         isCorrect: nominee.flatMap { n in winner.map { $0.id == n.id } })
