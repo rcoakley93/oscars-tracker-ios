@@ -62,7 +62,9 @@ struct SeasonTicker: View {
         case .beforeNominations(let date):
             copy.tickerBeforeNominations(date?.formatted(.dateTime.month(.abbreviated).day()))
         case .live:
-            copy.tickerLive
+            model.live.isOn && !model.ballot.categories.isEmpty
+                ? copy.tickerLiveProgress(model.live.decidedCount, model.ballot.categories.count)
+                : copy.tickerLive
         case .after:
             finalStanding
         }

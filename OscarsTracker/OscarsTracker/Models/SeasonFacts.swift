@@ -42,6 +42,9 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
 
     static let defaults = AppConfig()
 
+    /// Oscar night: winners revealed as they're announced (P6-02).
+    static let liveMode = "live_mode"
+
     func isEnabled(_ flag: String) -> Bool {
         featureFlags[flag] ?? false
     }

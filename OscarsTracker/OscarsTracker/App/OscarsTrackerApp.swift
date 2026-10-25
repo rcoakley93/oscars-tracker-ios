@@ -29,8 +29,9 @@ struct OscarsTrackerApp: App {
     /// The live backend, or (debug builds only) the sample season when launched
     /// with `-sample-data`, for screenshots and demos without an account
     /// (`-signed-out` too, for the sign-in screen, `-full-ballot` for all
-    /// 24 categories, and `-admin` for the Admin screen). `-ballot-stage locked`
-    /// or `winners` moves the season past the lock.
+    /// 24 categories, `-admin` for the Admin screen, and `-live` for live
+    /// mode on the rehearsal, with Best Picture announced three seconds in).
+    /// `-ballot-stage locked` or `winners` moves the season past the lock.
     private static func dataSource() -> any AppDataSource {
         #if DEBUG
         let arguments = ProcessInfo.processInfo.arguments
@@ -41,6 +42,14 @@ struct OscarsTrackerApp: App {
             case "locked": data.passLock()
             case "winners": data.passLock(winners: true)
             default: break
+            }
+            if arguments.contains("-live") {
+                data.isRehearsal = true
+                data.config.featureFlags[AppConfig.liveMode] = true
+                Task {
+                    try? await Task.sleep(for: .seconds(3))
+                    data.announce([103], inCategory: 1)
+                }
             }
             return data
         }

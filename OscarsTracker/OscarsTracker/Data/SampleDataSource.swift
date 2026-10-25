@@ -24,6 +24,8 @@ final class SampleDataSource: AppDataSource {
     var sentPushes: [String] = []
     /// Makes every call fail with this error, to preview error states.
     var failure: AppError?
+    /// Serves the season as the rehearsal ceremony, as a tester sees it (P2-13).
+    var isRehearsal = false
 
     /// `fullBallot` adds the rest of a real ballot's 24 categories, to check
     /// scrolling and deep links on a long ballot.
@@ -126,7 +128,7 @@ final class SampleDataSource: AppDataSource {
         try check()
         let now = serverNow ?? .now
         return SeasonFacts(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremony.ceremonyAt,
-                           ballotLockAt: ceremony.ballotLockAt, isLocked: now >= ceremony.ballotLockAt, isRehearsal: false, serverNow: now)
+                           ballotLockAt: ceremony.ballotLockAt, isLocked: now >= ceremony.ballotLockAt, isRehearsal: isRehearsal, serverNow: now)
     }
 
     func appConfig() async throws -> AppConfig {
@@ -289,11 +291,27 @@ final class SampleDataSource: AppDataSource {
     /// The global board is everyone; Movies LLC the top six; any other group just you.
     func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry] {
         _ = try requireUser()
+        let board = scoredBoard
         switch groupID {
         case nil: return board
         case 1: return Array(board.prefix(6))
         default: return board.filter { $0.userId == Self.userID }.map { $0.ranked(1) }
         }
+    }
+
+    /// Once winners are in, your score counts your correct picks (one point
+    /// each, the traditional rule) and the board is ranked by score, then
+    /// films; everyone else keeps their sample score.
+    private var scoredBoard: [BoardEntry] {
+        guard categories.contains(where: { !$0.winnerIDs.isEmpty }) else { return board }
+        let correct = categories.count { category in savedPicks[category.id].map(category.winnerIDs.contains) ?? false }
+        let rescored = board.map { entry in
+            entry.userId == Self.userID
+                ? BoardEntry.sample(entry.userId, entry.username, watched: entry.watchedCount, rank: entry.rank, score: correct, isCreator: entry.isCreator)
+                : entry
+        }
+        return rescored.sorted { ($0.score, $0.watchedCount) > ($1.score, $1.watchedCount) }
+            .enumerated().map { $0.element.ranked($0.offset + 1) }
     }
 
     /// Everyone on the sample board watched the first films in the list; picks show after the lock.
@@ -361,6 +379,41 @@ final class SampleDataSource: AppDataSource {
         revokedAppleCodes.append(authorizationCode)
     }
 
+    // MARK: - Live mode
+
+    private var winnerListeners: [UUID: AsyncStream<WinnerUpdate>.Continuation] = [:]
+
+    /// Every winner change, as Realtime would send it: one update per nominee
+    /// whose flag changed.
+    func winnerUpdates() -> AsyncStream<WinnerUpdate> {
+        let id = UUID()
+        let (stream, continuation) = AsyncStream.makeStream(of: WinnerUpdate.self)
+        if failure != nil {
+            continuation.finish()
+            return stream
+        }
+        winnerListeners[id] = continuation
+        continuation.onTermination = { [weak self] _ in
+            Task { @MainActor in self?.winnerListeners[id] = nil }
+        }
+        return stream
+    }
+
+    /// Sets a category's winners and tells the listeners, like the admin RPCs.
+    func announce(_ winners: Set<Int>, inCategory categoryID: Int) {
+        guard let index = categories.firstIndex(where: { $0.id == categoryID }) else { return }
+        announce(winners, at: index)
+    }
+
+    private func announce(_ winners: Set<Int>, at index: Int) {
+        let before = categories[index]
+        categories[index] = before.withWinners(winners)
+        for nominee in before.nominations where nominee.isWinner != winners.contains(nominee.id) {
+            let update = WinnerUpdate(nominationID: nominee.id, categoryID: before.id, isWinner: !nominee.isWinner)
+            for listener in winnerListeners.values { listener.yield(update) }
+        }
+    }
+
     // MARK: - Admin
 
     private func requireAdmin() throws {
@@ -375,7 +428,7 @@ final class SampleDataSource: AppDataSource {
         return [ceremony, past].map { ceremony in
             let isCurrent = ceremony.id == self.ceremony.id
             return AdminCeremony(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremony.ceremonyAt,
-                                 ballotLockAt: ceremony.ballotLockAt, isActive: ceremony.isActive, isRehearsal: false,
+                                 ballotLockAt: ceremony.ballotLockAt, isActive: ceremony.isActive, isRehearsal: isCurrent && isRehearsal,
                                  categories: isCurrent ? categories.count : 24,
                                  nominations: isCurrent ? categories.map(\.nominations.count).reduce(0, +) : 120,
                                  winners: isCurrent ? categories.count { !$0.winnerIDs.isEmpty } : 24,
@@ -396,14 +449,14 @@ final class SampleDataSource: AppDataSource {
             throw AppError.server("Unknown nomination \(nominationID)")
         }
         let winners = (tie ? categories[index].winnerIDs : []).union([nominationID])
-        categories[index] = categories[index].withWinners(winners)
+        announce(winners, at: index)
         return winners
     }
 
     func clearWinners(categoryID: Int) async throws {
         try requireAdmin()
         guard let index = categories.firstIndex(where: { $0.id == categoryID }) else { return }
-        categories[index] = categories[index].withWinners([])
+        announce([], at: index)
     }
 
     func setWinners(categoryID: Int, nominationIDs: Set<Int>) async throws -> Set<Int> {
@@ -414,7 +467,7 @@ final class SampleDataSource: AppDataSource {
         guard nominationIDs.isSubset(of: categories[index].nominations.map(\.id)) else {
             throw AppError.server("Those nominees aren't all in category \(categoryID)")
         }
-        categories[index] = categories[index].withWinners(nominationIDs)
+        announce(nominationIDs, at: index)
         return nominationIDs
     }
 

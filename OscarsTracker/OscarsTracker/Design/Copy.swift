@@ -120,6 +120,10 @@ struct Copy {
     /// Before nominations; the date ("Jan 21") when it's known.
     let tickerBeforeNominations: (_ date: String?) -> String
     let tickerLive: String
+    /// Live mode (P6-02): how many envelopes are open, of how many.
+    let tickerLiveProgress: (_ done: Int, _ total: Int) -> String
+    /// The live board's line for a category you didn't pick.
+    let liveNoPick: String
     /// Offline: the screens show the last good copy; `waiting` changes will send.
     let tickerOffline: (_ waiting: Int) -> String
     /// After the show: your final place on a board.
@@ -229,6 +233,8 @@ extension Copy {
         tickerLockDay: { left in "Ballot locks in \(left)." },
         tickerBeforeNominations: { date in date.map { "Nominations announced \($0)." } ?? "Nominations are coming." },
         tickerLive: "LIVE · Winners as they're announced",
+        tickerLiveProgress: { done, total in "LIVE · \(done) of \(total) announced" },
+        liveNoPick: "No pick",
         tickerOffline: { waiting in
             "Offline · showing your last copy" + (waiting > 0 ? " · \(waiting) to send" : "")
         },
@@ -363,6 +369,10 @@ extension Copy {
         tickerLockDay: { left in "Pens down in \(left)." },
         tickerBeforeNominations: { date in "Shortlists are in. Nominations \(date ?? "soon")." },
         tickerLive: "LIVE · The envelopes are open. Breathe.",
+        tickerLiveProgress: { done, total in
+            done == 0 ? "LIVE · Envelopes sealed. Breathe." : "LIVE · \(done) of \(total) envelopes open"
+        },
+        liveNoPick: "You sat this one out",
         tickerOffline: { waiting in
             waiting > 0
                 ? "Offline. \(waiting == 1 ? "1 change" : "\(waiting) changes") will send when you're back."

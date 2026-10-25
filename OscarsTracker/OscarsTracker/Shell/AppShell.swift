@@ -78,6 +78,8 @@ struct AppShell: View {
                 ShareCardSheet()
             }
         }
+        // Oscar night: each winner's envelope (P6-02).
+        .liveReveals()
     }
 }
 
