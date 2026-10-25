@@ -64,6 +64,7 @@ struct FilmsTab: View {
             }
             .tabChrome("Films", posters: films.movies.compactMap(\.posterUrl))
             .errorAlert("Couldn't save that", error: Bindable(films).actionError)
+            .errorAlert("Couldn't follow the ceremony", error: Bindable(model.liveActivity).actionError)
             .safeAreaBar(edge: .top) {
                 Picker("View", selection: $mode) {
                     ForEach(Mode.allCases) { Text($0.label).tag($0) }
@@ -162,7 +163,9 @@ private struct FilmsGrid: View {
                         let now = context.date.addingTimeInterval(model.season.clockOffset)
                         HeroCard(watched: films.watchedCount, total: films.movies.count,
                                  phase: model.season.phase(hasNominees: !films.movies.isEmpty, now: now),
-                                 now: now, results: heroResults)
+                                 now: now, results: heroResults,
+                                 onFollow: model.canFollowCeremony ? { Task { await model.followCeremony() } } : nil,
+                                 isFollowing: model.liveActivity.isFollowing)
                     }
                         .goldDust(trigger: films.completions)
                         .moment(.allWatched, trigger: films.completions)

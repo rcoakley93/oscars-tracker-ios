@@ -30,6 +30,8 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     /// The group's creator blocked you.
     case blockedFromGroup
     case tooManyReports
+    /// Live Activities are switched off for the app in Settings (P6-03).
+    case liveActivitiesOff
     /// The person closed the Apple or Google sheet: show nothing.
     case cancelled
     case server(String)
@@ -55,6 +57,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .nameInvalid: "That name doesn't fit the rules. Try another."
         case .blockedFromGroup: "You can't join that group."
         case .tooManyReports: "You've sent a lot of reports today. Try again tomorrow, or email support@oscarstracker.com."
+        case .liveActivitiesOff: "Live Activities are off for Oscars Tracker. Turn them on in Settings."
         case .cancelled: ""
         case .server: "Something went wrong on our side. Please try again."
         }
