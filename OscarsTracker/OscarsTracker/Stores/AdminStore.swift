@@ -218,6 +218,24 @@ final class AdminStore {
         }
     }
 
+    /// Whether the nominations push is going out.
+    private(set) var isSendingNominations = false
+
+    /// "Nominations are out" for the selected ceremony, to everyone who
+    /// wants it, in their voice (P6-04). Returns how many people it went to
+    /// (0 if it had already gone out), or nil if it failed.
+    func sendNominationsPush() async -> Int? {
+        guard let ceremonyID else { return nil }
+        isSendingNominations = true
+        defer { isSendingNominations = false }
+        do {
+            return try await data.sendNominationsPush(ceremonyID: ceremonyID)
+        } catch {
+            actionError = AppError(error)
+            return nil
+        }
+    }
+
     func reset() {
         ceremonies = []
         ceremonyID = nil

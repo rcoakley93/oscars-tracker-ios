@@ -319,6 +319,25 @@ final class SampleDataSource: AppDataSource {
         devices[token] = nil
     }
 
+    var preferences: NotificationPreferences?
+    /// Every preferences save, in order, and an optional pause before each, to test overlap.
+    var preferenceSaves: [NotificationPreferences] = []
+    var preferenceSaveDelay: Duration?
+
+    func notificationPreferences(userID: String) async throws -> NotificationPreferences? {
+        try check()
+        return preferences
+    }
+
+    func saveNotificationPreferences(_ preferences: NotificationPreferences) async throws -> NotificationPreferences {
+        if let preferenceSaveDelay { try? await Task.sleep(for: preferenceSaveDelay) }
+        try check()
+        _ = try requireUser()
+        preferenceSaves.append(preferences)
+        self.preferences = preferences
+        return preferences
+    }
+
     // MARK: - Account
 
     var accountProvider: Account.Provider = .email
@@ -416,6 +435,16 @@ final class SampleDataSource: AppDataSource {
     func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws {
         try requireAdmin()
         sentPushes.append(title)
+    }
+
+    /// Ceremonies whose nominations push went out.
+    var nominationsPushes: [Int] = []
+
+    func sendNominationsPush(ceremonyID: Int) async throws -> Int {
+        try requireAdmin()
+        guard !nominationsPushes.contains(ceremonyID) else { return 0 }
+        nominationsPushes.append(ceremonyID)
+        return devices.count
     }
 
     // MARK: - Profile

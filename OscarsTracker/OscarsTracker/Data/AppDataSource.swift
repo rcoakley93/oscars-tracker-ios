@@ -145,6 +145,10 @@ protocol AppDataSource: AnyObject, Sendable {
     func registerDevice(token: String, environment: PushEnvironment) async throws
     /// Forgets this device, at sign-out.
     func removeDevice(token: String) async throws
+    /// Your reminder switches, voice and time zone (P6-04); nil until first saved.
+    func notificationPreferences(userID: String) async throws -> NotificationPreferences?
+    /// Saves them and returns what the server stored.
+    func saveNotificationPreferences(_ preferences: NotificationPreferences) async throws -> NotificationPreferences
 
     // Admin (P6-01). For `Profile.isAdmin` only: the server refuses everyone else.
     /// Every ceremony with its seed counts, newest first.
@@ -162,6 +166,9 @@ protocol AppDataSource: AnyObject, Sendable {
     func setCeremonyDates(id: Int, ceremonyAt: Date, ballotLockAt: Date) async throws
     /// A push to every device, through send-push.
     func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws
+    /// "Nominations are out" to everyone who wants it, in their voice, once
+    /// per ceremony (P6-04); returns how many people it went to.
+    func sendNominationsPush(ceremonyID: Int) async throws -> Int
 
     // Profile
     func profile(userID: String) async throws -> Profile?

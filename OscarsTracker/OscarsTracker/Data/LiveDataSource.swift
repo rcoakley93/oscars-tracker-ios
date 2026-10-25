@@ -420,6 +420,33 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    private nonisolated struct PreferencesParams: Encodable {
+        let p_nominations: Bool
+        let p_watch_plan: Bool
+        let p_ballot_lock: Bool
+        let p_results: Bool
+        let p_voice: String
+        let p_time_zone: String
+    }
+
+    func notificationPreferences(userID: String) async throws -> NotificationPreferences? {
+        try await run {
+            let rows: [NotificationPreferences] = try await client.from("notification_preferences")
+                .select().eq("user_id", value: userID).limit(1).execute().value
+            return rows.first
+        }
+    }
+
+    func saveNotificationPreferences(_ preferences: NotificationPreferences) async throws -> NotificationPreferences {
+        try await run {
+            try await client.rpc("save_notification_preferences", params: PreferencesParams(
+                p_nominations: preferences.nominations, p_watch_plan: preferences.watchPlan,
+                p_ballot_lock: preferences.ballotLock, p_results: preferences.results,
+                p_voice: preferences.voice, p_time_zone: preferences.timeZone
+            )).single().execute().value
+        }
+    }
+
     // MARK: - Admin
 
     private nonisolated struct WinnerParams: Encodable {
@@ -516,6 +543,16 @@ final class LiveDataSource: AppDataSource {
     func sendPushToEveryone(title: String, body: String, destination: PushDestination) async throws {
         try await run {
             try await client.rpc("admin_send_push", params: PushParams(p_title: title, p_body: body, p_path: destination.rawValue)).execute()
+        }
+    }
+
+    private nonisolated struct CeremonyParams: Encodable {
+        let p_ceremony_id: Int
+    }
+
+    func sendNominationsPush(ceremonyID: Int) async throws -> Int {
+        try await run {
+            try await client.rpc("admin_send_nominations_push", params: CeremonyParams(p_ceremony_id: ceremonyID)).execute().value
         }
     }
 

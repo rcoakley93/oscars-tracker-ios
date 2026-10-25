@@ -73,7 +73,8 @@ final class AppModel {
             async let groups: Void = groups.load(userID: userID)
             async let profile: Void = profile.load(userID: userID)
             async let push: Void = push.signedIn()
-            _ = await (plan, groups, profile, push)
+            async let reminders: Void = self.push.loadPreferences(userID: userID)
+            _ = await (plan, groups, profile, push, reminders)
         }
         _ = await (season, films, ballot)
         await loadPickShares()
