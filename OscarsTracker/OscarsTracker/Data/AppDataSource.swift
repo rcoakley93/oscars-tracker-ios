@@ -100,6 +100,9 @@ protocol AppDataSource: AnyObject, Sendable {
     /// `tie`; returns the category's winners.
     func setWinner(nominationID: Int, tie: Bool) async throws -> Set<Int>
     func clearWinners(categoryID: Int) async throws
+    /// Sets a category's winners to exactly `nominationIDs` in one write (an
+    /// empty set clears them); returns the category's winners.
+    func setWinners(categoryID: Int, nominationIDs: Set<Int>) async throws -> Set<Int>
     func setActiveCeremony(id: Int) async throws
     func setCeremonyDates(id: Int, ceremonyAt: Date, ballotLockAt: Date) async throws
     /// A push to every device, through send-push.

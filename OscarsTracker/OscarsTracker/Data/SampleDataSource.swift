@@ -346,6 +346,18 @@ final class SampleDataSource: AppDataSource {
         categories[index] = categories[index].withWinners([])
     }
 
+    func setWinners(categoryID: Int, nominationIDs: Set<Int>) async throws -> Set<Int> {
+        try requireAdmin()
+        guard let index = categories.firstIndex(where: { $0.id == categoryID }) else {
+            throw AppError.server("Unknown category \(categoryID)")
+        }
+        guard nominationIDs.isSubset(of: categories[index].nominations.map(\.id)) else {
+            throw AppError.server("Those nominees aren't all in category \(categoryID)")
+        }
+        categories[index] = categories[index].withWinners(nominationIDs)
+        return nominationIDs
+    }
+
     func setActiveCeremony(id: Int) async throws {
         try requireAdmin()
         ceremony = Ceremony(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: ceremony.ceremonyAt,

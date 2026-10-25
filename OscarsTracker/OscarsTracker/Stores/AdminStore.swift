@@ -25,6 +25,9 @@ final class AdminStore {
     private(set) var state: LoadState = .idle
     /// Changes that can still be undone, newest last.
     private(set) var undoStack: [WinnerChange] = []
+    /// Categories with a winner change on its way, which take no other
+    /// change until it's settled, so changes never overlap.
+    private(set) var pendingCategories: Set<Int> = []
     private(set) var isSendingPush = false
     var actionError: AppError?
     /// Called after the server accepts a change to a category's winners.
@@ -48,8 +51,11 @@ final class AdminStore {
             if ceremonyID == nil || ceremony == nil {
                 ceremonyID = (ceremonies.first { $0.isActive && !$0.isRehearsal } ?? ceremonies.first)?.id
             }
-            if let ceremonyID {
-                categories = try await data.adminBallot(ceremonyID: ceremonyID)
+            if let requested = ceremonyID {
+                let ballot = try await data.adminBallot(ceremonyID: requested)
+                // A switch to another ceremony while this loaded wins.
+                guard requested == ceremonyID else { return }
+                categories = ballot
             } else {
                 categories = []
             }
@@ -61,7 +67,7 @@ final class AdminStore {
 
     /// Switches the ceremony whose winners are set (the rehearsal, say).
     func select(ceremonyID: Int) async {
-        guard ceremonyID != self.ceremonyID else { return }
+        guard ceremonyID != self.ceremonyID, pendingCategories.isEmpty else { return }
         self.ceremonyID = ceremonyID
         undoStack = []
         categories = []
@@ -103,20 +109,17 @@ final class AdminStore {
         }
     }
 
-    /// Puts the last change back.
+    func isPending(_ categoryID: Int) -> Bool {
+        pendingCategories.contains(categoryID)
+    }
+
+    /// Puts the last change back, in one write, ties included.
     func undo() async {
-        guard let last = undoStack.popLast() else { return }
+        guard let last = undoStack.last, !isPending(last.categoryID) else { return }
+        undoStack.removeLast()
         let current = winners(in: last.categoryID)
         let restored = await change(last.categoryID, from: current, to: last.previous, recordUndo: false) {
-            guard let first = last.previous.min() else {
-                try await self.data.clearWinners(categoryID: last.categoryID)
-                return []
-            }
-            var winners = try await self.data.setWinner(nominationID: first, tie: false)
-            for other in last.previous.sorted().dropFirst() {
-                winners = try await self.data.setWinner(nominationID: other, tie: true)
-            }
-            return winners
+            try await self.data.setWinners(categoryID: last.categoryID, nominationIDs: last.previous)
         }
         if !restored { undoStack.append(last) }
     }
@@ -124,6 +127,9 @@ final class AdminStore {
     @discardableResult
     private func change(_ categoryID: Int, from previous: Set<Int>, to expected: Set<Int>, recordUndo: Bool,
                         _ send: () async throws -> Set<Int>) async -> Bool {
+        guard !isPending(categoryID) else { return false }
+        pendingCategories.insert(categoryID)
+        defer { pendingCategories.remove(categoryID) }
         apply(expected, in: categoryID)
         do {
             let saved = try await send()
@@ -217,6 +223,7 @@ final class AdminStore {
         ceremonyID = nil
         categories = []
         undoStack = []
+        pendingCategories = []
         state = .idle
     }
 }

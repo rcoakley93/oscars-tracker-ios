@@ -411,6 +411,11 @@ final class LiveDataSource: AppDataSource {
         let p_tie: Bool
     }
 
+    private nonisolated struct WinnersParams: Encodable {
+        let p_category_id: Int
+        let p_nomination_ids: [Int]
+    }
+
     private nonisolated struct CeremonyDatesParams: Encodable {
         let p_ceremony_id: Int
         let p_ceremony_at: Date
@@ -470,6 +475,13 @@ final class LiveDataSource: AppDataSource {
     func clearWinners(categoryID: Int) async throws {
         try await run {
             try await client.rpc("admin_clear_winners", params: ["p_category_id": categoryID]).execute()
+        }
+    }
+
+    func setWinners(categoryID: Int, nominationIDs: Set<Int>) async throws -> Set<Int> {
+        try await run {
+            let winners: [Int] = try await client.rpc("admin_set_winners", params: WinnersParams(p_category_id: categoryID, p_nomination_ids: nominationIDs.sorted())).execute().value
+            return Set(winners)
         }
     }
 

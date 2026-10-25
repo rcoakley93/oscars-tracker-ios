@@ -67,6 +67,7 @@ private struct UndoBar: View {
                     Task { await admin.undo() }
                 }
                 .buttonStyle(.glass)
+                .disabled(admin.isPending(change.categoryID))
                 .accessibilityHint("Puts back \(category.name)'s winner as it was")
             }
             .padding(.horizontal, Theme.Space.m)
@@ -139,6 +140,8 @@ private struct WinnerRow: View {
         }
         // Plain, so the row's text keeps its colours: gold only on a winner.
         .buttonStyle(.plain)
+        // One change at a time per category, until the server answers.
+        .disabled(model.admin.isPending(category.id))
         .accessibilityLabel(category.name)
         .accessibilityValue(winners.isEmpty ? "No winner yet" : "Winner: \(winners.map(\.spokenName).formatted(.list(type: .and)))")
         .accessibilityHint("Shows the nominees, to mark the winner")
