@@ -1,19 +1,15 @@
 import SwiftUI
 
-/// The app's mark: a velvet envelope with a gold seal (never the statuette).
+/// The app's mark: the gold emblem from the app icon, on a clear ground so it
+/// sits on the ambient background in light and dark.
 struct BrandMark: View {
-    var size: CGFloat = 64
+    var size: CGFloat = 96
 
     var body: some View {
-        Image(systemName: "envelope.fill")
-            .font(.system(size: size))
-            .foregroundStyle(.velvet)
-            .overlay(alignment: .center) {
-                Circle()
-                    .fill(RadialGradient(colors: [.goldStart, .goldMid, .gold], center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0, endRadius: size * 0.16))
-                    .frame(width: size * 0.3, height: size * 0.3)
-                    .offset(y: size * 0.06)
-            }
+        Image("BrandLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
             .accessibilityHidden(true)
     }
 }

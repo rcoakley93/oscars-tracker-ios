@@ -4,7 +4,7 @@ import SwiftUI
 struct LaunchView: View {
     var body: some View {
         VStack(spacing: Theme.Space.l) {
-            BrandMark(size: 72)
+            BrandMark(size: 120)
             Text("Oscars Tracker").displayFont(.title)
                 .foregroundStyle(.ink)
             ProgressView()
