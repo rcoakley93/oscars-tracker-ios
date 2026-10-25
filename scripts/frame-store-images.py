@@ -22,7 +22,8 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FONT = ROOT / "OscarsTracker/OscarsTracker/Resources/Fonts/PlayfairDisplay.ttf"
 LOGO = ROOT / "OscarsTracker/OscarsTracker/Resources/Assets.xcassets/BrandLogo.imageset/BrandLogo.png"
-SIZES = {"iphone-6.9": (1320, 2868), "iphone-6.1": (1206, 2622), "ipad-13": (2064, 2752), "duo-outer": (1398, 2034)}
+SIZES = {"iphone-6.9": (1320, 2868), "iphone-6.1": (1206, 2622), "ipad-13": (2064, 2752), "duo-outer": (1398, 2034),
+         "duo-inner": (2853, 2007), "duo-half-open": (2007, 2853)}
 VELVET, INK, PARCHMENT, GOLD = (142, 42, 53), (13, 13, 13), (242, 230, 194), (212, 168, 47)
 
 
@@ -74,7 +75,7 @@ def frame(raw_path, size, text, gold, out_path):
     w, h = size
     canvas = gradient(w, h)
     draw = ImageDraw.Draw(canvas)
-    font = playfair(int(w * 0.088))
+    font = playfair(int(min(w, h) * 0.088))  # the Duo's inner display is landscape
     y = int(h * 0.055)
     for line in wrap(draw, text, w, font):
         x = (w - draw.textlength(line, font=font)) / 2
