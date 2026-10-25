@@ -55,6 +55,19 @@ struct ReminderTests {
         #expect(data.preferences == nil)
     }
 
+    @Test func switchesChangedDuringASaveAreSentInOrderAfterIt() async {
+        let data = SampleDataSource()
+        data.preferenceSaveDelay = .milliseconds(50)
+        let store = PushStore(data: data)
+        async let first: Void = store.set(.watchPlan, true)
+        async let second: Void = store.set(.results, false)
+        _ = await (first, second)
+        #expect(data.preferenceSaves.count == 2)
+        #expect(data.preferenceSaves.last?.watchPlan == true && data.preferenceSaves.last?.results == false)
+        #expect(store.preferences.watchPlan && !store.preferences.results)
+        #expect(!store.isSaving)
+    }
+
     @Test func offlineLoadKeepsWhatsShown() async {
         let data = SampleDataSource()
         let store = PushStore(data: data)

@@ -29,7 +29,9 @@ final class PushStore {
     private(set) var status: UNAuthorizationStatus = .notDetermined
     private(set) var token: String?
     private(set) var preferences = NotificationPreferences.defaults
-    /// A switch being saved.
+    /// What the server last confirmed, which a failed save goes back to.
+    private var confirmed = NotificationPreferences.defaults
+    /// Preferences being saved.
     private(set) var isSaving = false
     var actionError: AppError?
 
@@ -84,6 +86,7 @@ final class PushStore {
     /// Before sign-out, so the next person on this phone doesn't get your pushes.
     func signingOut() async {
         preferences = .defaults
+        confirmed = .defaults
         guard let token else { return }
         try? await data.removeDevice(token: token)
     }
@@ -104,37 +107,51 @@ final class PushStore {
         } catch {
             return
         }
+        guard !isSaving else { return }
         preferences = stored ?? .defaults
+        confirmed = preferences
         var wanted = preferences
         wanted.voice = deviceVoice.rawValue
         wanted.timeZone = timeZone.identifier
         guard stored == nil || wanted != stored else { return }
-        if let saved = try? await data.saveNotificationPreferences(wanted) { preferences = saved }
+        if let saved = try? await data.saveNotificationPreferences(wanted), !isSaving {
+            preferences = saved
+            confirmed = saved
+        }
     }
 
-    /// Turns one reminder on or off; puts it back if the save fails.
+    /// Turns one reminder on or off. Saving puts everything back to what the
+    /// server last confirmed if it fails.
     func set(_ reminder: NotificationPreferences.Reminder, _ on: Bool) async {
-        let before = preferences
         preferences[reminder] = on
-        await save(rollingBackTo: before)
+        await save()
     }
 
     /// Profile → Voice changed: reminders follow it.
     func setVoice(_ voice: Voice) async {
         guard preferences.voice != voice.rawValue else { return }
-        let before = preferences
         preferences.voice = voice.rawValue
-        await save(rollingBackTo: before)
+        await save()
     }
 
-    private func save(rollingBackTo before: NotificationPreferences) async {
+    /// One save at a time: each sends the whole row, so a change made while
+    /// one is in flight is sent after it, in order, and a late answer never
+    /// overwrites a newer switch.
+    private func save() async {
+        guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
-        do {
-            preferences = try await data.saveNotificationPreferences(preferences)
-        } catch {
-            preferences = before
-            actionError = AppError(error)
+        while preferences != confirmed {
+            let sending = preferences
+            do {
+                let saved = try await data.saveNotificationPreferences(sending)
+                confirmed = saved
+                if preferences == sending { preferences = saved }
+            } catch {
+                preferences = confirmed
+                actionError = AppError(error)
+                return
+            }
         }
     }
 }

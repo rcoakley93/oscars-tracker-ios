@@ -212,7 +212,12 @@ private struct NominationsSection: View {
                 .confirmationDialog("Send \"Nominations are out\" for the \(admin.ceremony?.name ?? "ceremony")?",
                                     isPresented: $confirming, titleVisibility: .visible) {
                     Button("Send") {
-                        Task { sentTo = await admin.sendNominationsPush() }
+                        Task {
+                            // A result for a ceremony no longer selected isn't this one's.
+                            let requested = admin.ceremonyID
+                            let result = await admin.sendNominationsPush()
+                            if admin.ceremonyID == requested { sentTo = result }
+                        }
                     }
                 } message: {
                     Text("It goes once per ceremony, to everyone who has it on.")

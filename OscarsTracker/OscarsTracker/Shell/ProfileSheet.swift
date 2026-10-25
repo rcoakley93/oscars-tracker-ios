@@ -182,7 +182,6 @@ private struct ReminderToggle: View {
                 Image(systemName: reminder.systemImage)
             }
         }
-        .tint(.gold)
     }
 }
 

@@ -319,6 +319,9 @@ final class SampleDataSource: AppDataSource {
     }
 
     var preferences: NotificationPreferences?
+    /// Every preferences save, in order, and an optional pause before each, to test overlap.
+    var preferenceSaves: [NotificationPreferences] = []
+    var preferenceSaveDelay: Duration?
 
     func notificationPreferences(userID: String) async throws -> NotificationPreferences? {
         try check()
@@ -326,8 +329,10 @@ final class SampleDataSource: AppDataSource {
     }
 
     func saveNotificationPreferences(_ preferences: NotificationPreferences) async throws -> NotificationPreferences {
+        if let preferenceSaveDelay { try? await Task.sleep(for: preferenceSaveDelay) }
         try check()
         _ = try requireUser()
+        preferenceSaves.append(preferences)
         self.preferences = preferences
         return preferences
     }
