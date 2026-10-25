@@ -88,7 +88,8 @@ private struct BallotIntro: View {
                     .foregroundStyle(.goldText)
                     .contentTransition(.numericText(value: Double(ballot.score)))
             } else if model.season.isBallotLocked() {
-                Text(copy.locked)
+                // "Pens down" is already in the status bar above.
+                EmptyView()
             } else if ballot.isComplete {
                 Text(copy.ballotComplete(ballot.categories.count))
             } else {
@@ -430,11 +431,11 @@ private struct CategoryPoints: View {
         let earned = model.ballot.points(for: category)
         Group {
             if let earned, earned > 0 {
-                Text(verbatim: "+\(earned) pts").foregroundStyle(.goldText)
+                Text(verbatim: "+\(earned) \(earned == 1 ? "pt" : "pts")").foregroundStyle(.goldText)
             } else if let earned {
-                Text(verbatim: "\(earned) pts").foregroundStyle(.inkMuted)
+                Text(verbatim: "\(earned) \(earned == 1 ? "pt" : "pts")").foregroundStyle(.inkMuted)
             } else {
-                Text(verbatim: "\(category.pointsValue) pts").foregroundStyle(.goldText)
+                Text(verbatim: "\(category.pointsValue) \(category.pointsValue == 1 ? "pt" : "pts")").foregroundStyle(.goldText)
             }
         }
         .font(.subheadline.weight(.semibold))

@@ -68,6 +68,7 @@ struct LiveBoard: View {
         List {
             Section {
                 header
+                if model.live.decidedCount > 0 { tally }
             }
             if !decided.isEmpty {
                 Section("Announced") {
@@ -118,9 +119,19 @@ struct LiveBoard: View {
         }
         .accessibilityElement(children: .combine)
     }
+
+    private var tally: some View {
+        Text(copy.callTally(model.ballot.calledCount, model.live.decidedCount, toCome.isEmpty))
+            .font(.subheadline).foregroundStyle(.inkMuted)
+    }
 }
 
-private struct LiveBoardRow: View {
+extension BallotStore {
+    /// Winners announced in categories where you picked one of them.
+    var calledCount: Int { categories.count { outcome(for: $0) == .correct } }
+}
+
+struct LiveBoardRow: View {
     let category: BallotCategory
     let pick: Int?
     @Environment(\.copy) private var copy

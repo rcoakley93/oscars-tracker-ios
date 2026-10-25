@@ -76,6 +76,8 @@ struct AppShell: View {
                 SearchSheet()
             case .shareCard:
                 ShareCardSheet()
+            case .recap:
+                RecapSheet()
             case .report(let target):
                 ReportSheet(target: target)
             }

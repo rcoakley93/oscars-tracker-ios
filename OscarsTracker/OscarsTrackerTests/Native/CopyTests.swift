@@ -22,4 +22,13 @@ struct CopyTests {
         #expect(Copy.host.label == "Host")
         #expect(Copy.classic.label == "Classic")
     }
+
+    @Test func theTallyKeepsItsNumbersInBothVoices() {
+        for voice in Voice.allCases {
+            let copy = Copy.for(voice)
+            for (correct, announced, final) in [(0, 5, false), (3, 5, false), (14, 23, true), (23, 23, true), (4, 23, true)] {
+                #expect(copy.callTally(correct, announced, final).contains("\(correct) of \(announced)"))
+            }
+        }
+    }
 }

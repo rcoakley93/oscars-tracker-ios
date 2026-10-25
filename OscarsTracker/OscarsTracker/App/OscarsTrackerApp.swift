@@ -105,6 +105,7 @@ struct OscarsTrackerApp: App {
         }
         switch defaults.string(forKey: "sheet") {
         case "profile": model.navigation.sheet = .profile
+        case "recap": model.navigation.sheet = .recap
         case "share-card": model.navigation.sheet = .shareCard
         case "report": model.navigation.sheet = .report(.person(id: "u-chris", name: "Chris"))
         case "report-group": model.navigation.sheet = .report(.group(id: 2, name: "Family pool"))
