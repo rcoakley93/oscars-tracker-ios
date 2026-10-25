@@ -47,7 +47,8 @@ for set in "${SETS[@]}"; do
     [[ $# -gt 0 && ! " $* " == *" $id "* ]] && continue
     xcrun simctl terminate "$udid" $BUNDLE 2>/dev/null || true
     xcrun simctl launch "$udid" $BUNDLE -sample-data ${=args} >/dev/null
-    sleep 4   # live mode announces at +3 s
+    # Live mode announces at +3 s, then the envelope reveal runs about 3 s more.
+    if [[ "$id" == 07-live ]]; then sleep 10; else sleep 4; fi
     xcrun simctl io "$udid" screenshot --type=png "$OUT/$name/$id.png"
   done
   xcrun simctl status_bar "$udid" clear
