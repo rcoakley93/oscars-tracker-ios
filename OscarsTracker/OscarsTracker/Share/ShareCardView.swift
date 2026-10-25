@@ -39,14 +39,21 @@ struct ShareCardView: View {
     private static let cream = Color(red: 0.96, green: 0.93, blue: 0.86)
     private static let muted = Color(red: 0.96, green: 0.93, blue: 0.86).opacity(0.62)
 
+    /// A full ballot (all 24 categories) doesn't fit with a credit line under
+    /// every pick, so a long card drops those lines and tightens up.
+    private var isCompact: Bool { card.lines.count > 16 }
+
     var body: some View {
-        VStack(spacing: 14) {
-            header
-            posterStrip
-            if card.kind == .results { summary }
+        VStack(spacing: isCompact ? 10 : 14) {
+            header.layoutPriority(1)
+            posterStrip.layoutPriority(1)
+            if card.kind == .results { summary.layoutPriority(1) }
+            // The picks take what's left and never push the title or the TMDB
+            // credit off the card.
             picks
-            Spacer(minLength: 0)
-            footer
+                .frame(maxHeight: .infinity, alignment: .top)
+                .clipped()
+            footer.layoutPriority(1)
         }
         .padding(20)
         .frame(width: Self.size.width, height: Self.size.height)
@@ -86,7 +93,7 @@ struct ShareCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             }
         }
-        .frame(height: 78)
+        .frame(height: isCompact ? 64 : 78)
         .frame(maxWidth: .infinity)
     }
 
@@ -129,7 +136,7 @@ struct ShareCardView: View {
                 .foregroundStyle(color(for: line))
                 .strikethrough(line.isCorrect == false, color: Self.muted)
                 .lineLimit(1)
-            if let film = line.film {
+            if !isCompact, let film = line.film {
                 Text(film)
                     .font(.system(size: 8))
                     .foregroundStyle(Self.muted).lineLimit(1)
