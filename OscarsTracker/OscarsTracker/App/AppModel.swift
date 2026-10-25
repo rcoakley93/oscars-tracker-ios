@@ -213,12 +213,13 @@ final class AppModel {
     private func followLiveActivity() async {
         guard session.userID != nil, season.config.isEnabled(AppConfig.liveActivity) else { return }
         liveActivity.start(ceremonyID: season.ceremony?.id)
+        await liveActivity.sendUnsentTokens()
         await updateLiveActivity()
     }
 
     private func updateLiveActivity() async {
         guard liveActivity.isFollowing, !ballot.categories.isEmpty else { return }
-        await liveActivity.update(liveActivityState)
+        await liveActivity.update(liveActivityState, knowsLatest: live.latestCategoryID != nil)
     }
 
     /// The group the Ballot's "62% of Movies LLC picked Hamnet" lines speak for.

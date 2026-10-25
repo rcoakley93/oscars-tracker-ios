@@ -158,6 +158,34 @@ struct LiveActivityTests {
         #expect(live.latestCategoryID == nil)
     }
 
+    @Test func aColdStartKeepsThePushedWinner() {
+        let pushed = State.previewCalled
+        let figures = State(category: "Animated Feature", winner: "Elio", decided: 14, total: 23, score: 10, rank: 2, players: 212)
+        let next = LiveActivityStore.keepingWinner(of: pushed, in: figures)
+        #expect(next.category == pushed.category)
+        #expect(next.winner == pushed.winner)
+        #expect(next.outcome == pushed.outcome)
+        #expect([next.decided, next.score, next.rank] == [14, 10, 2])
+        // Nothing shown yet: the new state as it is.
+        #expect(LiveActivityStore.keepingWinner(of: .previewWaiting, in: figures) == figures)
+    }
+
+    @Test func aTokenThatFailsToSendGoesAgain() async {
+        let data = SampleDataSource()
+        let store = LiveActivityStore(data: data, activitiesEnabled: { true })
+        data.failure = .offline
+        await store.register("ab", ceremonyID: 1)
+        #expect(store.unsentTokens == [1: "ab"])
+        #expect(store.actionError == nil)
+        data.failure = .server("down")
+        await store.sendUnsentTokens()
+        #expect(store.actionError == .server("down"))
+        data.failure = nil
+        await store.sendUnsentTokens()
+        #expect(store.unsentTokens.isEmpty)
+        #expect(data.liveActivityTokens == [1: "ab"])
+    }
+
     @Test func tokensReachTheServer() async throws {
         let data = SampleDataSource()
         try await data.registerLiveActivity(ceremonyID: 1, token: "ab", environment: .sandbox)

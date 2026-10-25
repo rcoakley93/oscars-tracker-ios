@@ -23,6 +23,10 @@ final class LiveActivityStore {
     private var observers: [String: Task<Void, Never>] = [:]
     private var listening: Task<Void, Never>?
     private var startToken: String?
+    /// Tokens the server hasn't confirmed (offline, or a failed call), by
+    /// ceremony; sent again on the next refresh.
+    private(set) var unsentTokens: [Int: String] = [:]
+    private var startTokenUnsent = false
     private var ceremonyID: Int?
 
     init(data: any AppDataSource, activitiesEnabled: @escaping () -> Bool = { ActivityAuthorizationInfo().areActivitiesEnabled }) {
@@ -88,13 +92,61 @@ final class LiveActivityStore {
     }
 
     /// New winners while the app is open; the server's push brings the same.
-    func update(_ state: CeremonyActivityAttributes.ContentState) async {
+    /// When the app doesn't know which winner came last (a cold start: the
+    /// ballot isn't in announcement order), each activity keeps the winner
+    /// it shows, which a push put there, and takes only the figures.
+    func update(_ state: CeremonyActivityAttributes.ContentState, knowsLatest: Bool = true) async {
         for activity in activities {
-            if state.isFinished {
-                await activity.end(content(state), dismissalPolicy: .after(.now.addingTimeInterval(2 * 60 * 60)))
+            let next = knowsLatest ? state : Self.keepingWinner(of: activity.content.state, in: state)
+            if next.isFinished {
+                await activity.end(content(next), dismissalPolicy: .after(.now.addingTimeInterval(2 * 60 * 60)))
             } else {
-                await activity.update(content(state))
+                await activity.update(content(next))
             }
+        }
+    }
+
+    /// `state`'s figures under `shown`'s winner, when it shows one.
+    nonisolated static func keepingWinner(of shown: CeremonyActivityAttributes.ContentState,
+                                          in state: CeremonyActivityAttributes.ContentState) -> CeremonyActivityAttributes.ContentState {
+        guard shown.category != nil else { return state }
+        var next = state
+        next.category = shown.category
+        next.winner = shown.winner
+        next.detail = shown.detail
+        next.outcome = shown.outcome
+        return next
+    }
+
+    /// On each refresh (launch, the network back, the foreground): tokens
+    /// that didn't reach the server go again.
+    func sendUnsentTokens() async {
+        for (ceremonyID, token) in unsentTokens.sorted(by: { $0.key < $1.key }) {
+            await register(token, ceremonyID: ceremonyID)
+        }
+        if startTokenUnsent, let startToken { await registerStartToken(startToken) }
+    }
+
+    /// Saves an activity's token, keeping it to retry if that fails. Offline
+    /// is expected and silent; anything else shows.
+    func register(_ token: String, ceremonyID: Int) async {
+        unsentTokens[ceremonyID] = token
+        do {
+            try await data.registerLiveActivity(ceremonyID: ceremonyID, token: token, environment: .current)
+            if unsentTokens[ceremonyID] == token { unsentTokens[ceremonyID] = nil }
+        } catch {
+            let error = AppError(error)
+            if error != .offline { actionError = error }
+        }
+    }
+
+    private func registerStartToken(_ token: String) async {
+        startTokenUnsent = true
+        do {
+            try await data.registerLiveActivityStartToken(token, environment: .current)
+            if startToken == token { startTokenUnsent = false }
+        } catch {
+            // Push-to-start is a bonus; the next refresh tries again.
         }
     }
 
@@ -111,6 +163,8 @@ final class LiveActivityStore {
             await activity.end(nil, dismissalPolicy: .immediate)
         }
         isFollowing = false
+        unsentTokens = [:]
+        startTokenUnsent = false
         if let startToken {
             try? await data.removeLiveActivityStartToken(startToken)
             self.startToken = nil
@@ -138,15 +192,16 @@ final class LiveActivityStore {
         let ceremonyID = activity.attributes.ceremonyID
         observers[activity.id] = Task { [weak self, data] in
             await withTaskGroup(of: Void.self) { group in
-                group.addTask {
+                group.addTask { [weak self] in
                     for await token in activity.pushTokenUpdates {
-                        try? await data.registerLiveActivity(ceremonyID: ceremonyID, token: Self.hex(token), environment: .current)
+                        await self?.register(Self.hex(token), ceremonyID: ceremonyID)
                     }
                 }
                 group.addTask { [weak self] in
                     for await state in activity.activityStateUpdates {
                         await self?.refreshFollowing()
                         if state == .dismissed || state == .ended {
+                            await self?.dropUnsent(ceremonyID)
                             try? await data.endLiveActivity(ceremonyID: ceremonyID)
                             await self?.forget(activity.id)
                             return
@@ -157,6 +212,10 @@ final class LiveActivityStore {
         }
     }
 
+    private func dropUnsent(_ ceremonyID: Int) {
+        unsentTokens[ceremonyID] = nil
+    }
+
     private func forget(_ id: String) {
         observers[id]?.cancel()
         observers[id] = nil
@@ -165,7 +224,7 @@ final class LiveActivityStore {
     private func saveStartToken(_ token: Data) async {
         let hex = Self.hex(token)
         startToken = hex
-        try? await data.registerLiveActivityStartToken(hex, environment: .current)
+        await registerStartToken(hex)
     }
 
     nonisolated static func hex(_ token: Data) -> String {
