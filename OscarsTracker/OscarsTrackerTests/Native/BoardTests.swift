@@ -169,3 +169,13 @@ struct GroupLimitTests {
         }
     }
 }
+
+@Suite("Saved config")
+struct SavedConfigTests {
+    @Test func aConfigSavedBeforeTheGroupLimitsStillDecodes() throws {
+        let old = #"{"minSupportedBuild":7,"featureFlags":{"live_mode":true},"runtimeBuckets":[]}"#
+        let config = try JSONDecoder().decode(AppConfig.self, from: Data(old.utf8))
+        #expect(config.minSupportedBuild == 7)
+        #expect(config.groupMemberLimit == 50 && config.userGroupLimit == 5)
+    }
+}

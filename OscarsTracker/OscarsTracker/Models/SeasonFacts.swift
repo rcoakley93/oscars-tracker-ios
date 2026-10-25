@@ -46,3 +46,18 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
         featureFlags[flag] ?? false
     }
 }
+
+/// Written by older builds without the newer keys, so every field decodes
+/// with its default: a saved season cache stays readable after an update.
+extension AppConfig {
+    nonisolated init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = AppConfig()
+        minSupportedBuild = try c.decodeIfPresent(Int.self, forKey: .minSupportedBuild) ?? d.minSupportedBuild
+        featureFlags = try c.decodeIfPresent([String: Bool].self, forKey: .featureFlags) ?? d.featureFlags
+        runtimeBuckets = try c.decodeIfPresent([RuntimeBucket].self, forKey: .runtimeBuckets) ?? d.runtimeBuckets
+        nominationsAt = try c.decodeIfPresent(Date.self, forKey: .nominationsAt)
+        groupMemberLimit = try c.decodeIfPresent(Int.self, forKey: .groupMemberLimit) ?? d.groupMemberLimit
+        userGroupLimit = try c.decodeIfPresent(Int.self, forKey: .userGroupLimit) ?? d.userGroupLimit
+    }
+}
