@@ -12,6 +12,10 @@ final class BallotStore {
     private(set) var categories: [BallotCategory] = []
     private(set) var picks: [Int: Int] = [:]
     private(set) var state: LoadState = .idle
+    /// What a group picked, by category, once the ballot locks (P6-05).
+    private(set) var shares: [Int: [PickShare]] = [:]
+    /// The group `shares` came from.
+    private(set) var sharesGroup: PoolGroup?
     /// Counts the saves that picked the last category, for the gold dust. It
     /// changes only once the save succeeds, so a rolled-back pick never celebrates.
     private(set) var completions = 0
@@ -53,7 +57,41 @@ final class BallotStore {
     var hasWinners: Bool { categories.contains { $0.nominations.contains(where: \.isWinner) } }
 
     /// Points from correct picks so far.
-    var score: Int { categories.filter { outcome(for: $0) == .correct }.map(\.pointsValue).reduce(0, +) }
+    var score: Int { categories.compactMap(points(for:)).reduce(0, +) }
+
+    /// The points your pick earned once the winner is in: the category's
+    /// points when you called it, else 0 (P2-04). Nil before the winner, or
+    /// with no pick.
+    func points(for category: BallotCategory) -> Int? {
+        outcome(for: category).map { $0 == .correct ? category.pointsValue : 0 }
+    }
+
+    /// The group's most-picked nominee in a category and its share; on a
+    /// tie, the one listed first.
+    func topShare(for category: BallotCategory) -> (nominee: BallotNominee, percent: Int)? {
+        let rows = shares[category.id] ?? []
+        guard let top = rows.max(by: { $0.pickCount < $1.pickCount }), top.pickCount > 0 else { return nil }
+        let tied = Set(rows.filter { $0.pickCount == top.pickCount }.map(\.nominationId))
+        guard let nominee = category.nominations.first(where: { tied.contains($0.id) }) else { return nil }
+        return (nominee, top.percent)
+    }
+
+    /// Loads what `group` picked. Shares are a garnish, so a failure keeps
+    /// what was there and says nothing.
+    func loadShares(ceremonyID: Int, group: PoolGroup) async {
+        do {
+            let rows = try await data.pickShares(ceremonyID: ceremonyID, groupID: group.id)
+            shares = Dictionary(grouping: rows, by: \.categoryId)
+            sharesGroup = group
+        } catch {
+            if sharesGroup?.id != group.id { clearShares() }
+        }
+    }
+
+    func clearShares() {
+        shares = [:]
+        sharesGroup = nil
+    }
 
     /// Categories left to pick.
     var remaining: Int { categories.count - pickedCount }
@@ -109,6 +147,7 @@ final class BallotStore {
     func reset() {
         categories = []
         picks = [:]
+        clearShares()
         state = .idle
     }
 }

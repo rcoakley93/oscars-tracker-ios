@@ -6,10 +6,39 @@ nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     let name: String
     let pointsValue: Int
     let nominations: [BallotNominee]
+    /// `categories.display_mode`; nil from a copy cached before P6-05.
+    var displayMode: DisplayMode? = nil
+
+    nonisolated enum DisplayMode: String, Codable, Hashable, Sendable {
+        case person, film
+    }
 
     /// Acting categories lead with the person and show the film underneath.
+    /// The category's `display_mode` decides; without one, any nominee with
+    /// a person does.
     var leadsWithPerson: Bool {
-        nominations.contains { !($0.personName ?? "").isEmpty }
+        if let displayMode { return displayMode == .person }
+        return nominations.contains { !($0.personName ?? "").isEmpty }
+    }
+}
+
+/// How many of a group's members picked a nominee, after the lock (P6-05).
+nonisolated struct PickShare: Codable, Hashable, Sendable {
+    let categoryId: Int
+    let nominationId: Int
+    let memberCount: Int
+    let pickCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case categoryId = "category_id"
+        case nominationId = "nomination_id"
+        case memberCount = "member_count"
+        case pickCount = "pick_count"
+    }
+
+    /// The share of the group, rounded to a whole percent.
+    var percent: Int {
+        memberCount > 0 ? Int((Double(pickCount) / Double(memberCount) * 100).rounded()) : 0
     }
 }
 
@@ -56,6 +85,8 @@ protocol AppDataSource: AnyObject, Sendable {
     func ballot() async throws -> [BallotCategory]
     func picks(userID: String) async throws -> [Int: Int]
     func savePick(categoryID: Int, nominationID: Int, userID: String) async throws
+    /// What a group you're in picked, per nominee; empty before the lock.
+    func pickShares(ceremonyID: Int, groupID: Int) async throws -> [PickShare]
 
     // Watch plan
     func plan(userID: String) async throws -> [WatchPlanItem]

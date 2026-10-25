@@ -212,7 +212,8 @@ final class LiveDataSource: AppDataSource {
                     pointsValue: category.pointsValue ?? 1,
                     nominations: (byCategory[category.id] ?? [])
                         .map { BallotNominee(id: $0.id, movie: $0.movie, personName: $0.detail_text, isWinner: $0.is_winner ?? false) }
-                        .sorted { ($0.personName ?? $0.movie?.title ?? "") < ($1.personName ?? $1.movie?.title ?? "") }
+                        .sorted { ($0.personName ?? $0.movie?.title ?? "") < ($1.personName ?? $1.movie?.title ?? "") },
+                    displayMode: category.displayMode
                 )
             }
         }
@@ -240,6 +241,17 @@ final class LiveDataSource: AppDataSource {
             try await client.from("user_predictions")
                 .upsert(PickUpsert(user_id: userID, category_id: categoryID, nomination_id: nominationID), onConflict: "user_id,category_id")
                 .execute()
+        }
+    }
+
+    private nonisolated struct SharesParams: Encodable {
+        let p_ceremony_id: Int
+        let p_group_id: Int
+    }
+
+    func pickShares(ceremonyID: Int, groupID: Int) async throws -> [PickShare] {
+        try await run {
+            try await client.rpc("get_group_pick_shares", params: SharesParams(p_ceremony_id: ceremonyID, p_group_id: groupID)).execute().value
         }
     }
 

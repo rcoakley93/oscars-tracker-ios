@@ -33,6 +33,22 @@ struct BallotTab: View {
                 BallotCards(isPlaceholder: true)
             }
             .tabChrome("Ballot")
+            .toolbar {
+                // After the lock, which of your groups the "62% picked" lines speak for.
+                if model.season.isBallotLocked(), model.groups.groups.count > 1 {
+                    ToolbarOverflowMenu {
+                        Picker("Group picks", systemImage: "person.3", selection: Binding {
+                            model.ballotGroup?.id ?? 0
+                        } set: { id in
+                            navigation.ballotGroupID = id
+                            Task { await model.loadPickShares() }
+                        }) {
+                            ForEach(model.groups.groups) { Text($0.name).tag($0.id) }
+                        }
+                    }
+                    .visibilityPriority(.low)
+                }
+            }
             .safeAreaBar(edge: .top) { BallotStatusBar() }
             // The Ballot is a task, so its bar actions win over the tab bar
             // when the Duo's outer screen is short of room.
@@ -221,9 +237,7 @@ private struct CategoryCard: View {
                     .foregroundStyle(.ink)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(verbatim: "\(category.pointsValue) pts")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.goldText)
+                CategoryPoints(category: category)
             }
             .contentShape(.rect)
             // Only a picked category collapses and opens again.
@@ -237,10 +251,11 @@ private struct CategoryCard: View {
                     ForEach(category.nominations) { NomineeRow(category: category, nominee: $0) }
                 }
             } else if let pick {
-                PickSummary(pick: pick, outcome: outcome)
+                PickSummary(category: category, pick: pick, outcome: outcome)
                     .onTapGesture(perform: toggle)
                     .accessibilityAction { toggle() }
             }
+            GroupPickLine(category: category)
         }
         .padding(Theme.Space.m)
         .solidSurface()
@@ -251,6 +266,7 @@ private struct CategoryCard: View {
 /// whether you called it.
 private struct PickSummary: View {
     @Environment(\.copy) private var copy
+    let category: BallotCategory
     let pick: BallotNominee
     let outcome: BallotStore.Outcome?
 
@@ -259,22 +275,22 @@ private struct PickSummary: View {
             Image(systemName: outcome == .wrong ? "xmark.circle" : "checkmark.circle.fill")
                 .foregroundStyle(outcome == .wrong ? AnyShapeStyle(.inkMuted) : AnyShapeStyle(Theme.goldGradient))
             VStack(alignment: .leading, spacing: 2) {
-                Text(pick.personName ?? pick.movie?.title ?? "Your pick")
+                Text(pick.title(in: category) ?? "Your pick")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(outcome == .wrong ? .inkMuted : .goldText)
                 if let outcome {
                     Text(outcome == .correct ? copy.correct : copy.wrong)
                         .font(.footnote)
                         .foregroundStyle(.inkMuted)
-                } else if pick.personName != nil, let film = pick.movie?.title {
-                    Text(film).font(.footnote).foregroundStyle(.inkMuted)
+                } else if let detail = pick.detail(in: category) {
+                    Text(detail).font(.footnote).foregroundStyle(.inkMuted)
                 }
             }
             Spacer(minLength: 0)
         }
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Your pick: \(pick.spokenName)")
+        .accessibilityLabel("Your pick: \(pick.spokenName(in: category))")
         .accessibilityValue(outcome.map { $0 == .correct ? "Correct" : "Not this time" } ?? "")
         // A tap opens the nominees again, so VoiceOver hears it's a button.
         .accessibilityAddTraits(.isButton)
@@ -295,10 +311,13 @@ private struct CategoryRow: View {
             VStack(alignment: .leading) {
                 Text(category.name).font(.headline).foregroundStyle(.ink)
                 if let pick {
-                    Text(pick.spokenName).font(.footnote).foregroundStyle(outcome == .wrong ? .inkMuted : .goldText)
+                    Text(pick.spokenName(in: category)).font(.footnote).foregroundStyle(outcome == .wrong ? .inkMuted : .goldText)
                 }
             }
             Spacer()
+            if model.ballot.points(for: category) != nil {
+                CategoryPoints(category: category)
+            }
             Image(systemName: outcome == .correct ? "trophy.fill" : outcome == .wrong ? "xmark.circle" : pick == nil ? "circle" : "checkmark.circle.fill")
                 .foregroundStyle(pick == nil || outcome == .wrong ? AnyShapeStyle(.inkMuted) : AnyShapeStyle(Theme.goldGradient))
                 .accessibilityHidden(true)
@@ -315,10 +334,9 @@ private struct CategoryDetail: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.s) {
-                Text(verbatim: "\(category.pointsValue) pts")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.goldText)
+                CategoryPoints(category: category)
                 ForEach(category.nominations) { NomineeRow(category: category, nominee: $0) }
+                GroupPickLine(category: category)
             }
             .padding(Theme.Space.m)
             .frame(maxWidth: 640, alignment: .leading)
@@ -355,16 +373,11 @@ private struct NomineeRow: View {
                         .frame(width: 40)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    if let person = nominee.personName, !person.isEmpty {
-                        Text(person).font(.body.weight(.semibold)).foregroundStyle(.ink)
-                        if let film = nominee.movie?.title {
-                            Text(film).font(.subheadline).foregroundStyle(.inkMuted)
-                        }
-                    } else {
-                        Text(nominee.movie?.title ?? "Nominee").font(.body.weight(.semibold)).foregroundStyle(.ink)
-                        if let year = nominee.movie?.releaseYear {
-                            Text(verbatim: String(year)).font(.subheadline).foregroundStyle(.inkMuted)
-                        }
+                    Text(nominee.title(in: category) ?? "Nominee").font(.body.weight(.semibold)).foregroundStyle(.ink)
+                    if let detail = nominee.detail(in: category) {
+                        Text(detail).font(.subheadline).foregroundStyle(.inkMuted)
+                    } else if !category.leadsWithPerson, let year = nominee.movie?.releaseYear {
+                        Text(verbatim: String(year)).font(.subheadline).foregroundStyle(.inkMuted)
                     }
                     if picked, !locked, !ballot.hasWinners {
                         Text(copy.pickSaved(nominee.id))
@@ -398,21 +411,76 @@ private struct NomineeRow: View {
         .buttonStyle(.plain)
         .disabled(locked || ballot.hasWinners)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(nominee.spokenName)
+        .accessibilityLabel(nominee.spokenName(in: category))
         .accessibilityValue([picked ? "Your pick" : nil, nominee.isWinner ? "Winner" : nil].compactMap { $0 }.joined(separator: ", "))
         .accessibilityAddTraits(picked ? [.isButton, .isSelected] : .isButton)
         .moment(.pick, trigger: picked)
     }
 }
 
-extension BallotNominee {
-    /// "Jessie Buckley, in Hamnet" for acting categories, else the film.
-    var spokenName: String {
-        if let person = personName, !person.isEmpty {
-            if let film = movie?.title { return "\(person), in \(film)" }
-            return person
+/// "10 pts" before the winner; once it's in, what your pick earned: "+10 pts"
+/// in gold when you called it, "0 pts" when you didn't.
+private struct CategoryPoints: View {
+    @Environment(AppModel.self) private var model
+    let category: BallotCategory
+
+    var body: some View {
+        let earned = model.ballot.points(for: category)
+        Group {
+            if let earned, earned > 0 {
+                Text(verbatim: "+\(earned) pts").foregroundStyle(.goldText)
+            } else if let earned {
+                Text(verbatim: "\(earned) pts").foregroundStyle(.inkMuted)
+            } else {
+                Text(verbatim: "\(category.pointsValue) pts").foregroundStyle(.goldText)
+            }
         }
-        return movie?.title ?? "Nominee"
+        .font(.subheadline.weight(.semibold))
+        .accessibilityLabel(earned.map { "Earned \(Copy.pointCount($0))" } ?? Copy.pointCount(category.pointsValue))
+    }
+}
+
+/// After the lock, the group's favourite: "62% of Movies LLC picked Hamnet."
+private struct GroupPickLine: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+    let category: BallotCategory
+
+    var body: some View {
+        if let group = model.ballot.sharesGroup, let top = model.ballot.topShare(for: category) {
+            Label {
+                Text(copy.groupPicked(top.percent, group.name, top.nominee.title(in: category) ?? "Nominee"))
+            } icon: {
+                Image(systemName: "person.3")
+            }
+            .font(.footnote)
+            .foregroundStyle(.inkMuted)
+            .accessibilityIdentifier("group-picked-\(category.id)")
+        }
+    }
+}
+
+extension BallotNominee {
+    /// The person for categories that lead with the person, else the film.
+    func title(in category: BallotCategory) -> String? {
+        if category.leadsWithPerson, let person = personName, !person.isEmpty { return person }
+        return movie?.title ?? personName
+    }
+
+    /// The line under the title: the film under the person, or the detail
+    /// (a song, a country) under the film.
+    func detail(in category: BallotCategory) -> String? {
+        let title = title(in: category)
+        let other = category.leadsWithPerson ? movie?.title : personName
+        guard let other, !other.isEmpty, other != title else { return nil }
+        return other
+    }
+
+    /// "Jessie Buckley, in Hamnet" for acting categories, else the film.
+    func spokenName(in category: BallotCategory) -> String {
+        guard let title = title(in: category) else { return "Nominee" }
+        guard let detail = detail(in: category) else { return title }
+        return category.leadsWithPerson ? "\(title), in \(detail)" : "\(title), \(detail)"
     }
 }
 
@@ -445,19 +513,15 @@ extension BallotCategory {
     BallotTab().environment(AppModel(data: SampleDataSource())).preferredColorScheme(.dark)
 }
 
-#Preview("Locked") {
-    BallotTab().environment(AppModel.preview { data in
-        data.ceremony = Ceremony(id: 2, number: 99, name: "99th Academy Awards", ceremonyAt: .now, ballotLockAt: .now.addingTimeInterval(-60), isActive: true)
-    }).preferredColorScheme(.dark)
+#Preview("Before lock") {
+    // Picks open; no group shares until the lock.
+    BallotTab().environment(AppModel.preview()).preferredColorScheme(.dark)
+}
+
+#Preview("After lock") {
+    BallotTab().environment(AppModel.preview { $0.passLock() }).preferredColorScheme(.dark)
 }
 
 #Preview("Winners in") {
-    BallotTab().environment(AppModel.preview { data in
-        data.ceremony = Ceremony(id: 2, number: 99, name: "99th Academy Awards", ceremonyAt: .now, ballotLockAt: .now.addingTimeInterval(-3600), isActive: true)
-        data.categories = data.categories.map { category in
-            BallotCategory(id: category.id, name: category.name, pointsValue: category.pointsValue, nominations: category.nominations.enumerated().map { index, nominee in
-                BallotNominee(id: nominee.id, movie: nominee.movie, personName: nominee.personName, isWinner: index == 0)
-            })
-        }
-    }).preferredColorScheme(.dark)
+    BallotTab().environment(AppModel.preview { $0.passLock(winners: true) }).preferredColorScheme(.dark)
 }

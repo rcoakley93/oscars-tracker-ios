@@ -39,6 +39,8 @@ struct Copy {
     let searchEmpty: String
     /// "4 of 6 in Movies LLC have seen it."
     let groupSeen: (_ seen: Int, _ members: Int, _ group: String) -> String
+    /// After the lock: "62% of Movies LLC picked Hamnet."
+    let groupPicked: (_ percent: Int, _ group: String, _ nominee: String) -> String
 
     // Group comparison (Films) and the board
     /// "2nd of 6 in Movies LLC": a fact, the same in both voices.
@@ -156,6 +158,7 @@ extension Copy {
         },
         searchEmpty: "Search films and nominees.",
         groupSeen: { seen, members, group in "\(seen) of \(members) in \(group) have seen it." },
+        groupPicked: { percent, group, nominee in "\(percent)% of \(group) picked \(nominee)." },
         compareRank: rankLine,
         compareGap: { films, name in "You're \(filmCount(films)) behind \(name)." },
         compareTied: { name in "You're tied with \(name)." },
@@ -242,6 +245,11 @@ extension Copy {
             case members: "\(seen) of \(members) in \(group) have seen it. Full house."
             default: "\(seen) of \(members) in \(group) have seen it. Peer pressure, but make it cinema."
             }
+        },
+        groupPicked: { percent, group, nominee in
+            percent == 100
+                ? "All of \(group) picked \(nominee). Groupthink, or genius."
+                : "\(percent)% of \(group) picked \(nominee)."
         },
         compareRank: rankLine,
         compareGap: { films, name in

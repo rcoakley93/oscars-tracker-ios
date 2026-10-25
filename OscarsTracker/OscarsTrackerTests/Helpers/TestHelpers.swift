@@ -41,14 +41,16 @@ enum CategoryFactory {
         name: String = "Best Picture",
         pointsValue: Int? = 10,
         year: Int? = 2024,
-        createdAt: String? = nil
+        createdAt: String? = nil,
+        displayMode: BallotCategory.DisplayMode? = nil
     ) -> OscarsTracker.Category {
         Category(
             id: id,
             name: name,
             pointsValue: pointsValue,
             year: year,
-            createdAt: createdAt
+            createdAt: createdAt,
+            displayMode: displayMode
         )
     }
 }

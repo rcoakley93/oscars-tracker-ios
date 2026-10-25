@@ -72,6 +72,7 @@ final class AppModel {
             _ = await (plan, groups, profile, push)
         }
         _ = await (season, films, ballot)
+        await loadPickShares()
         applyPending()
         saveSnapshot()
     }
@@ -149,6 +150,21 @@ final class AppModel {
         async let season: Void = loadSeasonAndBoards()
         async let push: Void = push.refresh()
         _ = await (season, push)
+        await loadPickShares()
+    }
+
+    /// The group the Ballot's "62% of Movies LLC picked Hamnet" lines speak for.
+    var ballotGroup: PoolGroup? {
+        groups.groups.first { $0.id == navigation.ballotGroupID } ?? groups.groups.first
+    }
+
+    /// What `ballotGroup` picked, once the ballot locks (P6-05).
+    func loadPickShares() async {
+        guard session.userID != nil, let ceremony = season.ceremony, season.isBallotLocked(), let group = ballotGroup else {
+            ballot.clearShares()
+            return
+        }
+        await ballot.loadShares(ceremonyID: ceremony.id, group: group)
     }
 
     /// The boards need the ceremony's id.
