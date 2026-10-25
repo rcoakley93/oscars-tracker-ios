@@ -255,7 +255,7 @@ final class SampleDataSource: AppDataSource {
 
     func createGroup(name: String, userID: String) async throws -> PoolGroup {
         _ = try requireUser()
-        guard groups.count < 5 else { throw AppError.tooManyGroups }
+        guard groups.count < config.userGroupLimit else { throw AppError.tooManyGroups(limit: config.userGroupLimit) }
         let group = PoolGroup(id: (groups.map(\.id).max() ?? 0) + 1, name: name, createdBy: Self.userID, inviteCode: LiveDataSource.newInviteCode(), createdAt: nil)
         groups.append(group)
         return group
@@ -266,6 +266,7 @@ final class SampleDataSource: AppDataSource {
         let code = inviteCode.trimmingCharacters(in: .whitespaces).uppercased()
         if groups.contains(where: { $0.inviteCode == code }) { throw AppError.alreadyInGroup }
         guard code == "FRIEND" else { throw AppError.invalidInviteCode }
+        guard groups.count < config.userGroupLimit else { throw AppError.tooManyGroups(limit: config.userGroupLimit) }
         let group = PoolGroup(id: 9, name: "Film club", createdBy: "someone-else", inviteCode: code, createdAt: nil)
         groups.append(group)
         return JoinedGroup(groupId: group.id, groupName: group.name)

@@ -105,6 +105,10 @@ private struct GroupDetail: View {
         let ranked = LeaderboardStore.ranked(model.leaderboard.entries(group.id), by: .films)
 
         List {
+            Section {
+                GroupComparisonCard(group: group)
+                    .listRowInsets(.init()).listRowBackground(Color.clear)
+            }
             Section("Board") {
                 if ranked.count == 1 {
                     Text(copy.boardAlone).foregroundStyle(.ink).listRowBackground(Color.surface)
@@ -136,7 +140,7 @@ private struct GroupDetail: View {
                 }
                 .listRowBackground(Color.surface)
             } footer: {
-                Text("Up to 12 people. Friends join from the invite, or with the code in Groups → Add → Join a group.")
+                Text("Up to \(model.season.config.groupMemberLimit) people. Friends join from the invite, or with the code in Groups → Add → Join a group.")
             }
             Section {
                 Button("Open on the Board", systemImage: "trophy") {

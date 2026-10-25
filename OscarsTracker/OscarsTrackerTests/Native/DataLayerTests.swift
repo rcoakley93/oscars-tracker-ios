@@ -47,12 +47,21 @@ struct AppErrorTests {
         ("Invalid invite code", .invalidInviteCode),
         ("You are already a member of this group", .alreadyInGroup),
         ("You are the creator of this group", .ownGroup),
-        ("Group has reached the maximum limit of 12 members", .groupFull),
-        ("User has reached the maximum limit of 5 groups", .tooManyGroups),
+        ("Group has reached the maximum limit of 12 members", .groupFull(limit: 12)),
+        ("User has reached the maximum limit of 5 groups", .tooManyGroups(limit: 5)),
         ("Not authenticated", .notSignedIn),
     ])
     func mapsServerMessages(message: String, expected: AppError) {
         #expect(AppError(serverMessage: message) == expected)
+    }
+
+    @Test func groupLimitsAreMatchedByCodeNotByNumber() {
+        #expect(AppError(serverMessage: "Group has reached the maximum limit of 50 members", code: "GRP01", hint: "group_full") == .groupFull(limit: 50))
+        #expect(AppError(serverMessage: "anything", code: "GRP02") == .tooManyGroups(limit: nil))
+        #expect(AppError(serverMessage: "whatever", hint: "group_full") == .groupFull(limit: nil))
+        #expect(AppError.groupFull(limit: 50).message == "That group is full (50 members).")
+        #expect(AppError.tooManyGroups(limit: 8).message == "You're in 8 groups already, the most you can join.")
+        #expect(!AppError.groupFull(limit: nil).message.contains("("))
     }
 
     @Test func mapsOfflineErrors() {

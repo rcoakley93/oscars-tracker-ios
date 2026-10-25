@@ -105,9 +105,16 @@ final class LeaderboardStore {
             case behind(String, by: Int)
         }
 
+        /// The nearest person below you, and how many they trail by.
+        struct Chaser: Equatable {
+            let name: String
+            let by: Int
+        }
+
         let rank: Int
         let size: Int
         let position: Position
+        var chaser: Chaser?
     }
 
     /// Nil until the board is loaded, or if you're not on it.
@@ -124,7 +131,10 @@ final class LeaderboardStore {
         } else {
             position = .first
         }
-        return Standing(rank: me.rank, size: board.count, position: position)
+        let chaser = others.filter { Self.value($0, metric) < mine }
+            .max { Self.value($0, metric) < Self.value($1, metric) }
+            .map { Standing.Chaser(name: $0.username, by: mine - Self.value($0, metric)) }
+        return Standing(rank: me.rank, size: board.count, position: position, chaser: chaser)
     }
 
     func reset() {

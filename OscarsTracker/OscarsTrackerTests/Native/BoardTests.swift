@@ -102,3 +102,80 @@ struct BoardTests {
         }
     }
 }
+
+@MainActor
+@Suite("Group comparison")
+struct GroupComparisonTests {
+    private let user = SampleDataSource.userID
+
+    private func standing(_ board: [BoardEntry]) async -> LeaderboardStore.Standing? {
+        let data = SampleDataSource()
+        data.board = board
+        let store = LeaderboardStore(data: data)
+        await store.load(ceremonyID: 2, groupID: 1)
+        return store.standing(in: 1, userID: user)
+    }
+
+    @Test func namesThePersonsAboveAndBelow() async throws {
+        let s = try #require(await standing([.sample("u-sam", "Sam", watched: 12, rank: 1),
+                                             .sample(user, "filmbuff", watched: 10, rank: 2),
+                                             .sample("u-jo", "Jo", watched: 9, rank: 3),
+                                             .sample("u-al", "Al", watched: 3, rank: 4)]))
+        #expect(s.position == .behind("Sam", by: 2))
+        #expect(s.chaser == .init(name: "Jo", by: 1))
+    }
+
+    @Test func firstPlaceHasNoOneAbove() async throws {
+        let s = try #require(await standing([.sample(user, "filmbuff", watched: 10, rank: 1), .sample("u-jo", "Jo", watched: 4, rank: 2)]))
+        #expect(s.position == .first)
+        #expect(s.chaser == .init(name: "Jo", by: 6))
+    }
+
+    @Test func lastPlaceHasNoChaser() async throws {
+        let s = try #require(await standing([.sample("u-sam", "Sam", watched: 12, rank: 1), .sample(user, "filmbuff", watched: 1, rank: 2)]))
+        #expect(s.chaser == nil)
+    }
+
+    @Test func aTieIsNotAGap() async throws {
+        let s = try #require(await standing([.sample("u-sam", "Sam", watched: 5, rank: 1), .sample(user, "filmbuff", watched: 5, rank: 1),
+                                             .sample("u-jo", "Jo", watched: 2, rank: 3)]))
+        #expect(s.position == .tied(with: "Sam"))
+        #expect(s.chaser == .init(name: "Jo", by: 3))
+    }
+
+    @Test func linesFollowTheStandingInBothVoices() async throws {
+        let s = await standing([.sample("u-sam", "Sam", watched: 12, rank: 1), .sample(user, "filmbuff", watched: 10, rank: 2),
+                                .sample("u-jo", "Jo", watched: 9, rank: 3)])
+        for copy in [Copy.classic, Copy.host] {
+            let lines = GroupComparisonCard.lines(s, size: 3, copy: copy)
+            #expect(lines.count == 2)
+            #expect(lines[0].contains("Sam") && lines[1].contains("Jo"))
+        }
+        #expect(GroupComparisonCard.lines(s, size: 1, copy: .classic) == [Copy.classic.boardAlone])
+        #expect(GroupComparisonCard.lines(nil, size: 0, copy: .host) == ["Checking the board"])
+        #expect(Copy.classic.compareChaser(1, "Jo") == "Jo is 1 film behind you.")
+    }
+}
+
+@MainActor
+@Suite("Group limits")
+struct GroupLimitTests {
+    @Test func theSampleSourceFollowsTheConfiguredGroupLimit() async throws {
+        let data = SampleDataSource()
+        #expect(AppConfig.defaults.groupMemberLimit == 50 && AppConfig.defaults.userGroupLimit == 5)
+        data.config.userGroupLimit = 2
+        await #expect(throws: AppError.tooManyGroups(limit: 2)) {
+            _ = try await data.createGroup(name: "Third", userID: SampleDataSource.userID)
+        }
+    }
+}
+
+@Suite("Saved config")
+struct SavedConfigTests {
+    @Test func aConfigSavedBeforeTheGroupLimitsStillDecodes() throws {
+        let old = #"{"minSupportedBuild":7,"featureFlags":{"live_mode":true},"runtimeBuckets":[]}"#
+        let config = try JSONDecoder().decode(AppConfig.self, from: Data(old.utf8))
+        #expect(config.minSupportedBuild == 7)
+        #expect(config.groupMemberLimit == 50 && config.userGroupLimit == 5)
+    }
+}

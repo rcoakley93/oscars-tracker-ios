@@ -48,6 +48,8 @@ struct Copy {
     /// You're `films` behind `name`, the person one place above you.
     let compareGap: (_ films: Int, _ name: String) -> String
     let compareTied: (_ name: String) -> String
+    /// `name` is `films` behind you, the person one place below.
+    let compareChaser: (_ films: Int, _ name: String) -> String
     let boardLeader: String
 
     // Ballot
@@ -179,6 +181,7 @@ extension Copy {
         compareRank: rankLine,
         compareGap: { films, name in "You're \(filmCount(films)) behind \(name)." },
         compareTied: { name in "You're tied with \(name)." },
+        compareChaser: { films, name in "\(name) is \(filmCount(films)) behind you." },
         boardLeader: "You're in first place.",
         ballotProgress: { picked, total in "\(picked) of \(total) categories picked" },
         ballotIntro: { left in
@@ -289,6 +292,11 @@ extension Copy {
                 : "\(filmCount(films)) behind \(name). Clear your weekend."
         },
         compareTied: { name in "Dead level with \(name). Someone blinks first." },
+        compareChaser: { films, name in
+            films == 1
+                ? "\(name) is \(filmCount(films)) back. Don't look round."
+                : "\(name) is \(filmCount(films)) back. Comfortable, not safe."
+        },
         boardLeader: "Top of the board. Act humble.",
         ballotProgress: { picked, total in "\(picked) of \(total) categories picked" },
         ballotIntro: { left in
