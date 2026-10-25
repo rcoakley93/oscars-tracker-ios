@@ -223,7 +223,6 @@ private struct Podium: View {
 private struct GapCard: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
-    @AppStorage("films.hidesWatched") private var hidesWatched = false
     let groupID: Int?
     let userID: String
     let metric: LeaderboardStore.Metric
@@ -238,13 +237,12 @@ private struct GapCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                     if metric == .films, standing.position != .first, !model.films.toWatch.isEmpty {
                         Button("Catch up", systemImage: "film") {
-                            hidesWatched = true
                             model.navigation.tab = .films
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(.ink)
                         .fontWeight(.semibold)
-                        .accessibilityHint("Shows the films you haven't watched")
+                        .accessibilityHint("Opens your films")
                     }
                 }
                 .padding(.vertical, Theme.Space.xxs)

@@ -62,6 +62,30 @@ struct FilmsTests {
         #expect(store.completions == 0)
     }
 
+    @Test func unwatchingMovesAFilmBackToWatch() async {
+        let data = SampleDataSource()
+        data.watched = [2]
+        let store = FilmsStore(data: data)
+        await store.load(userID: user)
+        #expect(store.watched.map(\.id) == [2])
+        await store.toggleWatched(2, userID: user)
+        #expect(store.watched.isEmpty)
+        #expect(store.toWatch.contains { $0.id == 2 })
+    }
+
+    @Test func hideWatchedLeftOnByCatchUpIsClearedOnce() throws {
+        let defaults = try #require(UserDefaults(suiteName: "FilmsTests.hidesWatched"))
+        defaults.removePersistentDomain(forName: "FilmsTests.hidesWatched")
+        defaults.set(true, forKey: FilmsTab.hidesWatchedKey)
+        FilmsTab.clearCatchUpHidesWatched(in: defaults)
+        #expect(!defaults.bool(forKey: FilmsTab.hidesWatchedKey))
+        // Turned on with the toggle afterwards, it stays on.
+        defaults.set(true, forKey: FilmsTab.hidesWatchedKey)
+        FilmsTab.clearCatchUpHidesWatched(in: defaults)
+        #expect(defaults.bool(forKey: FilmsTab.hidesWatchedKey))
+        defaults.removePersistentDomain(forName: "FilmsTests.hidesWatched")
+    }
+
     @Test func bothVoicesGiveTheRankAndTheGap() {
         for voice in Voice.allCases {
             let copy = Copy.for(voice)
