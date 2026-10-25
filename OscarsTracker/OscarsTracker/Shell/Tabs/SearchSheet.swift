@@ -151,7 +151,7 @@ private struct PersonRow: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(nominee.spokenName), \(category.name)")
+        .accessibilityLabel("\(nominee.spokenName(in: category)), \(category.name)")
         .accessibilityHint("Opens the category on your ballot")
     }
 }

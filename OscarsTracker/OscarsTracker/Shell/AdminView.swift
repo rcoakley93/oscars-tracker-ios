@@ -143,7 +143,7 @@ private struct WinnerRow: View {
         // One change at a time per category, until the server answers.
         .disabled(model.admin.isPending(category.id))
         .accessibilityLabel(category.name)
-        .accessibilityValue(winners.isEmpty ? "No winner yet" : "Winner: \(winners.map(\.spokenName).formatted(.list(type: .and)))")
+        .accessibilityValue(winners.isEmpty ? "No winner yet" : "Winner: \(winners.map { $0.spokenName(in: category) }.formatted(.list(type: .and)))")
         .accessibilityHint("Shows the nominees, to mark the winner")
         .moment(.correct, trigger: winners.map(\.id))
     }

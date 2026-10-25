@@ -181,6 +181,46 @@ final class SampleDataSource: AppDataSource {
         savedPicks[categoryID] = nominationID
     }
 
+    /// The ballot locked an hour ago; with `winners`, the first nominee in
+    /// every category has won (so the sample picks score 0, 5 and nothing).
+    func passLock(winners: Bool = false) {
+        ceremony = Ceremony(id: ceremony.id, number: ceremony.number, name: ceremony.name, ceremonyAt: .now,
+                            ballotLockAt: .now.addingTimeInterval(-3600), isActive: true)
+        guard winners else { return }
+        categories = categories.map { category in
+            BallotCategory(id: category.id, name: category.name, pointsValue: category.pointsValue,
+                           nominations: category.nominations.enumerated().map { index, nominee in
+                               BallotNominee(id: nominee.id, movie: nominee.movie, personName: nominee.personName, isWinner: index == 0)
+                           }, displayMode: category.displayMode)
+        }
+    }
+
+    /// Fixed shares to serve instead of the made-up ones.
+    var shareRows: [PickShare]?
+    /// How long each group's shares take to arrive, for tests of answers
+    /// that come back out of order.
+    var shareDelays: [Int: Duration] = [:]
+
+    /// After the lock, each category's nominees split six members 3, 2, 1
+    /// (four in other groups: 2, 1, 1), starting from a different nominee
+    /// in each category. Groups you're not in are refused.
+    func pickShares(ceremonyID: Int, groupID: Int) async throws -> [PickShare] {
+        _ = try requireUser()
+        if let delay = shareDelays[groupID] { try await Task.sleep(for: delay) }
+        guard groups.contains(where: { $0.id == groupID }) else { throw AppError.server("Not a member of this group") }
+        guard ceremony.isBallotLocked() else { return [] }
+        if let shareRows { return shareRows }
+        let members = groupID == 1 ? 6 : 4
+        let counts = groupID == 1 ? [3, 2, 1] : [2, 1, 1]
+        return categories.flatMap { category in
+            let nominees = category.nominations
+            return counts.prefix(nominees.count).enumerated().map { offset, count in
+                let nominee = nominees[(category.id + offset) % nominees.count]
+                return PickShare(categoryId: category.id, nominationId: nominee.id, memberCount: members, pickCount: count)
+            }
+        }
+    }
+
     // MARK: - Watch plan
 
     func plan(userID: String) async throws -> [WatchPlanItem] {
@@ -455,15 +495,15 @@ nonisolated enum SampleData {
             BallotNominee(id: 103, movie: film(5), personName: nil, isWinner: false),
             BallotNominee(id: 104, movie: film(6), personName: nil, isWinner: false),
             BallotNominee(id: 105, movie: film(9), personName: nil, isWinner: false),
-        ]),
+        ], displayMode: .film),
         BallotCategory(id: 2, name: "Actress in a Leading Role", pointsValue: 5, nominations: [
             BallotNominee(id: 201, movie: film(1), personName: "Jessie Buckley", isWinner: false),
             BallotNominee(id: 202, movie: film(6), personName: "Renate Reinsve", isWinner: false),
             BallotNominee(id: 203, movie: film(7), personName: "Emma Stone", isWinner: false),
-        ]),
+        ], displayMode: .person),
         BallotCategory(id: 3, name: "Animated Feature", pointsValue: 3, nominations: [
             BallotNominee(id: 301, movie: film(3), personName: nil, isWinner: false),
-        ]),
+        ], displayMode: .film),
     ]
 
     /// The three categories above, then 21 more with the sample films as nominees.

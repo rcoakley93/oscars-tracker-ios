@@ -6,6 +6,12 @@ nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     let name: String
     let pointsValue: Int
     let nominations: [BallotNominee]
+    /// `categories.display_mode`; nil from a copy cached before P6-05.
+    var displayMode: DisplayMode? = nil
+
+    nonisolated enum DisplayMode: String, Codable, Hashable, Sendable {
+        case person, film
+    }
 
     /// The same category with `winners` as its winners and nobody else.
     func withWinners(_ winners: Set<Int>) -> BallotCategory {
@@ -17,8 +23,55 @@ nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     var winnerIDs: Set<Int> { Set(nominations.filter(\.isWinner).map(\.id)) }
 
     /// Acting categories lead with the person and show the film underneath.
+    /// The category's `display_mode` decides; without one, any nominee with
+    /// a person does.
     var leadsWithPerson: Bool {
-        nominations.contains { !($0.personName ?? "").isEmpty }
+        if let displayMode { return displayMode == .person }
+        return nominations.contains { !($0.personName ?? "").isEmpty }
+    }
+}
+
+nonisolated extension BallotNominee {
+    /// The person for categories that lead with the person, else the film.
+    func title(in category: BallotCategory) -> String? {
+        if category.leadsWithPerson, let person = personName, !person.isEmpty { return person }
+        return movie?.title ?? personName
+    }
+
+    /// The line under the title: the film under the person, or the detail
+    /// (a song, a country) under the film.
+    func detail(in category: BallotCategory) -> String? {
+        let title = title(in: category)
+        let other = category.leadsWithPerson ? movie?.title : personName
+        guard let other, !other.isEmpty, other != title else { return nil }
+        return other
+    }
+
+    /// "Jessie Buckley, in Hamnet" for acting categories, else the film.
+    func spokenName(in category: BallotCategory) -> String {
+        guard let title = title(in: category) else { return "Nominee" }
+        guard let detail = detail(in: category) else { return title }
+        return category.leadsWithPerson ? "\(title), in \(detail)" : "\(title), \(detail)"
+    }
+}
+
+/// How many of a group's members picked a nominee, after the lock (P6-05).
+nonisolated struct PickShare: Codable, Hashable, Sendable {
+    let categoryId: Int
+    let nominationId: Int
+    let memberCount: Int
+    let pickCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case categoryId = "category_id"
+        case nominationId = "nomination_id"
+        case memberCount = "member_count"
+        case pickCount = "pick_count"
+    }
+
+    /// The share of the group, rounded to a whole percent.
+    var percent: Int {
+        memberCount > 0 ? Int((Double(pickCount) / Double(memberCount) * 100).rounded()) : 0
     }
 }
 
@@ -65,6 +118,8 @@ protocol AppDataSource: AnyObject, Sendable {
     func ballot() async throws -> [BallotCategory]
     func picks(userID: String) async throws -> [Int: Int]
     func savePick(categoryID: Int, nominationID: Int, userID: String) async throws
+    /// What a group you're in picked, per nominee; empty before the lock.
+    func pickShares(ceremonyID: Int, groupID: Int) async throws -> [PickShare]
 
     // Watch plan
     func plan(userID: String) async throws -> [WatchPlanItem]

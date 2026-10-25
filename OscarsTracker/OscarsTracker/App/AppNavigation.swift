@@ -49,6 +49,8 @@ final class AppNavigation {
     var selectedCategoryID: Int?
     var selectedDay: PlanDay?
     var selectedGroupID: Int?
+    /// The group whose picks the Ballot shows after the lock; nil is your first group.
+    var ballotGroupID: Int?
     /// The Board's group; nil is the global board.
     var boardGroupID: Int?
     var boardMetric: LeaderboardStore.Metric = .films
@@ -89,6 +91,7 @@ final class AppNavigation {
         selectedCategoryID = nil
         selectedDay = nil
         selectedGroupID = nil
+        ballotGroupID = nil
         boardGroupID = nil
         boardMetric = .films
         selectedPersonID = nil

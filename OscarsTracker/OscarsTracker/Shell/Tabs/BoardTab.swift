@@ -384,10 +384,10 @@ private struct PickRow: View {
         HStack(spacing: Theme.Space.s) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(category.name).font(.footnote).foregroundStyle(.inkMuted)
-                Text(nominee.personName.flatMap { $0.isEmpty ? nil : $0 } ?? nominee.movie?.title ?? "Nominee")
+                Text(nominee.title(in: category) ?? "Nominee")
                     .foregroundStyle(.ink)
-                if let person = nominee.personName, !person.isEmpty, let film = nominee.movie?.title {
-                    Text(film).font(.subheadline).foregroundStyle(.inkMuted)
+                if let detail = nominee.detail(in: category) {
+                    Text(detail).font(.subheadline).foregroundStyle(.inkMuted)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
