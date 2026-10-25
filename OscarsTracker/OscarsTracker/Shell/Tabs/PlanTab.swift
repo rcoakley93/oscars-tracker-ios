@@ -4,8 +4,7 @@ import SwiftUI
 /// compact widths an agenda by day, where films drag between days and swipe
 /// to reschedule, mark watched or remove; on regular widths the calendar and
 /// the selected day side by side in an arrangement (calendar above the day
-/// when a Duo stands in tabletop pose). Past days' unwatched films collapse
-/// into one "N to reschedule" bar at the top.
+/// when a Duo stands in tabletop pose).
 struct PlanTab: View {
     @Environment(AppModel.self) private var model
     @Environment(\.copy) private var copy
@@ -14,7 +13,6 @@ struct PlanTab: View {
 
     var body: some View {
         @Bindable var plan = model.plan
-        let overdue = plan.toReschedule(watchedIDs: model.films.watchedIDs)
 
         NavigationStack {
             LoadStateView(state: plan.state, isEmpty: plan.items.isEmpty && plan.state != .loaded) {
@@ -33,15 +31,6 @@ struct PlanTab: View {
                 PlanAgenda(hidesPast: true, isPlaceholder: true)
             }
             .tabChrome("Watch plan", posters: posters)
-            // The agenda carries its own bar, as an inset of its scroll view, so
-            // scrolling to a day lands below it; the other layouts use this one.
-            .safeAreaBar(edge: .top) {
-                if !overdue.isEmpty, plan.items.isEmpty || sizeClass == .regular {
-                    RescheduleBar(count: overdue.count) {
-                        Task { await plan.rescheduleAll(overdue) }
-                    }
-                }
-            }
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     Button("What can I watch?", systemImage: "clock") { model.navigation.sheet = .whatCanIWatch }
@@ -60,41 +49,6 @@ struct PlanTab: View {
     /// The ambient light comes from the films planned next.
     private var posters: [String] {
         model.plan.upcomingDays().flatMap(\.items).compactMap { model.plan.movie(for: $0, in: model.films.movies)?.posterUrl }
-    }
-}
-
-/// "4 films to reschedule. · Move all to this week", pinned under the title.
-private struct RescheduleBar: View {
-    @Environment(\.copy) private var copy
-    let count: Int
-    var moveAll: () -> Void
-
-    var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Space.s) {
-                label
-                Spacer(minLength: 0)
-                button
-            }
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                label
-                button
-            }
-        }
-        .padding(.horizontal, Theme.Space.m)
-        .padding(.bottom, Theme.Space.xs)
-    }
-
-    private var label: some View {
-        Label(copy.planReschedule(count), systemImage: "calendar.badge.clock")
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(.ink)
-    }
-
-    private var button: some View {
-        Button("Move all to this week", action: moveAll)
-            .buttonStyle(.glass)
-            .controlSize(.small)
     }
 }
 
@@ -131,7 +85,6 @@ private struct PlanAgenda: View {
 
     var body: some View {
         let plan = model.plan
-        let overdue = plan.toReschedule(watchedIDs: model.films.watchedIDs)
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Theme.Space.l) {
                 if isPlaceholder {
@@ -153,15 +106,6 @@ private struct PlanAgenda: View {
             .padding(.horizontal, Theme.Space.m)
             .padding(.bottom, Theme.Space.xxl)
         }
-        .safeAreaBar(edge: .top) {
-            if !isPlaceholder, !overdue.isEmpty {
-                RescheduleBar(count: overdue.count) {
-                    Task { await plan.rescheduleAll(overdue) }
-                }
-            }
-        }
-        // Films scrolled up under the bar fade out instead of showing through it.
-        .scrollEdgeEffectStyle(.hard, for: .top)
         .scrollPosition(id: $scrolledDay, anchor: .top)
         .reorderContainer(for: WatchPlanItem.self, in: PlanDay.self) { difference in
             Task { await plan.move(difference.sources, to: difference.destination.collectionID) }

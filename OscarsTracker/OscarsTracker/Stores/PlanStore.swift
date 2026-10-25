@@ -42,15 +42,6 @@ final class PlanStore {
         days(where: { $0 >= today })
     }
 
-    /// Past days' films you haven't watched: one "N to reschedule" row, not a
-    /// red badge on every item (the season review's UX fix).
-    func toReschedule(watchedIDs: Set<Int>, today: PlanDay = .today()) -> [WatchPlanItem] {
-        items.filter { item in
-            guard let day = PlanDay(item.plannedDate) else { return false }
-            return day < today && !watchedIDs.contains(item.movieId)
-        }
-    }
-
     /// The agenda: today and the next `minimumDays - 1` days, empty or not,
     /// then every later day that has films.
     func agenda(today: PlanDay = .today(), minimumDays: Int = 7) -> [Day] {
@@ -65,7 +56,10 @@ final class PlanStore {
         days(where: { $0 < today }).reversed()
     }
 
-    /// Films planned for today or later, for Fill my plan and the add sheet.
+    /// Every film on the plan, whatever its day.
+    var allPlannedMovieIDs: Set<Int> { Set(items.map(\.movieId)) }
+
+    /// Films planned for today or later, for the add sheet.
     func plannedMovieIDs(from today: PlanDay = .today()) -> Set<Int> {
         Set(upcomingDays(today: today).flatMap(\.items).map(\.movieId))
     }
@@ -151,13 +145,6 @@ final class PlanStore {
             }
         }
         return added
-    }
-
-    /// "Move all to this week": one film a day from today, in their planned order.
-    func rescheduleAll(_ overdue: [WatchPlanItem], from today: PlanDay = .today()) async {
-        for (offset, item) in overdue.sorted(by: { $0.plannedDate < $1.plannedDate }).enumerated() {
-            await move(item.id, to: today.adding(days: offset))
-        }
     }
 
     func remove(_ itemID: Int) async {

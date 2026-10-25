@@ -59,7 +59,6 @@ struct PlanFillerTests {
     @Test func bothVoicesCarryThePlanNumbers() {
         for voice in Voice.allCases {
             let copy = Copy.for(voice)
-            #expect(copy.planReschedule(4).contains("4"))
             #expect(copy.planFillDone(12, 9).contains("12 films"))
             #expect(copy.planFillDone(12, 9).contains("9"))
             #expect(copy.planFit("KPop Demon Hunters", "1h 36m").contains("KPop Demon Hunters"))
@@ -168,5 +167,27 @@ struct PlanTwiceTests {
         #expect(error == .alreadyPlanned)
         #expect(!error.message.isEmpty)
         #expect(AppError(serverMessage: "duplicate key value violates unique constraint \"profiles_username_key\"", code: "23505") != .alreadyPlanned)
+    }
+}
+
+@MainActor
+@Suite("Fill my plan skips planned films")
+struct PlanFillSkipTests {
+    @Test func everyPlannedFilmIsExcludedWhateverItsDay() async {
+        let store = PlanStore(data: SampleDataSource())
+        await store.load(userID: SampleDataSource.userID)
+        // The sample plan has film 2 two days ago, film 3 today and film 5 tomorrow.
+        #expect(store.allPlannedMovieIDs == [2, 3, 5])
+        #expect(store.plannedMovieIDs() == [3, 5])
+    }
+
+    @Test func aFailedFillReportsAndAddsNothing() async {
+        let data = SampleDataSource()
+        let store = PlanStore(data: data)
+        await store.load(userID: SampleDataSource.userID)
+        data.failure = .server("boom")
+        let added = await store.fill([PlanFiller.Assignment(movieID: 9, day: .today())], userID: SampleDataSource.userID)
+        #expect(added == 0)
+        #expect(store.actionError != nil)
     }
 }

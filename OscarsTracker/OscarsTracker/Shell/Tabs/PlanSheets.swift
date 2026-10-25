@@ -167,6 +167,8 @@ struct FillPlanSheet: View {
     /// Busy weekdays, "1,7" (1 = Sunday).
     @AppStorage("plan.fill.busy") private var busy = ""
     @State private var done: String?
+    /// A save that failed, shown here because the Plan tab's alert sits behind this sheet.
+    @State private var failure: String?
 
     var body: some View {
         let assignments = self.assignments
@@ -177,7 +179,12 @@ struct FillPlanSheet: View {
                     Button {
                         guard let userID = model.session.userID else { return }
                         Task {
+                            failure = nil
                             let added = await model.plan.fill(assignments, userID: userID)
+                            if let error = model.plan.actionError {
+                                failure = error.message
+                                model.plan.actionError = nil
+                            }
                             if added > 0 {
                                 done = copy.planFillDone(added, Set(assignments.prefix(added).map(\.day)).count)
                             }
@@ -193,7 +200,7 @@ struct FillPlanSheet: View {
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                 } footer: {
-                    Text(done ?? (assignments.isEmpty ? copy.planFillNothing : summary(films: assignments.count, days: days)))
+                    Text(failure ?? done ?? (assignments.isEmpty ? copy.planFillNothing : summary(films: assignments.count, days: days)))
                         .font(.subheadline)
                         .foregroundStyle(.ink)
                         .padding(.top, Theme.Space.xs)
@@ -234,7 +241,8 @@ struct FillPlanSheet: View {
     private var assignments: [PlanFiller.Assignment] {
         let today = PlanDay.today()
         let last = model.season.ceremony.map { PlanDay($0.ceremonyAt).adding(days: -1) } ?? today.adding(days: 29)
-        let planned = model.plan.plannedMovieIDs(from: today)
+        // Any film already on the plan is skipped, on a past day or a coming one.
+        let planned = model.plan.allPlannedMovieIDs
         return PlanFiller.fill(
             films: model.films.toWatch.filter { !planned.contains($0.id) },
             from: today, through: last, perDay: perDay, busyWeekdays: busyDays,
