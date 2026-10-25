@@ -79,6 +79,16 @@ final class PlanStore {
         return byDay.keys.filter(include).sorted().map { Day(day: $0, items: byDay[$0]!.map(\.1)) }
     }
 
+    /// Puts a row the server returned into the list, replacing the same film's
+    /// row if two requests for it overlapped (the upsert returns one row for both).
+    private func place(_ item: WatchPlanItem) {
+        if let index = items.firstIndex(where: { $0.id == item.id || $0.movieId == item.movieId }) {
+            items[index] = item
+        } else {
+            items.append(item)
+        }
+    }
+
     /// Plans a film. A film is on the plan once, so one that's already there
     /// moves to `day` instead of being added again.
     func add(movieID: Int, on day: PlanDay, userID: String) async {
@@ -87,7 +97,7 @@ final class PlanStore {
             return
         }
         do {
-            items.append(try await data.addToPlan(movieID: movieID, day: day, userID: userID))
+            place(try await data.addToPlan(movieID: movieID, day: day, userID: userID))
         } catch {
             actionError = AppError(error)
         }
@@ -137,7 +147,7 @@ final class PlanStore {
                 continue
             }
             do {
-                items.append(try await data.addToPlan(movieID: assignment.movieID, day: assignment.day, userID: userID))
+                place(try await data.addToPlan(movieID: assignment.movieID, day: assignment.day, userID: userID))
                 added += 1
             } catch {
                 actionError = AppError(error)

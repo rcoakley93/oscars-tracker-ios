@@ -169,6 +169,7 @@ struct FillPlanSheet: View {
     @State private var done: String?
     /// A save that failed, shown here because the Plan tab's alert sits behind this sheet.
     @State private var failure: String?
+    @State private var isFilling = false
 
     var body: some View {
         let assignments = self.assignments
@@ -178,7 +179,10 @@ struct FillPlanSheet: View {
                 Section {
                     Button {
                         guard let userID = model.session.userID else { return }
+                        guard !isFilling else { return }
+                        isFilling = true
                         Task {
+                            defer { isFilling = false }
                             failure = nil
                             let added = await model.plan.fill(assignments, userID: userID)
                             if let error = model.plan.actionError {
@@ -196,7 +200,7 @@ struct FillPlanSheet: View {
                     }
                     .buttonStyle(.glassProminent)
                     .controlSize(.large)
-                    .disabled(assignments.isEmpty || done != nil)
+                    .disabled(assignments.isEmpty || done != nil || isFilling)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                 } footer: {

@@ -191,3 +191,18 @@ struct PlanFillSkipTests {
         #expect(store.actionError != nil)
     }
 }
+
+@MainActor
+@Suite("Overlapping plan requests")
+struct PlanOverlapTests {
+    @Test func twoOverlappingAddsLeaveOneRow() async {
+        let store = PlanStore(data: SampleDataSource())
+        await store.load(userID: SampleDataSource.userID)
+        let before = store.items.count
+        async let first: Void = store.add(movieID: 9, on: .today(), userID: SampleDataSource.userID)
+        async let second: Void = store.add(movieID: 9, on: .today().adding(days: 2), userID: SampleDataSource.userID)
+        _ = await (first, second)
+        #expect(store.items.filter { $0.movieId == 9 }.count == 1)
+        #expect(store.items.count == before + 1)
+    }
+}
