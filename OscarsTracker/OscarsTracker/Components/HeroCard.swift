@@ -21,8 +21,11 @@ struct HeroCard: View {
     var now: Date = .now
     /// Your score and the winners announced, for the live and after phases.
     var results: Results?
-    /// Starts the Live Activity (P6-03). Nil leaves the button as a placeholder.
+    /// Starts the Live Activity (P6-03). Nil hides the button, unless it's
+    /// already following.
     var onFollow: (() -> Void)?
+    /// The Live Activity is on: the button says so instead.
+    var isFollowing = false
 
     @Environment(\.copy) private var copy
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -55,10 +58,13 @@ struct HeroCard: View {
                     .accessibilityHidden(true)
             }
 
-            if phase == .live {
-                Button(copy.heroFollow, systemImage: "dot.radiowaves.left.and.right") { onFollow?() }
+            if phase == .live, isFollowing {
+                Label(copy.heroFollowing, systemImage: "checkmark.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.inkMuted)
+            } else if phase == .live, let onFollow {
+                Button(copy.heroFollow, systemImage: "dot.radiowaves.left.and.right", action: onFollow)
                     .buttonStyle(.bordered)
-                    .disabled(onFollow == nil)
             }
 
             if let days = figureDays, watched < total {
@@ -199,7 +205,7 @@ private struct HeroPhases: View {
                 HeroCard(watched: 38, total: 50, phase: .finalWeek(days: 5))
                 HeroCard(watched: 44, total: 50, phase: .lockDay(locksAt: HeroCard.anchor.addingTimeInterval(3 * 3600)), now: HeroCard.anchor)
                 HeroCard(watched: 44, total: 50, phase: .locked(days: 4))
-                HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23))
+                HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23), onFollow: {})
                 HeroCard(watched: 44, total: 50, phase: .after, results: .init(score: 11, announced: 23, categories: 23))
             }
             .padding()
@@ -225,7 +231,12 @@ private struct HeroPhases: View {
         .padding().background(.ground)
 }
 #Preview("Ceremony night") {
-    HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23)).padding().background(.ground)
+    HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23), onFollow: {})
+        .padding().background(.ground)
+}
+#Preview("Ceremony night · Following") {
+    HeroCard(watched: 44, total: 50, phase: .live, results: .init(score: 4, announced: 6, categories: 23), isFollowing: true)
+        .padding().background(.ground)
 }
 #Preview("Recap") {
     HeroCard(watched: 44, total: 50, phase: .after, results: .init(score: 11, announced: 23, categories: 23)).padding().background(.ground)

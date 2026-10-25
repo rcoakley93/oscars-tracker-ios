@@ -337,6 +337,32 @@ final class SampleDataSource: AppDataSource {
         devices[token] = nil
     }
 
+    /// Live Activity tokens by ceremony, ended ceremonies, and push-to-start tokens (P6-03).
+    var liveActivityTokens: [Int: String] = [:]
+    var endedLiveActivities: Set<Int> = []
+    var liveActivityStartTokens: [String: PushEnvironment] = [:]
+
+    func registerLiveActivity(ceremonyID: Int, token: String, environment: PushEnvironment) async throws {
+        _ = try requireUser()
+        liveActivityTokens[ceremonyID] = token
+        endedLiveActivities.remove(ceremonyID)
+    }
+
+    func endLiveActivity(ceremonyID: Int) async throws {
+        _ = try requireUser()
+        liveActivityTokens[ceremonyID] = nil
+        endedLiveActivities.insert(ceremonyID)
+    }
+
+    func registerLiveActivityStartToken(_ token: String, environment: PushEnvironment) async throws {
+        _ = try requireUser()
+        liveActivityStartTokens[token] = environment
+    }
+
+    func removeLiveActivityStartToken(_ token: String) async throws {
+        liveActivityStartTokens[token] = nil
+    }
+
     var preferences: NotificationPreferences?
     /// Every preferences save, in order, and an optional pause before each, to test overlap.
     var preferenceSaves: [NotificationPreferences] = []

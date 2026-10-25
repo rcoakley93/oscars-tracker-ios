@@ -7,10 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B6030010A1B2C3D4E5F60010 /* OscarsTrackerWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B6030002A1B2C3D4E5F60002 /* OscarsTrackerWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F3051D706F6E1003707735C5 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 8E708AA264E4AD4E7E846E6B /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		B6030011A1B2C3D4E5F60011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3188C7D18B35F3BB3F4080B2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B6030005A1B2C3D4E5F60005;
+			remoteInfo = OscarsTrackerWidgets;
+		};
 		60EF7FA0C7470AC1F2CD1DB6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3188C7D18B35F3BB3F4080B2 /* Project object */;
@@ -27,7 +35,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		B6030013A1B2C3D4E5F60013 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B6030010A1B2C3D4E5F60010 /* OscarsTrackerWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		B6030002A1B2C3D4E5F60002 /* OscarsTrackerWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OscarsTrackerWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3687A5FE000ED2FDFF18BB4F /* OscarsTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OscarsTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		87F06CC8AA8030F8A6BFBE13 /* OscarsTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OscarsTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA2708F45FDFD9D3A7DC95E0 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
@@ -35,6 +58,21 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B6030014A1B2C3D4E5F60014 /* Exceptions for "OscarsTracker" folder in "OscarsTrackerWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Design/Theme.swift,
+				Resources/Assets.xcassets,
+			);
+			target = B6030005A1B2C3D4E5F60005 /* OscarsTrackerWidgets */;
+		};
+		B6030015A1B2C3D4E5F60015 /* Exceptions for "OscarsTrackerWidgets" folder in "OscarsTrackerWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B6030005A1B2C3D4E5F60005 /* OscarsTrackerWidgets */;
+		};
 		F5E147D035FA27FB950241FD /* Exceptions for "OscarsTracker" folder in "OscarsTracker" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -45,10 +83,24 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		B6030003A1B2C3D4E5F60003 /* OscarsTrackerWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B6030015A1B2C3D4E5F60015 /* Exceptions for "OscarsTrackerWidgets" folder in "OscarsTrackerWidgets" target */,
+			);
+			path = OscarsTrackerWidgets;
+			sourceTree = "<group>";
+		};
+		B6030004A1B2C3D4E5F60004 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		2733DDEAABAF95A6DC90ABA4 /* OscarsTracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				F5E147D035FA27FB950241FD /* Exceptions for "OscarsTracker" folder in "OscarsTracker" target */,
+				B6030014A1B2C3D4E5F60014 /* Exceptions for "OscarsTracker" folder in "OscarsTrackerWidgets" target */,
 			);
 			path = OscarsTracker;
 			sourceTree = "<group>";
@@ -66,6 +118,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B6030006A1B2C3D4E5F60006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5AA0CAA6E08F6CE3FEFCBF3C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -97,6 +156,7 @@
 				3687A5FE000ED2FDFF18BB4F /* OscarsTracker.app */,
 				87F06CC8AA8030F8A6BFBE13 /* OscarsTrackerTests.xctest */,
 				A11C0002B2C3D4E5F6A7B802 /* OscarsTrackerUITests.xctest */,
+				B6030002A1B2C3D4E5F60002 /* OscarsTrackerWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,6 +174,8 @@
 			children = (
 				DAF1A2DBC71AF75D677B86E9 /* Config */,
 				2733DDEAABAF95A6DC90ABA4 /* OscarsTracker */,
+				B6030004A1B2C3D4E5F60004 /* Shared */,
+				B6030003A1B2C3D4E5F60003 /* OscarsTrackerWidgets */,
 				7F7C57E587E6337F23F19F15 /* OscarsTrackerTests */,
 				A11C0003B2C3D4E5F6A7B803 /* OscarsTrackerUITests */,
 				8E1E64432B28A85D64364A58 /* Products */,
@@ -123,6 +185,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B6030005A1B2C3D4E5F60005 /* OscarsTrackerWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B603000AA1B2C3D4E5F6000A /* Build configuration list for PBXNativeTarget "OscarsTrackerWidgets" */;
+			buildPhases = (
+				B6030007A1B2C3D4E5F60007 /* Sources */,
+				B6030006A1B2C3D4E5F60006 /* Frameworks */,
+				B6030008A1B2C3D4E5F60008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B6030003A1B2C3D4E5F60003 /* OscarsTrackerWidgets */,
+				B6030004A1B2C3D4E5F60004 /* Shared */,
+			);
+			name = OscarsTrackerWidgets;
+			packageProductDependencies = (
+			);
+			productName = OscarsTrackerWidgets;
+			productReference = B6030002A1B2C3D4E5F60002 /* OscarsTrackerWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D047B623CA7BD96E8FE821D2 /* OscarsTrackerTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA7CA12E7B2F3E62814A1E32 /* Build configuration list for PBXNativeTarget "OscarsTrackerTests" */;
@@ -153,13 +238,16 @@
 				00543A57DA7266602B095884 /* Sources */,
 				5AA0CAA6E08F6CE3FEFCBF3C /* Frameworks */,
 				6600C97DA45AEC5CFA64A6E6 /* Resources */,
+				B6030013A1B2C3D4E5F60013 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B6030012A1B2C3D4E5F60012 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2733DDEAABAF95A6DC90ABA4 /* OscarsTracker */,
+				B6030004A1B2C3D4E5F60004 /* Shared */,
 			);
 			name = OscarsTracker;
 			packageProductDependencies = (
@@ -213,6 +301,9 @@
 					E5DCFEC1E960F8FC5E436FAF = {
 						CreatedOnToolsVersion = 15.0;
 					};
+					B6030005A1B2C3D4E5F60005 = {
+						CreatedOnToolsVersion = 27.1;
+					};
 				};
 			};
 			buildConfigurationList = 396C93A0CA9B21605C1154A2 /* Build configuration list for PBXProject "OscarsTracker" */;
@@ -235,11 +326,19 @@
 				E5DCFEC1E960F8FC5E436FAF /* OscarsTracker */,
 				D047B623CA7BD96E8FE821D2 /* OscarsTrackerTests */,
 				A11C0005B2C3D4E5F6A7B805 /* OscarsTrackerUITests */,
+				B6030005A1B2C3D4E5F60005 /* OscarsTrackerWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B6030008A1B2C3D4E5F60008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6600C97DA45AEC5CFA64A6E6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -264,6 +363,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B6030007A1B2C3D4E5F60007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		00543A57DA7266602B095884 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -288,6 +394,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B6030012A1B2C3D4E5F60012 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B6030005A1B2C3D4E5F60005 /* OscarsTrackerWidgets */;
+			targetProxy = B6030011A1B2C3D4E5F60011 /* PBXContainerItemProxy */;
+		};
 		8C5CF1CF153C1A07CF89B607 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E5DCFEC1E960F8FC5E436FAF /* OscarsTracker */;
@@ -301,6 +412,56 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		B6030008A1B2C3D4E5F6C008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OscarsTrackerWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B6030009A1B2C3D4E5F6C009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZKXK2PNT5G;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OscarsTrackerWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		053E9418EAD5E39B13C0AD29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -436,7 +597,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -462,6 +623,7 @@
 				INFOPLIST_FILE = OscarsTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -472,7 +634,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -495,6 +657,7 @@
 				INFOPLIST_FILE = OscarsTracker/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Oscars Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -505,7 +668,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -521,7 +684,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -539,7 +702,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -557,7 +720,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZKXK2PNT5G;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oscars.tracker.uitests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -571,6 +734,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B603000AA1B2C3D4E5F6000A /* Build configuration list for PBXNativeTarget "OscarsTrackerWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B6030008A1B2C3D4E5F6C008 /* Debug */,
+				B6030009A1B2C3D4E5F6C009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		396C93A0CA9B21605C1154A2 /* Build configuration list for PBXProject "OscarsTracker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -97,7 +97,7 @@ The questionnaire (as of the Jan 2026 revision, with the 13+, 16+ and 18+ tiers)
 
 Expected result: **4+**. If the user-generated-content answer lifts it, 12+ is still fine for the audience. Film posters can carry R-rated artwork, but the content descriptors above are about the app's own content.
 
-**Guideline 1.2 (user-generated content).** Group names and usernames are the only user text. There is no report or block action in the app today and nothing in the code filters them (`Services/ValidationService.swift` checks shape only). Reviewers do sometimes ask. Options if they do: add "Report" on a group and a member (a `reports` table plus email), or filter names. Not in scope for this draft; flagged for the user.
+**Guideline 1.2 (user-generated content).** Group names and usernames are the only user text. As of Oct 25 a separate session is adding report and block (`ValidationService.swift` only checks shape). The review notes below describe it; fix their navigation to match what merged.
 
 ## Content Rights
 
@@ -124,6 +124,9 @@ Paste into App Review Information → Notes. Fill the two placeholders in App St
 > 3. Board tab: the leaderboard. Rehearsal picks never appear on the real leaderboards.
 > 4. Groups tab: create a group or join one with an invite code.
 > 5. Profile (person icon, top right): sign out, change voice, and Delete account (Profile → scroll to the bottom → Delete account → confirm). Deletion removes the account, picks, watched films, plan and created groups.
+>
+> MODERATION (guideline 1.2)
+> The only user-written text is usernames and group names. People can Report a group or a member and Block a member from the Groups tab (`<CONFIRM PATH after the report-and-block PR merges>`). A blocked person's name and scores disappear for the blocker. Reports are reviewed by us at support@oscarstracker.com and offending names are removed.
 >
 > NOTES
 > - Sign-in options: Sign in with Apple, Google and email and password (guideline 4.8).
@@ -192,3 +195,21 @@ On the simulator (iPhone 18 Pro, iOS 27.0, `-sample-data` build from this branch
 Before submission (user): delete a throwaway email account and a throwaway Apple account against the real backend on TestFlight, and confirm in Supabase that the user, profile, picks and groups are gone. If the Apple path fails on a device, check that `revoke-apple` has the Sign in with Apple key configured.
 
 Not found, worth a look: the support and privacy pages should repeat the deletion steps (P5-02 says they will).
+
+## What's New (version 2.0, or the number chosen; 4000 max)
+
+> Oscars Tracker is now a native app, rebuilt for iPhone and iPad.
+>
+> - Watch the nominees, mark what you've seen and plan your viewing by the day.
+> - Make your picks and change them until the ballot locks.
+> - Start a group and see who's ahead.
+> - On the night, winners appear as they're announced.
+> - Reminders for the ballot lock and results, only if you turn them on.
+> - Choose the Host or Classic voice in Profile.
+> - You can report and block people in groups, and delete your account from Profile.
+
+Check before pasting: cut any line for a feature that did not ship by Jan 8 (live mode, reminders, plan filler, report and block). Voice rules applied: short sentences, sentence case, digits, no jokes about people.
+
+## Final review notes status
+
+The review notes above are the final text. Remaining placeholders: demo email and password, phone, and the report and block path. Never commit credentials.

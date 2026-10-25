@@ -108,6 +108,8 @@ struct Copy {
     /// The show is on: winners announced so far.
     let heroLive: (_ announced: Int, _ total: Int) -> String
     let heroFollow: String
+    /// The Live Activity is on (P6-03).
+    let heroFollowing: String
     /// After the show; `isFinal` once every winner is in.
     let heroAfter: (_ isFinal: Bool) -> String
 
@@ -232,6 +234,7 @@ extension Copy {
         heroLocked: { days in days == 0 ? "The ceremony is today." : "Ballot locked · \(Copy.days(days)) to the ceremony." },
         heroLive: { announced, total in "\(announced) of \(total) winners announced." },
         heroFollow: "Follow the ceremony",
+        heroFollowing: "Following on your Lock Screen",
         heroAfter: { isFinal in isFinal ? "Your final score." : "Your score so far." },
         tickerSeason: classicCountdown,
         tickerFinalWeek: classicCountdown,
@@ -362,6 +365,7 @@ extension Copy {
         heroLocked: { days in days == 0 ? "Tonight's the night. Ballot sealed." : "Ballot sealed. \(Copy.days(days)) to go. Watch something." },
         heroLive: { announced, total in "\(announced) of \(total) envelopes opened. Breathe." },
         heroFollow: "Follow the ceremony",
+        heroFollowing: "On your Lock Screen. Go mingle.",
         heroAfter: { isFinal in isFinal ? "Final score. No appeals." : "Score so far. The envelopes aren't done." },
         tickerSeason: { days, left in
             left == 0
