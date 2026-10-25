@@ -25,6 +25,10 @@ struct AddToDaySheet: View {
                         VStack(alignment: .leading) {
                             Text(movie.title).foregroundStyle(.ink)
                             Text(verbatim: movie.facts).font(.subheadline).foregroundStyle(.inkMuted)
+                            if let planned = model.plan.plannedDay(of: movie.id) {
+                                // Already on another day (a past one, say): choosing it moves it here.
+                                Text("Planned \(planned.label)").font(.footnote).foregroundStyle(.inkMuted)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

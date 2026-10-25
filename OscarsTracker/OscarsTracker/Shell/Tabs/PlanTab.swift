@@ -33,8 +33,10 @@ struct PlanTab: View {
                 PlanAgenda(hidesPast: true, isPlaceholder: true)
             }
             .tabChrome("Watch plan", posters: posters)
+            // The agenda carries its own bar, as an inset of its scroll view, so
+            // scrolling to a day lands below it; the other layouts use this one.
             .safeAreaBar(edge: .top) {
-                if !overdue.isEmpty {
+                if !overdue.isEmpty, plan.items.isEmpty || sizeClass == .regular {
                     RescheduleBar(count: overdue.count) {
                         Task { await plan.rescheduleAll(overdue) }
                     }
@@ -129,6 +131,7 @@ private struct PlanAgenda: View {
 
     var body: some View {
         let plan = model.plan
+        let overdue = plan.toReschedule(watchedIDs: model.films.watchedIDs)
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Theme.Space.l) {
                 if isPlaceholder {
@@ -150,6 +153,15 @@ private struct PlanAgenda: View {
             .padding(.horizontal, Theme.Space.m)
             .padding(.bottom, Theme.Space.xxl)
         }
+        .safeAreaBar(edge: .top) {
+            if !isPlaceholder, !overdue.isEmpty {
+                RescheduleBar(count: overdue.count) {
+                    Task { await plan.rescheduleAll(overdue) }
+                }
+            }
+        }
+        // Films scrolled up under the bar fade out instead of showing through it.
+        .scrollEdgeEffectStyle(.hard, for: .top)
         .scrollPosition(id: $scrolledDay, anchor: .top)
         .reorderContainer(for: WatchPlanItem.self, in: PlanDay.self) { difference in
             Task { await plan.move(difference.sources, to: difference.destination.collectionID) }

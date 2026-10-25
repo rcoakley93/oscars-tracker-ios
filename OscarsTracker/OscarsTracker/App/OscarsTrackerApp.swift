@@ -87,7 +87,7 @@ struct OscarsTrackerApp: App {
 
     /// Opens a tab, a film or a debug gallery from launch arguments, so
     /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
-    /// `-group 1`, `-sheet profile` (or `report`, `report-group`, `share-card`, the
+    /// `-group 1`, `-day 3` (the Plan agenda opens scrolled to three days out), `-sheet profile` (or `report`, `report-group`, `share-card`, the
     /// results card with `-ballot-stage winners`), `-gallery tokens`.
     private static func openScreenshotRoute(in model: AppModel) {
         let defaults = UserDefaults.standard
@@ -99,6 +99,9 @@ struct OscarsTrackerApp: App {
         }
         if defaults.object(forKey: "category") != nil {
             model.navigation.selectedCategoryID = defaults.integer(forKey: "category")
+        }
+        if defaults.object(forKey: "day") != nil {
+            model.navigation.selectedDay = PlanDay.today().adding(days: defaults.integer(forKey: "day"))
         }
         if defaults.object(forKey: "group") != nil {
             model.navigation.selectedGroupID = defaults.integer(forKey: "group")

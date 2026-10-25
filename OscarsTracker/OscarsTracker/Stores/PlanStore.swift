@@ -85,7 +85,13 @@ final class PlanStore {
         return byDay.keys.filter(include).sorted().map { Day(day: $0, items: byDay[$0]!.map(\.1)) }
     }
 
+    /// Plans a film. A film is on the plan once, so one that's already there
+    /// moves to `day` instead of being added again.
     func add(movieID: Int, on day: PlanDay, userID: String) async {
+        if let existing = items.first(where: { $0.movieId == movieID }) {
+            await move(existing.id, to: day)
+            return
+        }
         do {
             items.append(try await data.addToPlan(movieID: movieID, day: day, userID: userID))
         } catch {
@@ -94,15 +100,28 @@ final class PlanStore {
     }
 
     func move(_ itemID: Int, to day: PlanDay) async {
-        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+        await moveItem(itemID, to: day)
+    }
+
+    /// Moves a film optimistically; returns false (and rolls back) if it fails.
+    @discardableResult
+    private func moveItem(_ itemID: Int, to day: PlanDay) async -> Bool {
+        guard let index = items.firstIndex(where: { $0.id == itemID }) else { return false }
         let previous = items[index].plannedDate
         items[index].plannedDate = day.description
         do {
             try await data.movePlanItem(id: itemID, to: day)
+            return true
         } catch {
             if let index = items.firstIndex(where: { $0.id == itemID }) { items[index].plannedDate = previous }
             actionError = AppError(error)
+            return false
         }
+    }
+
+    /// Where a film is planned, if it is.
+    func plannedDay(of movieID: Int) -> PlanDay? {
+        items.first { $0.movieId == movieID }.flatMap { PlanDay($0.plannedDate) }
     }
 
     /// Moves several films to one day (a drag between days, or Reschedule).
@@ -118,6 +137,11 @@ final class PlanStore {
     func fill(_ assignments: [PlanFiller.Assignment], userID: String) async -> Int {
         var added = 0
         for assignment in assignments {
+            if let existing = items.first(where: { $0.movieId == assignment.movieID }) {
+                guard await moveItem(existing.id, to: assignment.day) else { break }
+                added += 1
+                continue
+            }
             do {
                 items.append(try await data.addToPlan(movieID: assignment.movieID, day: assignment.day, userID: userID))
                 added += 1

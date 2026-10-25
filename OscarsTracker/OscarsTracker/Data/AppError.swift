@@ -21,6 +21,8 @@ nonisolated enum AppError: Error, Equatable, Sendable {
     case linkExpired
     /// A pick made offline reached the server after the lock.
     case offlinePickLocked
+    /// A film is on the plan once (a unique key on the server); adding it again should move it.
+    case alreadyPlanned
     /// An admin call (P6-01) from an account that isn't the admin.
     case adminsOnly
     /// The server's name filter refused a username or group name (P6-16).
@@ -52,6 +54,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         case .weakPassword: "Use at least 8 characters, with a lowercase letter, an uppercase letter and a number."
         case .linkExpired: "That link has expired or was already used. Ask for a new one."
         case .offlinePickLocked: "A pick you made offline reached us after the ballot locked, so it wasn't saved."
+        case .alreadyPlanned: "That film is already on your plan. Move it to another day instead."
         case .adminsOnly: "Only the admin can do that."
         case .nameNotAllowed: "That name isn't allowed. Try another."
         case .nameInvalid: "That name doesn't fit the rules. Try another."
@@ -114,6 +117,7 @@ nonisolated enum AppError: Error, Equatable, Sendable {
         else if code == "NAM01" || hint == "name_not_allowed" { self = .nameNotAllowed }
         else if code == "NAM02" || hint == "name_invalid" { self = .nameInvalid }
         else if code == "RPT01" || hint == "report_limit" { self = .tooManyReports }
+        else if code == "23505", text.contains("watch_plan") { self = .alreadyPlanned }
         else if text.contains("ballot is locked") { self = .ballotLocked }
         else if text.contains("invalid invite code") { self = .invalidInviteCode }
         else if text.contains("already a member") { self = .alreadyInGroup }
