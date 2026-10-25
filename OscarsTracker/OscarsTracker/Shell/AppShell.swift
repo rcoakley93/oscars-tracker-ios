@@ -34,7 +34,8 @@ struct AppShell: View {
             }
         }
         .tabViewStyle(.sidebarAdaptable)
-        .tabBarMinimizeBehavior(.onScrollDown)
+        // The tab bar stays full size; it never collapses on scroll.
+        .tabBarMinimizeBehavior(.never)
         .tabViewBottomAccessory(isEnabled: model.isOffline || model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: !model.films.movies.isEmpty) != .none) {
             SeasonTicker()
         }
