@@ -11,3 +11,4 @@ OscarsTracker/.swiftpm/
 
 # Local Claude Code settings (preview servers, permissions)
 .claude/
+docs/app-store/screenshots/raw/

@@ -213,3 +213,19 @@ Check before pasting: cut any line for a feature that did not ship by Jan 8 (liv
 ## Final review notes status
 
 The review notes above are the final text. Remaining placeholders: demo email and password, phone, and the report and block path. Never commit credentials.
+
+## Framed screenshot headlines (P6-17)
+
+Source of truth is `docs/app-store/screenshots/frames.json`; this table mirrors it. Host voice, sentence case, no Oscar marks, no jokes about people. Gold marks the one earned word, if any.
+
+| Shot | Headline | Gold word |
+|---|---|---|
+| 01 Films | Every nominee, one list. | none |
+| 02 Ballot | One pick per category. | pick |
+| 03 Full ballot | Change your mind until it locks. | locks. |
+| 04 Plan | Plan your watching, day by day. | none |
+| 05 Board | Beat your friends. | none |
+| 06 Film sheet | Know where it's streaming. | none |
+| 07 Live mode | Follow the night as it happens. | none |
+
+Pipeline: `scripts/capture-store-screenshots.sh` (raw, `-sample-data`, dedicated "Store shots" simulators) → `scripts/frame-store-images.py` (velvet gradient, Playfair Display headline, device bezel; exact App Store size, RGB, no alpha) → `docs/app-store/screenshots/draft/<set>/` for review, `final/<set>/` after the Phase 6 merge. Set sizes: iPhone 6.9" 1320 × 2868, iPhone 6.3" 1206 × 2622 (Apple now labels this the required medium Dynamic Island set), iPad 13" 2064 × 2752. Duo sizes are skipped until April 2027.

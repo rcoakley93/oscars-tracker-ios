@@ -1,12 +1,12 @@
 #!/bin/zsh
 # Captures App Store screenshots from the simulators with the sample season.
 # Usage: scripts/capture-store-screenshots.sh [shot-name ...]   (default: all shots)
-# Output: docs/app-store/screenshots/<set>/<nn-name>.png  (PNG, no alpha)
+# Output: docs/app-store/screenshots/raw/<set>/<nn-name>.png  (PNG, no alpha; raw is gitignored; scripts/frame-store-images.py frames them)
 # Plan and sizes: docs/app-store/submission-checklist.md, "Screenshots".
 set -euo pipefail
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 cd "$(dirname "$0")/.."
-OUT=docs/app-store/screenshots
+OUT=${OUT:-docs/app-store/screenshots/raw}
 DD=${DERIVED_DATA:-/tmp/dd_store_shots}
 BUNDLE=com.oscars.tracker
 
@@ -15,7 +15,6 @@ SETS=(
   "iphone-6.9|iPhone 18 Pro Max|27.0|1320x2868"
   "iphone-6.1|iPhone 18 Pro|27.0|1206x2622"
   "ipad-13|iPad Pro 13-inch (M5)|27.0|2064x2752"
-  "duo-outer|iPhone Duo|27.1|1398x2034"
 )
 # shot | launch arguments after -sample-data | tab to open
 SHOTS=(
@@ -34,8 +33,13 @@ APP="$DD/Build/Products/Debug-iphonesimulator/OscarsTracker.app"
 
 for set in "${SETS[@]}"; do
   IFS='|' read -r name device os size <<<"$set"
-  udid=$(xcrun simctl list devices available "iOS $os" | grep -F "    $device (" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
-  [[ -n "$udid" ]] || { echo "no simulator: $device (iOS $os)"; continue; }
+  # Dedicated simulators, so other sessions' booted devices are never touched.
+  sim="Store shots $name"
+  udid=$(xcrun simctl list devices | grep -F "    $sim (" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/' || true)
+  if [[ -z "$udid" ]]; then
+    type=$(xcrun simctl list devicetypes | grep -F "$device (com" | head -1 | sed -E 's/.*\((com\.apple[^)]*)\)$/\1/' || true)
+    udid=$(xcrun simctl create "$sim" "$type" "com.apple.CoreSimulator.SimRuntime.iOS-${os//./-}")
+  fi
   xcrun simctl boot "$udid" 2>/dev/null || true
   xcrun simctl bootstatus "$udid" -b >/dev/null
   xcrun simctl ui "$udid" appearance dark
@@ -47,9 +51,17 @@ for set in "${SETS[@]}"; do
     [[ $# -gt 0 && ! " $* " == *" $id "* ]] && continue
     xcrun simctl terminate "$udid" $BUNDLE 2>/dev/null || true
     xcrun simctl launch "$udid" $BUNDLE -sample-data ${=args} >/dev/null
-    # Live mode announces at +3 s, then the envelope reveal runs about 3 s more.
-    if [[ "$id" == 07-live ]]; then sleep 10; else sleep 4; fi
-    xcrun simctl io "$udid" screenshot --type=png "$OUT/$name/$id.png"
+    # Wait for a real screen, not a splash or a black frame (the ambient MeshGradient
+    # drifts, so frames are never byte-identical). Live mode announces at +3 s and the
+    # reveal runs about 3 s more; a busy Mac is slower, so the checks are generous.
+    if [[ "$id" == 07-live ]]; then sleep 10; else sleep 5; fi
+    ok=0
+    for attempt in {1..30}; do
+      xcrun simctl io "$udid" screenshot --type=png "$OUT/$name/$id.png" 2>/dev/null
+      if [[ $(stat -f%z "$OUT/$name/$id.png") -gt 150000 ]]; then ok=1; break; fi
+      sleep 2
+    done
+    (( ok )) && { sleep 2; xcrun simctl io "$udid" screenshot --type=png "$OUT/$name/$id.png" 2>/dev/null; } || echo "WARN $name/$id never showed a real screen"
   done
   xcrun simctl status_bar "$udid" clear
   # Verify the pixel size App Store Connect expects.

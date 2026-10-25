@@ -1,0 +1,12 @@
+{
+  "note": "Headlines for the framed App Store images. Host voice, sentence case, no Oscar marks, no jokes about people (voice.md). 'gold' is the one earned word, if any (brand.md: gold is earned). Edit here, then run scripts/frame-store-images.py.",
+  "frames": [
+    {"shot": "01-films",       "headline": "Every nominee, one list.",                 "gold": []},
+    {"shot": "02-ballot",      "headline": "One pick per category.",                   "gold": ["pick"]},
+    {"shot": "03-ballot-full", "headline": "Change your mind until it locks.",         "gold": ["locks."]},
+    {"shot": "04-plan",        "headline": "Plan your watching, day by day.",          "gold": []},
+    {"shot": "05-board",       "headline": "Beat your friends.",                       "gold": []},
+    {"shot": "06-film",        "headline": "Know where it's streaming.",               "gold": []},
+    {"shot": "07-live",        "headline": "Follow the night as it happens.",          "gold": []}
+  ]
+}
