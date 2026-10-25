@@ -76,6 +76,8 @@ struct AppShell: View {
                 SearchSheet()
             case .shareCard:
                 ShareCardSheet()
+            case .recap:
+                RecapSheet()
             }
         }
         // Oscar night: each winner's envelope (P6-02).

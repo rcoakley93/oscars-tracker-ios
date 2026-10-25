@@ -124,6 +124,11 @@ struct Copy {
     let tickerLiveProgress: (_ done: Int, _ total: Int) -> String
     /// The live board's line for a category you didn't pick.
     let liveNoPick: String
+    /// Results (P6-10): how many of the announced winners you called. The
+    /// same figures in both voices; `isFinal` once every winner is in.
+    let callTally: (_ correct: Int, _ announced: Int, _ isFinal: Bool) -> String
+    /// The recap's eyebrow above your score.
+    let recapEyebrow: (_ isFinal: Bool) -> String
     /// Offline: the screens show the last good copy; `waiting` changes will send.
     let tickerOffline: (_ waiting: Int) -> String
     /// After the show: your final place on a board.
@@ -235,6 +240,10 @@ extension Copy {
         tickerLive: "LIVE · Winners as they're announced",
         tickerLiveProgress: { done, total in "LIVE · \(done) of \(total) announced" },
         liveNoPick: "No pick",
+        callTally: { correct, announced, isFinal in
+            "You called \(correct) of \(announced)" + (isFinal ? "." : " so far.")
+        },
+        recapEyebrow: { isFinal in isFinal ? "The results" : "The results so far" },
         tickerOffline: { waiting in
             "Offline · showing your last copy" + (waiting > 0 ? " · \(waiting) to send" : "")
         },
@@ -373,6 +382,16 @@ extension Copy {
             done == 0 ? "LIVE · Envelopes sealed. Breathe." : "LIVE · \(done) of \(total) envelopes open"
         },
         liveNoPick: "You sat this one out",
+        callTally: { correct, announced, isFinal in
+            let count = "\(correct) of \(announced)"
+            if announced == 0 { return "Nothing called yet." }
+            if !isFinal { return correct == announced ? "\(count) called. Perfect so far." : "\(count) called so far." }
+            if correct == announced { return "\(count). A perfect night. Frame it." }
+            if correct * 3 >= announced * 2 { return "\(count) called. The Academy owes you a thank-you note." }
+            if correct * 2 >= announced { return "\(count) called. Respectable. Smug, even." }
+            return "\(count) called. The Academy zigged. Next year, you zig."
+        },
+        recapEyebrow: { isFinal in isFinal ? "And that's a wrap" : "The envelopes so far" },
         tickerOffline: { waiting in
             waiting > 0
                 ? "Offline. \(waiting == 1 ? "1 change" : "\(waiting) changes") will send when you're back."

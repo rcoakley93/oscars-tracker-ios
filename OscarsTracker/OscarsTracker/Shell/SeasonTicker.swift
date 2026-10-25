@@ -35,7 +35,11 @@ struct SeasonTicker: View {
 
                     if placement != .inline, !model.isOffline, let button = button(for: ticker) {
                         Button(button.title, systemImage: button.symbol) {
-                            model.navigation.tab = destination(for: ticker)
+                            if ticker == .after, model.live.decidedCount > 0 {
+                                model.navigation.sheet = .recap
+                            } else {
+                                model.navigation.tab = destination(for: ticker)
+                            }
                         }
                         .buttonStyle(.glass)
                         .controlSize(.small)

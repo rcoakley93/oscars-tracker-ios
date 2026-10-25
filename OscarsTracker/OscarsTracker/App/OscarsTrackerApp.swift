@@ -85,8 +85,11 @@ struct OscarsTrackerApp: App {
         if defaults.object(forKey: "group") != nil {
             model.navigation.selectedGroupID = defaults.integer(forKey: "group")
         }
-        if defaults.string(forKey: "sheet") == "profile" {
-            model.navigation.sheet = .profile
+        switch defaults.string(forKey: "sheet") {
+        case "profile": model.navigation.sheet = .profile
+        case "recap": model.navigation.sheet = .recap
+        case "share": model.navigation.sheet = .shareCard
+        default: break
         }
         model.navigation.debugGallery = defaults.string(forKey: "gallery")
     }

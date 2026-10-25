@@ -26,6 +26,8 @@ final class AppNavigation {
         case search
         /// The ballot or score as an image to share (P6-08).
         case shareCard
+        /// The results recap, after the show (P6-10).
+        case recap
 
         var id: String {
             switch self {
@@ -39,6 +41,7 @@ final class AppNavigation {
             case .fillPlan: "fill-plan"
             case .search: "search"
             case .shareCard: "share-card"
+            case .recap: "recap"
             }
         }
     }
