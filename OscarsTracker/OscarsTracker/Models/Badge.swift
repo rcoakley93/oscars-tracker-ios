@@ -177,6 +177,46 @@ nonisolated extension UserBadge {
     var imageName: String { Badge.imageName(badgeKey, tierName: tierName) }
 }
 
+/// One person on the Board's Badges segment (P12-04b), from
+/// `get_board_badges`: their rank by badges this season and those badges,
+/// newest first. The server lists only you and people you share a group with.
+nonisolated struct BoardBadgeEntry: Codable, Identifiable, Hashable, Sendable {
+    let rank: Int
+    let userId: String
+    let username: String
+    let avatarUrl: String?
+    /// Distinct badges this season: `top_billing` won twice counts once.
+    let badgeCount: Int
+    let badges: [UserBadge]
+
+    var id: String { userId }
+
+    /// The same row at another place, when someone above leaves the board.
+    func withRank(_ rank: Int) -> BoardBadgeEntry {
+        BoardBadgeEntry(rank: rank, userId: userId, username: username, avatarUrl: avatarUrl, badgeCount: badgeCount, badges: badges)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case rank
+        case userId = "user_id"
+        case username
+        case avatarUrl = "avatar_url"
+        case badgeCount = "badge_count"
+        case badges
+    }
+
+    /// The strip's tiles: one per badge, newest first, ones this version
+    /// doesn't know skipped.
+    var tiles: [BadgeTile] {
+        var seen = Set<String>()
+        return badges.compactMap { row in
+            guard let badge = row.badge, seen.insert(row.badgeKey).inserted else { return nil }
+            let earned = badges.filter { $0.badgeKey == row.badgeKey }.sorted { $0.tier > $1.tier }
+            return BadgeTile(badge: badge, earned: earned)
+        }
+    }
+}
+
 /// One tile in a badge case: a badge, earned or not, in one season.
 /// `top_billing` won in two groups is one tile with both rows.
 nonisolated struct BadgeTile: Identifiable, Hashable, Sendable {

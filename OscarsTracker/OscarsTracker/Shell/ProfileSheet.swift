@@ -2,7 +2,7 @@ import AuthenticationServices
 import SwiftUI
 
 /// Profile (screens.md, 3.8): your account and the app's few settings.
-/// Account, Voice, Badges (P12-04), Notifications (P4-09 and P6-04), Past seasons, Blocked
+/// Account, Badges (P12-04, under Account so it shows), Voice, Notifications (P4-09 and P6-04), Past seasons, Blocked
 /// people (P6-16), About with support and the terms, Sign out and Delete
 /// account. A large sheet on compact widths, a page on
 /// regular ones.
@@ -38,6 +38,10 @@ struct ProfileSheet: View {
                     }
                 }
 
+                Section("Badges") {
+                    ProfileBadgesRow()
+                }
+
                 Section {
                     Picker("Voice", selection: $voice) {
                         ForEach(Voice.allCases) { Text(Copy.for($0).label).tag($0) }
@@ -55,10 +59,6 @@ struct ProfileSheet: View {
                         .contentTransition(.opacity)
                         .animation(.default, value: voice)
                         .padding(.top, Theme.Space.xs)
-                }
-
-                Section("Badges") {
-                    ProfileBadgesRow()
                 }
 
                 if model.isAdmin {
@@ -425,6 +425,18 @@ extension Bundle {
 #Preview("No badges") {
     Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
         .environment(AppModel.preview { $0.badgeRows = [:] }).preferredColorScheme(.dark)
+}
+
+#Preview("Some badges") {
+    Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
+        .environment(AppModel.preview { $0.badgeRows[SampleDataSource.userID] = SampleData.currentBadges })
+        .preferredColorScheme(.dark)
+}
+
+#Preview("All badges") {
+    Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
+        .environment(AppModel.preview { $0.badgeRows[SampleDataSource.userID] = SampleData.fullBadges })
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Admin") {

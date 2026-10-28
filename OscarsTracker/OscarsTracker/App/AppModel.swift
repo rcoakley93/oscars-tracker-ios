@@ -343,6 +343,7 @@ final class AppModel {
         if season.state == .loaded { films.stage = season.config.listStage }
         guard session.userID != nil else { return }
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
+        await badges.reloadBoards(ceremonyID: season.ceremony?.id)
     }
 
     /// The server changed `list_stage` while the app was away (P9-05): the
@@ -367,6 +368,7 @@ final class AppModel {
         // Offline, the reload fails and keeps the old boards: drop them from
         // what's on screen and from the offline copy, so they don't come back.
         leaderboard.hide(userID)
+        badges.hide(userID)
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
         leaderboard.hide(userID)
         saveSnapshot()

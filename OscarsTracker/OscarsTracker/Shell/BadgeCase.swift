@@ -245,26 +245,87 @@ extension AppModel {
     }
 }
 
-/// Profile's Badges row: the three newest earned badges and how many,
-/// pushing the case.
-struct ProfileBadgesRow: View {
-    @Environment(AppModel.self) private var model
+extension AppModel {
+    /// This season's 13 for the strips: earned first, then the outlines,
+    /// each in the catalogue's order. All outlines before the season loads.
+    var currentBadgeTiles: [BadgeTile] {
+        let current = season.ceremony.flatMap { ceremony in badgeSeasons.first { $0.ceremonyId == ceremony.id } }
+        let tiles = current?.tiles ?? Badge.catalogue.map { BadgeTile(badge: $0, earned: []) }
+        return tiles.filter(\.isEarned) + tiles.filter { !$0.isEarned }
+    }
+}
+
+/// A row of badge art that never scrolls: as many as fit the width, then
+/// "+4". Earned art in colour, the rest as outlines.
+struct BadgeStrip: View {
+    let tiles: [BadgeTile]
+    @ScaledMetric(relativeTo: .body) private var size: CGFloat = 32
+
+    /// `size` is the art at the default text size; it grows with Dynamic Type.
+    init(tiles: [BadgeTile], size: CGFloat = 32) {
+        self.tiles = tiles
+        _size = ScaledMetric(wrappedValue: size, relativeTo: .body)
+    }
 
     var body: some View {
-        let mine = model.badges.mine.filter { $0.badge != nil }
-        let newest = mine.sorted { $0.earnedAt > $1.earnedAt }.prefix(3)
+        ViewThatFits(in: .horizontal) {
+            ForEach(Self.options(tiles.count), id: \.self) { shown in
+                HStack(spacing: Theme.Space.xs) {
+                    ForEach(tiles.prefix(shown)) { BadgeArt(tile: $0, size: size) }
+                    if tiles.count > shown {
+                        Text(verbatim: "+\(tiles.count - shown)")
+                            .font(.subheadline)
+                            .foregroundStyle(.inkMuted)
+                            .monospacedDigit()
+                    }
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// How many to try showing, most first: all, then two fewer each time,
+    /// down to three.
+    static func options(_ count: Int) -> [Int] {
+        guard count > 3 else { return [count] }
+        return Array(stride(from: count, through: 3, by: -2)) + (count % 2 == 0 ? [3] : [])
+    }
+
+    /// "Badges, 2 of 13 earned: Stub Collector, Silver; Pens Down", or
+    /// "Badges, none earned yet".
+    static func label(_ tiles: [BadgeTile], voice: Voice) -> String {
+        let earned = tiles.filter(\.isEarned)
+        guard !earned.isEmpty else { return "Badges, none earned yet" }
+        return "Badges, \(earned.count) of \(tiles.count) earned: "
+            + earned.map { BadgeArt.label($0, voice: voice) }.joined(separator: "; ")
+    }
+}
+
+/// Profile's Badges row, right under Account: this season's strip and the
+/// count, pushing the case.
+struct ProfileBadgesRow: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+    @AppStorage(Voice.storageKey) private var voice: Voice = .host
+
+    var body: some View {
+        let tiles = model.currentBadgeTiles
         NavigationLink {
             BadgeCaseView()
         } label: {
-            HStack(spacing: Theme.Space.s) {
-                HStack(spacing: -Theme.Space.xs) {
-                    ForEach(Array(newest), id: \.self) { BadgeArt(badge: $0, size: 28) }
-                }
-                Text(mine.isEmpty ? "None yet" : "\(mine.count) earned")
-                    .foregroundStyle(mine.isEmpty ? .inkMuted : .ink)
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                BadgeStrip(tiles: tiles)
+                Text(copy.badgeCount(tiles.count(where: \.isEarned), tiles.count))
+                    .font(.subheadline)
+                    .foregroundStyle(.ink)
             }
+            .padding(.vertical, Theme.Space.xxs)
         }
-        .accessibilityLabel(mine.isEmpty ? "Badges, none yet" : "Badges, \(mine.count) earned")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(BadgeStrip.label(tiles, voice: voice))
+        .accessibilityHint("Opens your badge case")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("profile.badges")
     }
 }
 
@@ -323,6 +384,40 @@ private struct BadgeCasePreview: View {
 #Preview("Dark") { BadgeCasePreview().preferredColorScheme(.dark) }
 #Preview("Light") { BadgeCasePreview().preferredColorScheme(.light) }
 #Preview("Large text") { BadgeCasePreview().preferredColorScheme(.dark).dynamicTypeSize(.accessibility2) }
+
+/// Profile's strip, for none, some and all earned.
+private struct BadgeStripsPreview: View {
+    var badges: [UserBadge] = SampleData.currentBadges
+    var voice = Voice.host
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Badges") { ProfileBadgesRow() }
+            }
+            .scrollContentBackground(.hidden)
+            .background(.ground)
+        }
+        .environment(\.copy, .for(voice))
+        .defaultAppStorage(Self.defaults(voice))
+        .environment(AppModel.preview { $0.badgeRows[SampleDataSource.userID] = badges })
+    }
+
+    private static func defaults(_ voice: Voice) -> UserDefaults {
+        let defaults = UserDefaults(suiteName: "preview.badges.\(voice.rawValue)")!
+        defaults.set(voice.rawValue, forKey: Voice.storageKey)
+        return defaults
+    }
+}
+
+#Preview("Strips · None") { BadgeStripsPreview(badges: []).preferredColorScheme(.dark) }
+#Preview("Strips · Some") { BadgeStripsPreview().preferredColorScheme(.dark) }
+#Preview("Strips · All") { BadgeStripsPreview(badges: SampleData.fullBadges).preferredColorScheme(.dark) }
+#Preview("Strips · Classic") { BadgeStripsPreview(voice: .classic).preferredColorScheme(.dark) }
+#Preview("Strips · Light") { BadgeStripsPreview().preferredColorScheme(.light) }
+#Preview("Strips · Large text") {
+    BadgeStripsPreview().preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
 #Preview("Detail") {
     Color.ground.sheet(isPresented: .constant(true)) {
         BadgeDetailSheet(tile: BadgeTile(badge: Badge.named("films_watched")!, earned: [SampleData.badge("films_watched", tier: 2)]),

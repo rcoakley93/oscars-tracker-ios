@@ -231,6 +231,9 @@ protocol AppDataSource: AnyObject, Sendable {
     /// Someone's badges, every season, newest season first, then the case's
     /// order: yours, or someone's you share a group with (else it throws).
     func userBadges(userID: String) async throws -> [UserBadge]
+    /// A board ranked by badges this season (P12-04b): you and the people on
+    /// it you share a group with, each with their badges.
+    func boardBadges(ceremonyID: Int, groupID: Int?) async throws -> [BoardBadgeEntry]
     /// Revokes your Sign in with Apple tokens (guideline 5.1.1(v)), with a
     /// fresh authorization code, before the account is deleted.
     func revokeApple(authorizationCode: String) async throws
