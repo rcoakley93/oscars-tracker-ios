@@ -181,6 +181,10 @@ struct Copy {
     let badgeRevealTitle: String
     /// Above the badge case when nothing's earned yet.
     let badgeCaseEmpty: String
+    /// Under the badge strip on Profile and Board: `earned` of `total` this season.
+    let badgeCount: (_ earned: Int, _ total: Int) -> String
+    /// The Board's Badges segment when nobody on the board has one.
+    let boardBadgesEmpty: String
 
     // The setting itself
     let label: String
@@ -449,6 +453,8 @@ extension Copy {
         stageMomentAdded: "New on the list",
         badgeRevealTitle: "New badge",
         badgeCaseEmpty: "You haven't earned a badge yet.",
+        badgeCount: { earned, total in earned == total ? "All \(total) earned" : "\(earned) of \(total) earned" },
+        boardBadgesEmpty: "Nobody has earned a badge yet.",
         label: "Classic"
     ) }
 
@@ -676,6 +682,12 @@ extension Copy {
         stageMomentAdded: "New arrivals",
         badgeRevealTitle: "And the badge goes to…",
         badgeCaseEmpty: "No badges yet. The first one's the hardest.",
+        badgeCount: { earned, total in
+            earned == 0 ? "\(total) badges up for grabs."
+                : earned == total ? "All \(total). Clear the mantel."
+                : "\(earned) of \(total). Room on the mantel."
+        },
+        boardBadgesEmpty: "Nobody's on the shelf yet. Somebody has to go first.",
         label: "Host"
     ) }
 }

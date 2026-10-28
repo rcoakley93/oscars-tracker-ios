@@ -499,6 +499,23 @@ final class SampleDataSource: AppDataSource {
         return (badgeRows[userID] ?? []).sorted { ($1.ceremonyNumber, $0.sortOrder) < ($0.ceremonyNumber, $1.sortOrder) }
     }
 
+    /// The board's people you share a group with (here, the Movies LLC
+    /// six), ranked by their badges this season.
+    func boardBadges(ceremonyID: Int, groupID: Int?) async throws -> [BoardBadgeEntry] {
+        let me = try requireUser()
+        let visible = Set(try await board(ceremonyID: ceremonyID, groupID: 1).map(\.userId) + [me])
+        let people = try await board(ceremonyID: ceremonyID, groupID: groupID).filter { visible.contains($0.userId) }
+        let rows = people.map { entry in
+            let badges = (badgeRows[entry.userId] ?? []).filter { $0.ceremonyId == ceremonyID }.sorted { $0.earnedAt > $1.earnedAt }
+            return (entry, badges, Set(badges.map(\.badgeKey)).count, badges.reduce(0) { $0 + $1.tier })
+        }
+        .sorted { ($0.2, $0.3, $1.0.username) > ($1.2, $1.3, $0.0.username) }
+        return rows.map { row in
+            BoardBadgeEntry(rank: rows.firstIndex { $0.2 == row.2 && $0.3 == row.3 }! + 1, userId: row.0.userId, username: row.0.username,
+                            avatarUrl: row.0.avatarUrl, badgeCount: row.2, badges: row.1)
+        }
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         _ = try requireUser()
         revokedAppleCodes.append(authorizationCode)

@@ -12,6 +12,9 @@ final class BadgeStore {
     /// People opened from a board, by user id. Nil after a failed load: the
     /// server shows badges only to people who share a group.
     private(set) var people: [String: [UserBadge]?] = [:]
+    /// The Board's Badges segment (P12-04b), by group; nil is the global board.
+    private(set) var boards: [Int?: [BoardBadgeEntry]] = [:]
+    private(set) var boardStates: [Int?: LoadState] = [:]
     /// Badges waiting for their reveal, oldest first; the first is on screen.
     private(set) var queue: [UserBadge] = []
 
@@ -57,6 +60,48 @@ final class BadgeStore {
         people[userID] = .some(try? await data.userBadges(userID: userID))
     }
 
+    // MARK: - The Board's Badges segment
+
+    func board(_ groupID: Int?) -> [BoardBadgeEntry] {
+        boards[groupID] ?? []
+    }
+
+    func boardState(_ groupID: Int?) -> LoadState {
+        boardStates[groupID] ?? .idle
+    }
+
+    func loadBoard(ceremonyID: Int?, groupID: Int?) async {
+        guard let ceremonyID else { return }
+        let generation = generation
+        boardStates[groupID] = .loading
+        do {
+            let entries = try await data.boardBadges(ceremonyID: ceremonyID, groupID: groupID)
+            guard generation == self.generation else { return }
+            boards[groupID] = entries
+            boardStates[groupID] = .loaded
+        } catch {
+            guard generation == self.generation else { return }
+            // A board already on screen stays; only an empty one shows the error.
+            boardStates[groupID] = boards[groupID] == nil ? .failed(AppError(error)) : .loaded
+        }
+    }
+
+    /// Reloads every badge board already open, after a refresh.
+    func reloadBoards(ceremonyID: Int?) async {
+        for groupID in Set(boards.keys).union(boardStates.keys) {
+            await loadBoard(ceremonyID: ceremonyID, groupID: groupID)
+        }
+    }
+
+    /// Takes someone you blocked off every badge board, ranks closed up.
+    func hide(_ userID: String) {
+        for (groupID, entries) in boards where entries.contains(where: { $0.userId == userID }) {
+            let others = entries.filter { $0.userId != userID }
+            boards[groupID] = others.map { entry in entry.withRank(others.count { $0.rank < entry.rank } + 1) }
+        }
+        people[userID] = nil
+    }
+
     // MARK: - The earned moment
 
     /// Fills the queue with badges this device hasn't shown for `userID`;
@@ -96,6 +141,8 @@ final class BadgeStore {
     func reset() {
         mine = []
         people = [:]
+        boards = [:]
+        boardStates = [:]
         queue = []
         state = .idle
         isFresh = false

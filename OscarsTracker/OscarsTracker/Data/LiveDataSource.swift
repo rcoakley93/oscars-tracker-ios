@@ -742,6 +742,12 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    func boardBadges(ceremonyID: Int, groupID: Int?) async throws -> [BoardBadgeEntry] {
+        try await run {
+            try await client.rpc("get_board_badges", params: BoardParams(p_ceremony_id: ceremonyID, p_group_id: groupID)).execute().value
+        }
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         try await run {
             try await client.functions.invoke("revoke-apple", options: FunctionInvokeOptions(body: ["authorization_code": authorizationCode]))

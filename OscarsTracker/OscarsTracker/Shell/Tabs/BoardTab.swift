@@ -16,17 +16,24 @@ struct BoardTab: View {
         let entries = board.entries(groupID)
 
         NavigationSplitView {
-            LoadStateView(state: board.state(groupID), isEmpty: entries.isEmpty,
-                          empty: ContentUnavailableView(copy.boardEmpty, systemImage: "trophy")) {
-                BoardList(groupID: groupID, entries: entries)
-            } placeholder: {
-                BoardList(groupID: groupID, entries: BoardEntry.placeholders)
+            Group {
+                if navigation.boardShowsBadges {
+                    BadgeBoard(groupID: groupID)
+                } else {
+                    LoadStateView(state: board.state(groupID), isEmpty: entries.isEmpty,
+                                  empty: ContentUnavailableView(copy.boardEmpty, systemImage: "trophy")) {
+                        BoardList(groupID: groupID, entries: entries)
+                    } placeholder: {
+                        BoardList(groupID: groupID, entries: BoardEntry.placeholders)
+                    }
+                }
             }
             .tabChrome("Leaderboard", subtitle: subtitle(groupID: groupID, size: entries.count))
             .safeAreaBar(edge: .top) {
-                Picker("Rank by", selection: $navigation.boardMetric) {
-                    Text("Films watched").tag(LeaderboardStore.Metric.films)
-                    Text("Predictions").tag(LeaderboardStore.Metric.predictions)
+                Picker("Rank by", selection: BoardSegment.binding(navigation)) {
+                    Text("Films watched").tag(BoardSegment.films)
+                    Text("Predictions").tag(BoardSegment.predictions)
+                    Text("Badges").tag(BoardSegment.badges)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, Theme.Space.m)
@@ -58,7 +65,11 @@ struct BoardTab: View {
             }
         } detail: {
             // Wide layouts open on your own season rather than an empty column.
-            if let entry = entries.first(where: { $0.userId == navigation.selectedPersonID })
+            // On Badges, your own row (or no selection) is your badge case.
+            if navigation.boardShowsBadges,
+               navigation.selectedPersonID == nil || navigation.selectedPersonID == model.session.userID {
+                BadgeCaseView()
+            } else if let entry = entries.first(where: { $0.userId == navigation.selectedPersonID })
                 ?? entries.first(where: { $0.userId == model.session.userID }) {
                 PersonDetail(entry: entry, metric: navigation.boardMetric).id(entry.userId)
             } else {

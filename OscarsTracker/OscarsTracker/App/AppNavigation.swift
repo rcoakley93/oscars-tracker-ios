@@ -66,6 +66,8 @@ final class AppNavigation {
     /// The Board's group; nil is the global board.
     var boardGroupID: Int?
     var boardMetric: LeaderboardStore.Metric = .films
+    /// The Board's third segment, Badges (P12-04b), over the metric.
+    var boardShowsBadges = false
     /// The person whose picks or watched films the Board shows on wide layouts.
     var selectedPersonID: String?
     var sheet: Sheet?
