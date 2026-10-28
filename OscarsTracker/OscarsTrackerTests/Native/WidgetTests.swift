@@ -19,37 +19,57 @@ struct WidgetTests {
         WidgetSnapshot(ceremonyAt: date("2027-03-14", hour: 20), filmsTotal: 60, filmsWatched: 22,
                        plan: [.init(title: "Hamnet", day: PlanDay("2027-02-01")!), .init(title: "Sinners", day: PlanDay("2027-02-02")!),
                               .init(title: "Bugonia", day: PlanDay("2027-02-02")!)],
-                       savedAt: date("2027-02-01"))
+                       savedAt: date("2027-02-01"), ceremonyNumber: 99, ballotLockAt: date("2027-03-14", hour: 16),
+                       nominationsAt: date("2027-01-21", hour: 13), stage: .nominated, categoriesPicked: 9, categoriesTotal: 24)
     }
 
-    @Test func entryCountsDaysAndFilmsLeft() {
-        let entry = WidgetEntry.make(snapshot, at: date("2027-02-04"), calendar: utc)
-        #expect(entry.daysToCeremony == 38)
-        #expect(entry.filmsLeft == 38)
-        #expect(entry.tonight == nil)
+    private var contenders: WidgetSnapshot {
+        var contenders = snapshot
+        contenders.stage = .predicted
+        contenders.filmsTotal = 40
+        contenders.filmsWatched = 7
+        return contenders
     }
 
-    @Test func daysEndAfterTheCeremony() {
-        #expect(WidgetEntry.make(snapshot, at: date("2027-03-14"), calendar: utc).daysToCeremony == 0)
-        #expect(WidgetEntry.make(snapshot, at: date("2027-03-15"), calendar: utc).daysToCeremony == nil)
+    @Test func phaseFollowsTheSeason() {
+        #expect(WidgetEntry.phase(contenders, at: date("2026-10-27"), calendar: utc) == .contenders(daysToNominations: 86, shortlisted: false))
+        #expect(WidgetEntry.phase(snapshot, at: date("2027-02-04"), calendar: utc) == .season(daysToCeremony: 38))
+        #expect(WidgetEntry.phase(snapshot, at: date("2027-03-14", hour: 11), calendar: utc) == .lockDay(locksAt: date("2027-03-14", hour: 16)))
+        #expect(WidgetEntry.phase(snapshot, at: date("2027-03-14", hour: 17), calendar: utc) == .showtime(startsAt: date("2027-03-14", hour: 20)))
+        #expect(WidgetEntry.phase(snapshot, at: date("2027-03-15", hour: 2), calendar: utc) == .results)
+        #expect(WidgetEntry.phase(snapshot, at: date("2027-07-10"), calendar: utc) == .offSeason)
+        #expect(WidgetEntry.phase(.empty, at: date("2027-07-10"), calendar: utc) == .empty)
+    }
+
+    @Test func aTwoPointOhSnapshotStillDecodesAsNominees() throws {
+        let old = #"{"ceremonyAt":800000000,"filmsTotal":60,"filmsWatched":22,"plan":[],"savedAt":790000000}"#
+        let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: Data(old.utf8))
+        #expect(decoded.hasNominees)
+        #expect(decoded.posters == nil)
     }
 
     @Test func tonightIsTodaysFilmAndCountsTheRest() {
         let entry = WidgetEntry.make(snapshot, at: date("2027-02-02"), calendar: utc)
         #expect(entry.tonight == "Bugonia" || entry.tonight == "Sinners")
         #expect(entry.tonightExtra == 1)
+        #expect(WidgetEntry.make(snapshot, at: date("2027-01-30"), calendar: utc).next?.title == "Hamnet")
     }
 
-    @Test func timelineRollsOverAtEachMidnight() {
+    @Test func timelineRollsOverAtEachMidnightAndEachTurn() {
         let now = date("2027-02-01", hour: 18)
         let entries = WidgetEntry.timeline(snapshot, now: now, days: 3, calendar: utc)
         #expect(entries.count == 4)
         #expect(entries[0].date == now)
         #expect(entries[1].date == date("2027-02-02", hour: 0))
-        #expect(entries.map(\.daysToCeremony) == [41, 40, 39, 38])
+        #expect(entries.map(\.phase) == [41, 40, 39, 38].map { .season(daysToCeremony: $0) })
         #expect(entries[0].tonight == "Hamnet")
         #expect(entries[3].tonight == nil)
         #expect(WidgetEntry.refreshDate(now: now, days: 3, calendar: utc) == date("2027-02-05", hour: 0))
+
+        let lockWeek = WidgetEntry.timeline(snapshot, now: date("2027-03-12"), days: 3, calendar: utc).map(\.date)
+        #expect(lockWeek.contains(date("2027-03-13", hour: 16)))
+        #expect(lockWeek.contains(date("2027-03-14", hour: 16)))
+        #expect(lockWeek.contains(date("2027-03-14", hour: 20)))
     }
 
     @Test func upcomingKeepsUnwatchedPlansFromTodayOn() {
@@ -81,10 +101,20 @@ struct WidgetTests {
         #expect(!WidgetSnapshotStore.none.write(snapshot))
     }
 
-    @Test func copyIsPlural() {
-        #expect(WidgetCopy.filmsLeft(1) == "1 film left")
-        #expect(WidgetCopy.filmsLeft(38) == "38 films left")
-        #expect(WidgetCopy.accessibility(.empty) == WidgetCopy.noSeason)
-        #expect(WidgetCopy.accessibility(.sample) == "38 days to go, 38 films left")
+    @Test func faceSaysWhatEachStateIsAbout() {
+        let early = WidgetCopy.face(WidgetEntry.make(contenders, at: date("2026-10-27"), calendar: utc))
+        #expect(early.count == 7 && early.of == 40 && early.frames == .films)
+        #expect(early.foot == "86 days to nominations")
+        let season = WidgetCopy.face(WidgetEntry.make(snapshot, at: date("2027-02-04"), calendar: utc))
+        #expect(season.foot == "38 days · 9 of 24 picked")
+        let lock = WidgetCopy.face(WidgetEntry.make(snapshot, at: date("2027-03-14", hour: 11), calendar: utc))
+        #expect(lock.count == 9 && lock.of == 24 && lock.frames == .picks)
+        #expect(lock.countdownTo == date("2027-03-14", hour: 16))
+        #expect(WidgetCopy.face(.results).rectangularLine == "3rd of 212")
+        #expect(WidgetCopy.face(.offSeason).inline == "Last season: 15 of 24 right")
+        #expect(WidgetCopy.days(1) == "1 day")
+        for sample in WidgetEntry.allSamples {
+            #expect(!WidgetCopy.face(sample.entry).accessibility.contains("Open Oscars Tracker"))
+        }
     }
 }

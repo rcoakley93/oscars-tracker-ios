@@ -102,6 +102,7 @@ final class AppModel {
         followLiveMode()
         await followLiveActivity()
         saveSnapshot()
+        await loadWidgetPosters()
         saveWidgetSnapshot()
     }
 
@@ -127,17 +128,45 @@ final class AppModel {
                    for: userID)
     }
 
-    /// What the widgets show (P6-09), written to the App Group when the stores
-    /// refresh; widgets reload only if it changed. Cleared at sign-out.
+    /// What the widgets show (P6-09, P11-02), written to the App Group when the
+    /// stores refresh; widgets reload only if it changed. Cleared at sign-out.
     func saveWidgetSnapshot() {
         // Before nominations there are no films, but the countdown still counts.
         guard session.userID != nil, season.ceremony != nil || !films.movies.isEmpty else { return }
         let titles = Dictionary(films.movies.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
-        let snapshot = WidgetSnapshot(ceremonyAt: season.ceremony?.ceremonyAt, filmsTotal: films.movies.count,
+        let ceremony = season.ceremony
+        let snapshot = WidgetSnapshot(ceremonyAt: ceremony?.ceremonyAt, filmsTotal: films.movies.count,
                                       filmsWatched: films.watchedCount,
                                       plan: WidgetSnapshot.upcoming(plan.items, watchedIDs: films.watchedIDs, titles: titles, today: .today()),
-                                      savedAt: .now)
+                                      savedAt: .now, ceremonyNumber: ceremony?.number, ballotLockAt: ceremony?.ballotLockAt,
+                                      nominationsAt: season.config.nominationsAt,
+                                      // P9-05 sets predicted or shortlisted from `list_stage`; until then, no films means none yet.
+                                      stage: films.movies.isEmpty ? .predicted : .nominated,
+                                      posters: widgetPosters, categoriesPicked: ballot.pickedCount,
+                                      categoriesTotal: ballot.categories.count, results: widgetResults)
         if widgets.write(snapshot) { WidgetCenter.shared.reloadAllTimelines() }
+    }
+
+    /// Watched films' poster colours for the strip, kept from the last refresh.
+    @ObservationIgnored private var widgetPosters: [WidgetSnapshot.PosterColor] = []
+
+    private func loadWidgetPosters() async {
+        let urls = films.watched.prefix(16).compactMap { PosterSize.thumbnail.url($0.posterUrl) }
+        widgetPosters = await PosterPalette.shared.clusters(for: Array(urls)).map { .init(red: $0.red, green: $0.green, blue: $0.blue) }
+    }
+
+    /// Your ballot once winners are in, with your place on the global board.
+    private var widgetResults: WidgetSnapshot.Results? {
+        guard ballot.hasWinners else { return nil }
+        let decided = ballot.categories.filter { !$0.winnerIDs.isEmpty }
+        let correct = decided.count { ballot.outcome(for: $0) == .correct }
+        var results = WidgetSnapshot.Results(correct: correct, total: ballot.categories.count)
+        let board = leaderboard.entries(nil)
+        if let userID = session.userID, let mine = board.first(where: { $0.userId == userID }) {
+            results.rank = mine.rank
+            results.ranked = board.count
+        }
+        return results
     }
 
     private func enqueue(_ write: PendingWrite) {
