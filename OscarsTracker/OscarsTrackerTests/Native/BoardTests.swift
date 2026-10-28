@@ -179,3 +179,47 @@ struct SavedConfigTests {
         #expect(config.groupMemberLimit == 50 && config.userGroupLimit == 5)
     }
 }
+
+@MainActor
+@Suite("Season board")
+struct SeasonBoardTests {
+    private let user = SampleDataSource.userID
+
+    @Test(arguments: [ListStage.predicted, .shortlisted])
+    func beforeNominationsTheBoardCountsContendersWithNoPicks(stage: ListStage) async throws {
+        let data = SampleDataSource()
+        data.useListStage(stage)
+        // Last season's ceremony is still active and long locked.
+        data.ceremony = Ceremony(id: 1, number: 98, name: "98th Academy Awards", ceremonyAt: .now.addingTimeInterval(-86_400 * 200),
+                                 ballotLockAt: .now.addingTimeInterval(-86_400 * 201), isActive: true)
+        let store = LeaderboardStore(data: data)
+        await store.load(ceremonyID: 1, groupID: nil)
+        await store.load(ceremonyID: 1, groupID: 1)
+        #expect(store.entries(nil).allSatisfy { $0.listStage == stage && $0.score == 0 })
+        #expect(!store.countsPicks(nil) && !store.countsPicks(1))
+        await store.loadPerson("u-sam")
+        let sam = try #require(store.people["u-sam"] ?? nil)
+        #expect(sam.picks.isEmpty && !sam.watchedMovieIDs.isEmpty)
+    }
+
+    @Test func fromNominationsDayPicksCount() async {
+        let data = SampleDataSource()
+        data.useListStage(.nominated)
+        let store = LeaderboardStore(data: data)
+        await store.load(ceremonyID: 2, groupID: nil)
+        #expect(store.entries(nil).allSatisfy { $0.listStage == .nominated })
+        #expect(store.countsPicks(nil))
+    }
+
+    @Test func theRowDecodesTheStageAndACopyWithoutOneCountsPicks() throws {
+        let row = #"{"rank":1,"user_id":"u","username":"u","avatar_url":null,"watched_count":3,"correct_count":0,"points":0,"score":0,"scoring":"traditional","is_creator":false%@}"#
+        let season = try JSONDecoder().decode(BoardEntry.self, from: Data(row.replacingOccurrences(of: "%@", with: #","list_stage":"shortlisted""#).utf8))
+        #expect(season.listStage == .shortlisted && !season.countsPicks)
+        let cached = try JSONDecoder().decode(BoardEntry.self, from: Data(row.replacingOccurrences(of: "%@", with: "").utf8))
+        #expect(cached.listStage == nil && cached.countsPicks)
+    }
+
+    @Test func anUnloadedBoardCountsPicks() {
+        #expect(LeaderboardStore(data: SampleDataSource()).countsPicks(nil))
+    }
+}
