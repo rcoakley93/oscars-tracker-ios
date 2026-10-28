@@ -219,8 +219,13 @@ struct WidgetFilmStrip: View {
 /// The count, gold in full colour: you earned it.
 private struct WidgetCount: View {
     let face: WidgetFace
-    var size: CGFloat
+    @ScaledMetric private var size: CGFloat
     @Environment(\.widgetRenderingMode) private var mode
+
+    init(face: WidgetFace, size: CGFloat) {
+        self.face = face
+        _size = ScaledMetric(wrappedValue: size, relativeTo: .largeTitle)
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {

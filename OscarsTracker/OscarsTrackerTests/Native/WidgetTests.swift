@@ -66,8 +66,9 @@ struct WidgetTests {
         #expect(entries[3].tonight == nil)
         #expect(WidgetEntry.refreshDate(now: now, days: 3, calendar: utc) == date("2027-02-05", hour: 0))
 
-        let lockWeek = WidgetEntry.timeline(snapshot, now: date("2027-03-12"), days: 3, calendar: utc).map(\.date)
-        #expect(lockWeek.contains(date("2027-03-13", hour: 16)))
+        let lockWeekEntries = WidgetEntry.timeline(snapshot, now: date("2027-03-12"), days: 3, calendar: utc)
+        let lockWeek = lockWeekEntries.map(\.date)
+        #expect(lockWeekEntries.first { $0.date == date("2027-03-13", hour: 16) }?.phase == .lockDay(locksAt: date("2027-03-14", hour: 16)))
         #expect(lockWeek.contains(date("2027-03-14", hour: 16)))
         #expect(lockWeek.contains(date("2027-03-14", hour: 20)))
     }

@@ -74,7 +74,7 @@ nonisolated struct WidgetEntry: TimelineEntry, Equatable, Sendable {
             let toNominations = snapshot.nominationsAt.map(days(until:)).flatMap { $0 >= 0 ? $0 : nil }
             return .contenders(daysToNominations: toNominations, shortlisted: snapshot.stage == .shortlisted)
         }
-        if locksAt.timeIntervalSince(date) < lockDayLength { return .lockDay(locksAt: locksAt) }
+        if locksAt.timeIntervalSince(date) <= lockDayLength { return .lockDay(locksAt: locksAt) }
         return .season(daysToCeremony: max(days(until: ceremonyAt), 0))
     }
 
