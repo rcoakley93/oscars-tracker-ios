@@ -26,7 +26,7 @@ struct SignInView: View {
                     BrandMark(size: 120)
                     Text("Oscars Tracker").displayFont(.largeTitle)
                         .foregroundStyle(.ink)
-                    Text("Track the nominees, make your picks, beat your friends.")
+                    Text("Watch the contenders, make your picks, beat your friends.")
                         .font(.body)
                         .foregroundStyle(.inkMuted)
                         .multilineTextAlignment(.center)

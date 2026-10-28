@@ -175,15 +175,16 @@ struct ContendersTests {
 
     // MARK: - Copy
 
-    @Test func everyStageHasItsLinesInBothVoices() {
-        for copy in [Copy.host, Copy.classic] {
-            for stage in ListStage.allCases {
-                #expect(copy.tickerBeforeNominations("Jan 21", 12, stage).contains("12 contenders"))
-                #expect(copy.heroTeaser(1, "Jan 21", stage).contains("1 contender"))
-                #expect(copy.heroTeaser(5, "Jan 21", stage).contains("Jan 21"))
+    @Test func theContenderStagesCountContenders() {
+        for voice in Voice.allCases {
+            for stage in [ListStage.predicted, .shortlisted] {
+                let copy = Copy.for(voice, stage: stage)
+                #expect(copy.tickerBeforeNominations("Jan 21", 12).contains("12 contenders"))
+                #expect(copy.heroTeaser(1, "Jan 21").contains("1 contender"))
+                #expect(copy.heroTeaser(5, "Jan 21").contains("Jan 21"))
             }
         }
-        #expect(Copy.classic.tickerBeforeNominations("Jan 21", nil, .predicted) == "Nominations announced Jan 21.")
+        #expect(Copy.for(.classic, stage: .predicted).tickerBeforeNominations("Jan 21", nil) == "Nominations announced Jan 21.")
     }
 
     // MARK: - Config and offline

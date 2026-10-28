@@ -30,6 +30,8 @@ final class AppNavigation {
         case recap
         /// Report a person or a group (P6-16).
         case report(ReportTarget)
+        /// The list moved to a new stage (P10-03).
+        case stageMoment
 
         var id: String {
             switch self {
@@ -45,6 +47,7 @@ final class AppNavigation {
             case .shareCard: "share-card"
             case .recap: "recap"
             case .report(let target): "report-\(target.id)"
+            case .stageMoment: "stage-moment"
             }
         }
     }
@@ -63,6 +66,9 @@ final class AppNavigation {
     /// The person whose picks or watched films the Board shows on wide layouts.
     var selectedPersonID: String?
     var sheet: Sheet?
+    /// A film's detail is open as a sheet from Films (compact width), which
+    /// `sheet` doesn't hold; Films keeps it current. Moments wait for it.
+    var isFilmSheetOpen = false
     /// The search sheet's query, kept across a fold like everything else here.
     var searchText = ""
     #if DEBUG

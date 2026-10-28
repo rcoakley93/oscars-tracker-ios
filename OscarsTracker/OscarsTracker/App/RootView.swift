@@ -29,7 +29,9 @@ struct RootView: View {
         // Ink, not gold: gold is earned (progress, your picks, wins), so the
         // places that are gold say so themselves.
         .tint(.ink)
-        .environment(\.copy, Copy.for(voice))
+        // The lines follow the voice and the list's stage (P10-04), with any
+        // seasonal overrides from `app_config`.
+        .environment(\.copy, Copy.for(voice, stage: model.films.listStage, overrides: model.season.config.copyOverrides))
         .asyncImageURLSession(.posters)
         // Back online: send what queued up, then reload.
         .onChange(of: model.connectivity.isOnline) { _, online in

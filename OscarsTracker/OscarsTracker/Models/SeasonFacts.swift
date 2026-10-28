@@ -42,6 +42,9 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
     /// Which list Films shows; `feature_flags.list_stage` (2.1). Missing means
     /// the nominees, as before 2.1.
     var listStage = ListStage.nominated
+    /// Seasonal lines that replace the built-in ones (P10-04);
+    /// `{"<key>": {"host": "…", "classic": "…"}}`. See `Copy.applying`.
+    var copyOverrides: CopyOverrides = [:]
 
     static let defaults = AppConfig()
 
@@ -68,5 +71,6 @@ extension AppConfig {
         groupMemberLimit = try c.decodeIfPresent(Int.self, forKey: .groupMemberLimit) ?? d.groupMemberLimit
         userGroupLimit = try c.decodeIfPresent(Int.self, forKey: .userGroupLimit) ?? d.userGroupLimit
         listStage = (try? c.decodeIfPresent(ListStage.self, forKey: .listStage)) ?? d.listStage
+        copyOverrides = (try? c.decodeIfPresent(CopyOverrides.self, forKey: .copyOverrides)) ?? d.copyOverrides
     }
 }

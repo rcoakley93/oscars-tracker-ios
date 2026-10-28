@@ -17,8 +17,6 @@ struct HeroCard: View {
     let total: Int
     /// Where the season is (`SeasonPhase`); the hero's figures and line follow it.
     var phase: SeasonPhase = .none
-    /// The list's stage, for the line before nominations (P9-05).
-    var stage: ListStage = .predicted
     /// The clock the lock-day countdown reads.
     var now: Date = .now
     /// Your score and the winners announced, for the live and after phases.
@@ -102,7 +100,7 @@ struct HeroCard: View {
         case .none:
             return watched == total && total > 0 ? copy.allWatched : copy.progressSummary(watched, total)
         case .beforeNominations(let date):
-            return copy.heroTeaser(left, date?.formatted(.dateTime.month(.abbreviated).day()), stage)
+            return copy.heroTeaser(left, date?.formatted(.dateTime.month(.abbreviated).day()))
         case .season(let days):
             return copy.heroSeason(days, left)
         case .finalWeek(let days):
@@ -219,8 +217,17 @@ private struct HeroPhases: View {
 #Preview("Season phases · Dark") { HeroPhases().preferredColorScheme(.dark) }
 #Preview("Season phases · Light") { HeroPhases().preferredColorScheme(.light) }
 #Preview("Season phases · Large text") { HeroPhases().preferredColorScheme(.dark).dynamicTypeSize(.accessibility2) }
-#Preview("Before nominations") {
+#Preview("Before nominations · Predicted") {
     HeroCard(watched: 0, total: 40, phase: .beforeNominations(HeroCard.anchor)).padding().background(.ground)
+        .environment(\.copy, .for(.host, stage: .predicted))
+}
+#Preview("Before nominations · Shortlisted") {
+    HeroCard(watched: 14, total: 52, phase: .beforeNominations(HeroCard.anchor)).padding().background(.ground)
+        .environment(\.copy, .for(.classic, stage: .shortlisted))
+}
+#Preview("Before nominations · Nominated, films loading") {
+    HeroCard(watched: 0, total: 0, phase: .beforeNominations(HeroCard.anchor)).padding().background(.ground)
+        .environment(\.copy, .for(.host, stage: .nominated))
 }
 #Preview("Nominations to final week") {
     HeroCard(watched: 12, total: 50, phase: .season(days: 33)).padding().background(.ground)
