@@ -30,6 +30,8 @@ final class AppNavigation {
         case recap
         /// Report a person or a group (P6-16).
         case report(ReportTarget)
+        /// The list moved to a new stage (P10-03).
+        case stageMoment
 
         var id: String {
             switch self {
@@ -45,6 +47,7 @@ final class AppNavigation {
             case .shareCard: "share-card"
             case .recap: "recap"
             case .report(let target): "report-\(target.id)"
+            case .stageMoment: "stage-moment"
             }
         }
     }

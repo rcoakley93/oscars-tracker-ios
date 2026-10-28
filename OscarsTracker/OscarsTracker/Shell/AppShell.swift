@@ -80,6 +80,8 @@ struct AppShell: View {
                 RecapSheet()
             case .report(let target):
                 ReportSheet(target: target)
+            case .stageMoment:
+                if let moment = model.stageMoment { StageMomentSheet(moment: moment) }
             }
         }
         .errorAlert("Couldn't change that", error: Bindable(model.moderation).actionError)

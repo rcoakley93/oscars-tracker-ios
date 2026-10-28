@@ -68,7 +68,7 @@ struct SearchSheet: View {
                 }
                 .visibilityPriority(.high)
             }
-            .searchable(text: $navigation.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Films and nominees")
+            .searchable(text: $navigation.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: copy.searchPrompt)
             .searchFocused($isSearching)
             .searchSuggestions {
                 if results.query.isEmpty {

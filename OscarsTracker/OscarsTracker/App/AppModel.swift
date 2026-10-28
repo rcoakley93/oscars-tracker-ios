@@ -30,16 +30,20 @@ final class AppModel {
     let connectivity = Connectivity()
     /// Watched toggles and picks made offline, oldest first (P4-11).
     private(set) var pending: [PendingWrite] = []
+    /// What changed when the list last moved to a new stage (P10-03).
+    private(set) var stageMoment: StageMoment?
 
     private let data: any AppDataSource
     private let cache: OfflineCache
     private let widgets: WidgetSnapshotStore
+    private let stages: StageMemory
 
     /// `cache` defaults to files in Caches for the live backend and nothing otherwise.
     init(data: any AppDataSource, cache: OfflineCache? = nil, widgets: WidgetSnapshotStore? = nil) {
         self.data = data
         self.widgets = widgets ?? (data is LiveDataSource ? .live : .none)
         self.cache = cache ?? (data is LiveDataSource ? .live : .none)
+        stages = StageMemory(defaults: data is LiveDataSource ? .standard : nil)
         session = SessionStore(data: data)
         season = SeasonStore(data: data, cacheKey: data is LiveDataSource ? "season.cache" : nil)
         films = FilmsStore(data: data)
@@ -106,6 +110,24 @@ final class AppModel {
         saveSnapshot()
         await loadWidgetPosters()
         saveWidgetSnapshot()
+        noteStage()
+    }
+
+    // MARK: - Stage moments (P10-03)
+
+    /// Compares the list with the one this account last saw: on the first
+    /// launch at a new stage, opens the moment. Only once the season and the
+    /// films came from the server (or its cache), and never over another
+    /// sheet: then it waits for the next refresh, unseen.
+    private func noteStage() {
+        guard let userID = session.userID, films.state == .loaded, season.state == .loaded, !films.list.isEmpty else { return }
+        let now = StageMoment.Seen(stage: films.listStage, ids: films.list.map(\.id))
+        if let moment = StageMoment.between(stages.seen(for: userID), and: now, watchedIDs: films.watchedIDs) {
+            guard navigation.sheet == nil else { return }
+            stageMoment = moment
+            navigation.sheet = .stageMoment
+        }
+        stages.save(now, for: userID)
     }
 
     // MARK: - Offline (P4-11)
@@ -317,6 +339,7 @@ final class AppModel {
         applyPending()
         saveSnapshot()
         saveWidgetSnapshot()
+        noteStage()
     }
 
     /// Blocks someone, then reloads the boards and your groups, which the
@@ -360,6 +383,7 @@ final class AppModel {
 
     private func clearUserData() {
         pending = []
+        stageMoment = nil
         widgets.clear()
         WidgetCenter.shared.reloadAllTimelines()
         films.reset()

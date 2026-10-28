@@ -67,7 +67,7 @@ struct SeasonTicker: View {
             copy.tickerLockDay(Self.timeLeft(until: locksAt, now: now))
         case .beforeNominations(let date):
             copy.tickerBeforeNominations(date?.formatted(.dateTime.month(.abbreviated).day()),
-                                         model.films.list.isEmpty ? nil : model.films.toWatch.count, model.films.listStage)
+                                         model.films.list.isEmpty ? nil : model.films.toWatch.count)
         case .live:
             model.live.isOn && !model.ballot.categories.isEmpty
                 ? copy.tickerLiveProgress(model.live.decidedCount, model.ballot.categories.count)

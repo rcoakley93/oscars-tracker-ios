@@ -91,6 +91,16 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    /// `copy_overrides`' lines with their text in each voice; anything that
+    /// isn't a string is skipped.
+    nonisolated static func copyOverrides(_ lines: [String: AnyJSON]) -> CopyOverrides {
+        lines.compactMapValues { line in
+            guard case .object(let voices) = line else { return nil }
+            let texts = voices.compactMapValues { if case .string(let text) = $0 { text } else { nil } }
+            return texts.isEmpty ? nil : texts
+        }
+    }
+
     private nonisolated struct ConfigRow: Decodable {
         let key: String
         let value: AnyJSON
@@ -125,6 +135,8 @@ final class LiveDataSource: AppDataSource {
                     config.userGroupLimit = limit
                 case ("nominations_at", .string(let date)):
                     config.nominationsAt = try? Date(date, strategy: .iso8601)
+                case ("copy_overrides", .object(let lines)):
+                    config.copyOverrides = Self.copyOverrides(lines)
                 default:
                     break
                 }
