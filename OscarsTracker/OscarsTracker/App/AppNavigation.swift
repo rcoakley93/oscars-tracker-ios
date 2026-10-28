@@ -66,6 +66,9 @@ final class AppNavigation {
     /// The person whose picks or watched films the Board shows on wide layouts.
     var selectedPersonID: String?
     var sheet: Sheet?
+    /// A film's detail is open as a sheet from Films (compact width), which
+    /// `sheet` doesn't hold; Films keeps it current. Moments wait for it.
+    var isFilmSheetOpen = false
     /// The search sheet's query, kept across a fold like everything else here.
     var searchText = ""
     #if DEBUG

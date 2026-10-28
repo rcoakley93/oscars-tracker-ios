@@ -203,6 +203,11 @@ struct StageCopyTests {
         await model.refresh()
         #expect(model.navigation.sheet == .search)
         model.navigation.sheet = nil
+        // A film's detail open from Films (compact width) holds it too.
+        model.navigation.isFilmSheetOpen = true
+        await model.refresh()
+        #expect(model.navigation.sheet == nil)
+        model.navigation.isFilmSheetOpen = false
         await model.refresh()
         #expect(model.navigation.sheet == .stageMoment)
         #expect(model.stageMoment?.stage == .shortlisted)

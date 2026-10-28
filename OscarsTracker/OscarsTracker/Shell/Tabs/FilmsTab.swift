@@ -136,6 +136,9 @@ struct FilmsTab: View {
         }) { movie in
             MovieDetail(movie: movie, layout: .sheet)
         }
+        .onChange(of: sizeClass == .compact && navigation.tab == .films && navigation.selectedMovieID != nil, initial: true) {
+            navigation.isFilmSheetOpen = $1
+        }
     }
 
     static let hidesWatchedKey = "films.hidesWatched"

@@ -123,7 +123,7 @@ final class AppModel {
         guard let userID = session.userID, films.state == .loaded, season.state == .loaded, !films.list.isEmpty else { return }
         let now = StageMoment.Seen(stage: films.listStage, ids: films.list.map(\.id))
         if let moment = StageMoment.between(stages.seen(for: userID), and: now, watchedIDs: films.watchedIDs) {
-            guard navigation.sheet == nil else { return }
+            guard navigation.sheet == nil, !navigation.isFilmSheetOpen else { return }
             stageMoment = moment
             navigation.sheet = .stageMoment
         }
