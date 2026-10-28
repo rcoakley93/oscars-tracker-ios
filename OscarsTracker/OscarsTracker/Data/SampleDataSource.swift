@@ -459,6 +459,15 @@ final class SampleDataSource: AppDataSource {
         return history
     }
 
+    /// Past seasons' archives by ceremony id; a ceremony not here is unknown.
+    var archives: [Int: SeasonArchive] = [1: SampleData.archive98]
+
+    func seasonArchive(ceremonyID: Int) async throws -> SeasonArchive {
+        _ = try requireUser()
+        guard let archive = archives[ceremonyID] else { throw AppError.server("Unknown ceremony \(ceremonyID)") }
+        return archive
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         _ = try requireUser()
         revokedAppleCodes.append(authorizationCode)

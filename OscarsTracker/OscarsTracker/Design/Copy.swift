@@ -62,6 +62,8 @@ struct Copy {
     let lockLabel: String
     let locked: String
     let ballotEmpty: Empty
+    /// A past season's archive with no picks at all (P12-06).
+    let archiveNoBallot: String
 
     // Results
     let correct: String
@@ -220,6 +222,7 @@ extension Copy {
         lockLabel: "Predictions lock at",
         locked: "The ballot is locked. Predictions are final.",
         ballotEmpty: Empty(title: "No categories yet", body: "Check back when nominations are announced."),
+        archiveNoBallot: "You didn't fill a ballot that season.",
         correct: "Correct.",
         wrong: "Not this time.",
         planEmpty: Empty(title: "No films planned yet", body: "Tap + to add films to your watch plan."),
@@ -347,6 +350,7 @@ extension Copy {
         lockLabel: "Pens down at",
         locked: "Pens down. Your picks are final.",
         ballotEmpty: Empty(title: "The envelopes aren't printed yet", body: "Check back on nominations day. We'll save you a seat."),
+        archiveNoBallot: "No ballot this season. A spectator's year.",
         correct: "Called it.",
         wrong: "The Academy has spoken. Wrongly, obviously.",
         planEmpty: Empty(title: "No plans? Bold strategy for awards season.", body: "Tap + and pencil in a film or two."),

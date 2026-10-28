@@ -8,14 +8,19 @@ final class ProfileStore {
     private(set) var profile: Profile?
     private(set) var account: Account?
     private(set) var history: [SeasonResult] = []
+    /// Past seasons opened from Profile (P12-06), by ceremony id.
+    private(set) var archives: [Int: SeasonArchive] = [:]
+    private(set) var archiveStates: [Int: LoadState] = [:]
     private(set) var state: LoadState = .idle
     private(set) var isWorking = false
     var actionError: AppError?
 
     private let data: any AppDataSource
+    private let cache: OfflineCache
 
-    init(data: any AppDataSource) {
+    init(data: any AppDataSource, cache: OfflineCache = .none) {
         self.data = data
+        self.cache = cache
     }
 
     /// A signed-in account without a username goes through onboarding first.
@@ -53,6 +58,28 @@ final class ProfileStore {
         history = (try? await data.seasonHistory()) ?? history
     }
 
+    /// A past season's archive: the cached copy at once, then the server's,
+    /// which is cached in turn. Offline with a cached copy is no error: a past
+    /// season doesn't change.
+    func loadArchive(ceremonyID: Int, userID: String) async {
+        if archives[ceremonyID] == nil, let cached = cache.archive(ceremonyID: ceremonyID, for: userID) {
+            archives[ceremonyID] = cached
+        }
+        archiveStates[ceremonyID] = .loading
+        do {
+            let archive = try await data.seasonArchive(ceremonyID: ceremonyID)
+            archives[ceremonyID] = archive
+            cache.save(archive, for: userID)
+            archiveStates[ceremonyID] = .loaded
+        } catch {
+            archiveStates[ceremonyID] = archives[ceremonyID] == nil ? .failed(AppError(error)) : .loaded
+        }
+    }
+
+    func archiveState(_ ceremonyID: Int) -> LoadState {
+        archiveStates[ceremonyID] ?? .idle
+    }
+
     /// For email accounts; the README's rules (8 characters, upper, lower, number).
     func changePassword(_ password: String) async -> Bool {
         guard PasswordRules.isValid(password) else {
@@ -75,6 +102,8 @@ final class ProfileStore {
             profile = nil
             account = nil
             history = []
+            archives = [:]
+            archiveStates = [:]
         }
     }
 
@@ -95,6 +124,8 @@ final class ProfileStore {
         profile = nil
         account = nil
         history = []
+        archives = [:]
+        archiveStates = [:]
         state = .idle
     }
 }
