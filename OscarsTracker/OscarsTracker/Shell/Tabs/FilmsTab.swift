@@ -215,6 +215,7 @@ private struct FilmsGrid: View {
                         let now = context.date.addingTimeInterval(model.season.clockOffset)
                         HeroCard(watched: films.watchedCount, total: films.list.count,
                                  phase: model.season.phase(hasNominees: films.hasNominees, now: now),
+                                 shortlistsAt: model.season.config.shortlistsAt,
                                  now: now, results: heroResults,
                                  onFollow: model.canFollowCeremony ? { Task { await model.followCeremony() } } : nil,
                                  isFollowing: model.liveActivity.isFollowing)

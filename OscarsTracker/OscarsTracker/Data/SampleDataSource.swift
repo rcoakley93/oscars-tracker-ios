@@ -158,6 +158,7 @@ final class SampleDataSource: AppDataSource {
         config.listStage = stage
         contenderList = SampleData.contenders(stage == .predicted ? .predicted : .shortlisted)
         config.nominationsAt = try? Date("2027-01-21T13:30:00Z", strategy: .iso8601)
+        config.shortlistsAt = try? Date("2026-12-15T16:00:00Z", strategy: .iso8601)
         announceNominations(stage == .nominated)
         for movie in SampleData.contenderOnlyMovies where !movieList.contains(movie) { movieList.append(movie) }
     }

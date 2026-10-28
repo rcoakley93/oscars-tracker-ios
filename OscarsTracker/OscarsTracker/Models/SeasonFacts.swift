@@ -35,6 +35,9 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
     var runtimeBuckets = RuntimeBucket.defaults
     /// When the nominations are announced, for the ticker before them; optional.
     var nominationsAt: Date?
+    /// When the Academy's shortlists come out; `shortlists_at`. The Films hero
+    /// explainer names the day, and leaves it out when this is nil.
+    var shortlistsAt: Date?
     /// Most people in a group, creator included; `group_member_limit`.
     var groupMemberLimit = 50
     /// Most groups a person creates or joins; `user_group_limit`.
@@ -68,6 +71,7 @@ extension AppConfig {
         featureFlags = try c.decodeIfPresent([String: Bool].self, forKey: .featureFlags) ?? d.featureFlags
         runtimeBuckets = try c.decodeIfPresent([RuntimeBucket].self, forKey: .runtimeBuckets) ?? d.runtimeBuckets
         nominationsAt = try c.decodeIfPresent(Date.self, forKey: .nominationsAt)
+        shortlistsAt = try c.decodeIfPresent(Date.self, forKey: .shortlistsAt)
         groupMemberLimit = try c.decodeIfPresent(Int.self, forKey: .groupMemberLimit) ?? d.groupMemberLimit
         userGroupLimit = try c.decodeIfPresent(Int.self, forKey: .userGroupLimit) ?? d.userGroupLimit
         listStage = (try? c.decodeIfPresent(ListStage.self, forKey: .listStage)) ?? d.listStage

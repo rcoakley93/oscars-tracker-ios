@@ -17,6 +17,8 @@ struct HeroCard: View {
     let total: Int
     /// Where the season is (`SeasonPhase`); the hero's figures and line follow it.
     var phase: SeasonPhase = .none
+    /// `app_config.shortlists_at`, for the explainer before nominations.
+    var shortlistsAt: Date?
     /// The clock the lock-day countdown reads.
     var now: Date = .now
     /// Your score and the winners announced, for the live and after phases.
@@ -50,6 +52,10 @@ struct HeroCard: View {
 
             if let line {
                 Text(line).font(.subheadline).foregroundStyle(.ink)
+            }
+
+            if let explainer {
+                Text(explainer).font(.footnote).foregroundStyle(.inkMuted)
             }
 
             if !showsResults {
@@ -114,6 +120,14 @@ struct HeroCard: View {
         case .after:
             return results.map { copy.heroAfter($0.isFinal) }
         }
+    }
+
+    /// What the contenders are and what the % means, before nominations;
+    /// nil at the nominated stage and in every other phase.
+    var explainer: String? {
+        guard case .beforeNominations(let nominations) = phase else { return nil }
+        let day = { (date: Date?) in date?.formatted(.dateTime.month(.abbreviated).day()) }
+        return copy.heroExplainer(day(shortlistsAt), day(nominations))
     }
 
     /// Days to show as a figure: only while the ceremony is ahead and the ballot is open.
@@ -224,6 +238,22 @@ private struct HeroPhases: View {
 #Preview("Before nominations · Shortlisted") {
     HeroCard(watched: 14, total: 52, phase: .beforeNominations(HeroCard.anchor)).padding().background(.ground)
         .environment(\.copy, .for(.classic, stage: .shortlisted))
+}
+#Preview("Before nominations · Explainer, Predicted, Classic") {
+    HeroCard(watched: 0, total: 70, phase: .beforeNominations(HeroCard.anchor), shortlistsAt: HeroCard.anchor).padding().background(.ground)
+        .environment(\.copy, .for(.classic, stage: .predicted))
+}
+#Preview("Before nominations · Explainer, Shortlisted, Host") {
+    HeroCard(watched: 14, total: 52, phase: .beforeNominations(HeroCard.anchor), shortlistsAt: HeroCard.anchor).padding().background(.ground)
+        .environment(\.copy, .for(.host, stage: .shortlisted))
+}
+#Preview("Before nominations · Explainer, no dates") {
+    HeroCard(watched: 0, total: 70, phase: .beforeNominations(nil)).padding().background(.ground)
+        .environment(\.copy, .for(.host, stage: .predicted))
+}
+#Preview("Before nominations · Explainer · Large text") {
+    HeroCard(watched: 0, total: 70, phase: .beforeNominations(HeroCard.anchor), shortlistsAt: HeroCard.anchor).padding().background(.ground)
+        .environment(\.copy, .for(.classic, stage: .predicted)).preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
 }
 #Preview("Before nominations · Nominated, films loading") {
     HeroCard(watched: 0, total: 0, phase: .beforeNominations(HeroCard.anchor)).padding().background(.ground)
