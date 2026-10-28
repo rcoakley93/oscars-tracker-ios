@@ -15,9 +15,12 @@ struct BallotTab: View {
         @Bindable var navigation = model.navigation
         @Bindable var ballot = model.ballot
 
+        let beforeNominations = model.isBallotBeforeNominations
         NavigationSplitView {
-            LoadStateView(state: ballot.state, isEmpty: ballot.categories.isEmpty, empty: preseason) {
-                if sizeClass == .regular {
+            LoadStateView(state: ballot.state, isEmpty: ballot.categories.isEmpty && !(beforeNominations && ballot.state == .loaded), empty: preseason) {
+                if beforeNominations {
+                    BallotNotOpen()
+                } else if sizeClass == .regular {
                     List(selection: $navigation.selectedCategoryID) {
                         BallotIntro().listRowBackground(Color.clear)
                         ForEach(ballot.categories) { category in
@@ -55,11 +58,13 @@ struct BallotTab: View {
             // The Ballot is a task, so its bar actions win over the tab bar
             // when the Duo's outer screen is short of room.
             .prefersToolbarItemsWhenCompressed()
-            .toolbar { ShareCardToolbar() }
+            .toolbar { if !beforeNominations { ShareCardToolbar() } }
             .navigationSplitViewColumnWidth(min: 320, ideal: 360)
             .errorAlert("Couldn't save your pick", error: $ballot.actionError)
         } detail: {
-            if let category = ballot.categories.first(where: { $0.id == navigation.selectedCategoryID }) ?? ballot.nextCategory {
+            if beforeNominations {
+                ContentUnavailableView(copy.ballotEmpty.title, systemImage: "lock.fill", description: Text(copy.ballotEmpty.body))
+            } else if let category = ballot.categories.first(where: { $0.id == navigation.selectedCategoryID }) ?? ballot.nextCategory {
                 CategoryDetail(category: category)
                     .id(category.id)
             } else {
@@ -68,9 +73,76 @@ struct BallotTab: View {
         }
     }
 
-    /// Before nominations: no categories yet.
+    /// No categories after the lock (between seasons).
     private var preseason: ContentUnavailableView<Label<Text, Image>, Text?, EmptyView> {
         ContentUnavailableView(copy.ballotEmpty.title, systemImage: "envelope", description: Text(copy.ballotEmpty.body))
+    }
+}
+
+/// Before nominations (screens.md, 3.4): a lock header with the stage's
+/// line, then the categories greyed out, with blank rows where the nominees
+/// will go. Nothing takes a tap, and nothing is gold.
+private struct BallotNotOpen: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.copy) private var copy
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: Theme.Space.m) {
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    Image(systemName: "lock.fill")
+                        .font(.title)
+                        .foregroundStyle(.inkMuted)
+                        .accessibilityHidden(true)
+                    Text(copy.ballotEmpty.title).font(.headline).foregroundStyle(.ink)
+                    Text(copy.ballotEmpty.body).font(.subheadline).foregroundStyle(.inkMuted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, Theme.Space.s)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("ballot-not-open")
+                ForEach(model.ballotPreview) { LockedCategoryCard(category: $0) }
+            }
+            .padding(.horizontal, Theme.Space.m)
+            .padding(.bottom, Theme.Space.xxl)
+        }
+    }
+}
+
+/// A category waiting for its nominees: its name and points in `inkMuted`,
+/// a lock, and three blank rows, desaturated and dimmed.
+private struct LockedCategoryCard: View {
+    let category: BallotPreviewCategory
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(category.name)
+                    .displayFont(.title3)
+                    .foregroundStyle(.inkMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let points = category.pointsValue {
+                    Text(verbatim: "\(points) \(points == 1 ? "pt" : "pts")")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.inkMuted)
+                }
+                Image(systemName: "lock")
+                    .font(.subheadline)
+                    .foregroundStyle(.inkMuted)
+            }
+            ForEach(0..<3, id: \.self) { _ in
+                Theme.shape(Theme.Radius.row)
+                    .strokeBorder(.hairline, lineWidth: 1)
+                    .frame(height: 44)
+            }
+        }
+        .padding(Theme.Space.m)
+        .solidSurface()
+        .saturation(0)
+        .opacity(0.5)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(category.name), opens on nominations day")
     }
 }
 
@@ -110,7 +182,17 @@ private struct BallotStatusBar: View {
 
     var body: some View {
         let ballot = model.ballot
-        if !ballot.categories.isEmpty {
+        if model.isBallotBeforeNominations {
+            // Nothing earned yet, so no gold bar.
+            Label(copy.ballotOpens(model.season.config.nominationsAt?.formatted(.dateTime.month(.abbreviated).day())), systemImage: "lock.fill")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(.inkMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Theme.Space.m)
+                .padding(.bottom, Theme.Space.xs)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                .accessibilityIdentifier("ballot-status")
+        } else if !ballot.categories.isEmpty {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 Group {
                     if model.season.isBallotLocked() {
@@ -364,7 +446,7 @@ private struct NomineeRow: View {
     var body: some View {
         let ballot = model.ballot
         let picked = ballot.pick(for: category.id) == nominee.id
-        let locked = model.season.isBallotLocked()
+        let locked = model.season.isBallotLocked() || model.isBallotBeforeNominations
         let wrong = picked && ballot.outcome(for: category) == .wrong
         Button {
             guard let userID = model.session.userID else { return }
@@ -487,6 +569,28 @@ extension BallotCategory {
 }
 
 #Preview("Before nominations") {
+    // A regular user: the 99th's categories are hidden, so the contenders' greyed out.
+    BallotTab().environment(AppModel.preview { $0.useListStage(.predicted) }).preferredColorScheme(.dark)
+}
+
+#Preview("Before nominations, light") {
+    BallotTab().environment(AppModel.preview { $0.useListStage(.predicted) }).preferredColorScheme(.light)
+}
+
+#Preview("Before nominations, large text") {
+    BallotTab().environment(AppModel.preview { $0.useListStage(.predicted) })
+        .preferredColorScheme(.dark).dynamicTypeSize(.accessibility2)
+}
+
+#Preview("Before nominations, tester") {
+    // The rehearsal's categories load, but the flag is still predicted.
+    BallotTab().environment(AppModel.preview {
+        $0.useListStage(.predicted)
+        $0.announceNominations(true)
+    }).preferredColorScheme(.dark)
+}
+
+#Preview("No categories") {
     BallotTab().environment(AppModel.preview { $0.categories = [] }).preferredColorScheme(.dark)
 }
 

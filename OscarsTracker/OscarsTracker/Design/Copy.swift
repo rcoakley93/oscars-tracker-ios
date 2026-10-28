@@ -85,6 +85,8 @@ struct Copy {
     let locked: String
     /// No categories: before nominations, when the ballot opens.
     let ballotEmpty: Empty
+    /// The locked Ballot's status bar before nominations; the date, if set.
+    let ballotOpens: (_ date: String?) -> String
     /// A past season's archive with no picks at all (P12-06).
     let archiveNoBallot: String
 
@@ -349,6 +351,7 @@ extension Copy {
         ballotEmpty: stage.showsContenders
             ? Empty(title: "The ballot opens on nominations day", body: "Watch the contenders until then.")
             : Empty(title: "No categories yet", body: "Check back when nominations are announced."),
+        ballotOpens: { date in date.map { "Opens on nominations day · \($0)" } ?? "Opens on nominations day" },
         archiveNoBallot: "You didn't fill a ballot that season.",
         correct: "Correct.",
         wrong: "Not this time.",
@@ -545,6 +548,7 @@ extension Copy {
             Empty(title: "The envelopes aren't printed yet", body: "The ballot opens on nominations day. Till then, the shortlists."),
             Empty(title: "The envelopes aren't printed yet", body: "Check back on nominations day. We'll save you a seat.")
         ),
+        ballotOpens: { date in date.map { "Envelopes print \($0)" } ?? "Envelopes print on nominations day" },
         archiveNoBallot: "No ballot this season. A spectator's year.",
         correct: "Called it.",
         wrong: "The Academy has spoken. Wrongly, obviously.",

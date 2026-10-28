@@ -324,6 +324,26 @@ final class AppModel {
         groups.groups.first { $0.id == navigation.ballotGroupID } ?? groups.groups.first
     }
 
+    /// The ballot isn't open yet: before nominations, from the server alone
+    /// (screens.md, 3.4). It opens once `list_stage` is `nominated` and the
+    /// active ceremony's categories load, which they do once its nominations
+    /// are announced (for testers, the rehearsal's). After the lock it's
+    /// "Pens down" instead.
+    var isBallotBeforeNominations: Bool {
+        !season.isBallotLocked() && (films.stage != .nominated || ballot.categories.isEmpty)
+    }
+
+    /// The categories the locked Ballot greys out before nominations: the
+    /// ballot's when it has them (testers' rehearsal), else the contenders'.
+    var ballotPreview: [BallotPreviewCategory] {
+        if !ballot.categories.isEmpty {
+            return ballot.categories.map { BallotPreviewCategory(id: $0.id, name: $0.name, pointsValue: $0.pointsValue) }
+        }
+        var seen = Set<Int>()
+        return films.contenders.filter { seen.insert($0.categoryId).inserted }
+            .map { BallotPreviewCategory(id: $0.categoryId, name: $0.categoryName, pointsValue: nil) }
+    }
+
     /// What `ballotGroup` picked, once the ballot locks (P6-05).
     func loadPickShares() async {
         guard session.userID != nil, let ceremony = season.ceremony, season.isBallotLocked(), let group = ballotGroup else {
@@ -426,4 +446,12 @@ extension AppModel {
         Task { await model.start() }
         return model
     }
+}
+
+/// A category on the locked Ballot: no nominees yet, and no points when it
+/// comes from the contender list.
+struct BallotPreviewCategory: Identifiable, Hashable {
+    let id: Int
+    let name: String
+    let pointsValue: Int?
 }
