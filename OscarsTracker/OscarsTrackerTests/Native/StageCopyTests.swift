@@ -271,4 +271,12 @@ struct StageCopyTests {
         #expect(shortlisted.contains("shortlists") && shortlisted.contains("predictions"))
         #expect(Copy.for(voice, stage: .nominated).filmsListHint.isEmpty)
     }
+
+    @Test func voiceSampleFollowsTheStage() {
+        #expect(Copy.for(.classic, stage: .predicted).sample == "12 of 50 films watched.")
+        #expect(Copy.for(.host, stage: .predicted).sample == "12 down, 38 to go. A head start the Academy can't match.")
+        #expect(Copy.for(.host, stage: .shortlisted).sample == "12 down, 38 to go. The Academy's still deciding. You're not.")
+        #expect(Copy.for(.host, stage: .nominated).sample == "12 down, 38 to go. The Academy watched all of these. Allegedly.")
+        #expect(Copy.host.sample == Copy.for(.host, stage: .nominated).sample)
+    }
 }

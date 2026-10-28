@@ -186,7 +186,8 @@ struct Copy {
 
     // The setting itself
     let label: String
-    let sample: String
+    /// Under the voice picker: the progress line at this copy's stage, 12 of 50.
+    var sample: String { progressSummary(12, 50) }
 }
 
 extension Copy {
@@ -451,8 +452,7 @@ extension Copy {
         badgeCaseEmpty: "You haven't earned a badge yet.",
         badgeCount: { earned, total in earned == total ? "All \(total) earned" : "\(earned) of \(total) earned" },
         boardBadgesEmpty: "Nobody has earned a badge yet.",
-        label: "Classic",
-        sample: "12 of 50 films watched."
+        label: "Classic"
     ) }
 
     /// "33 days to the ceremony · 38 films left", the same in the final week.
@@ -684,8 +684,7 @@ extension Copy {
                 : "\(earned) of \(total). Room on the mantel."
         },
         boardBadgesEmpty: "Nobody's on the shelf yet. Somebody has to go first.",
-        label: "Host",
-        sample: "12 down, 38 to go. The Academy watched all of these. Allegedly."
+        label: "Host"
     ) }
 }
 

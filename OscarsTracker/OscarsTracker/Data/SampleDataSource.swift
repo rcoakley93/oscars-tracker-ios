@@ -344,16 +344,28 @@ final class SampleDataSource: AppDataSource {
         _ = try requireUser()
     }
 
-    /// The global board is everyone; Movies LLC the top six; any other group just you.
+    /// The global board is everyone; Movies LLC the top six; any other group
+    /// just you. Before nominations it counts the contenders, with no scores.
     func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry] {
         _ = try requireUser()
-        let board = scoredBoard.filter { entry in !blocked.contains { $0.userId == entry.userId } }
-            .enumerated().map { $0.element.ranked($0.offset + 1) }
+        let stage = boardStage
+        let entries = stage == .nominated ? scoredBoard : board.map { BoardEntry.sample($0.userId, $0.username, watched: $0.watchedCount, rank: $0.rank, isCreator: $0.isCreator) }
+        let board = entries.filter { entry in !blocked.contains { $0.userId == entry.userId } }
+            .enumerated().map { $0.element.ranked($0.offset + 1, stage: stage) }
         switch groupID {
         case nil: return board
         case 1: return Array(board.prefix(6))
-        default: return board.filter { $0.userId == Self.userID }.map { $0.ranked(1) }
+        default: return board.filter { $0.userId == Self.userID }.map { $0.ranked(1, stage: stage) }
         }
+    }
+
+    /// The list the boards count, as `board_list()` decides it: the contenders
+    /// until the flag says `nominated` and the nominations are out.
+    private var boardStage: ListStage {
+        guard !contenderList.isEmpty else { return .nominated }
+        if config.listStage == .nominated, !categories.isEmpty { return .nominated }
+        if config.listStage.showsContenders { return config.listStage }
+        return contenderList.contains { $0.stage == .shortlisted } ? .shortlisted : .predicted
     }
 
     /// Once winners are in, your score counts your correct picks (one point
@@ -379,7 +391,7 @@ final class SampleDataSource: AppDataSource {
             throw AppError.server("Not in a group with this person")
         }
         let films = Set(movieList.prefix(entry.watchedCount).map(\.id))
-        let picks = ceremony.isBallotLocked() ? Dictionary(uniqueKeysWithValues: categories.compactMap { c in c.nominations.first.map { (c.id, $0.id) } }) : [:]
+        let picks = boardStage == .nominated && ceremony.isBallotLocked() ? Dictionary(uniqueKeysWithValues: categories.compactMap { c in c.nominations.first.map { (c.id, $0.id) } }) : [:]
         return BoardPerson(watchedMovieIDs: films, picks: picks)
     }
 
@@ -864,5 +876,9 @@ nonisolated extension BoardEntry {
                    correctCount: scoring == .traditional ? score : 0, points: score, score: score, scoring: scoring, isCreator: isCreator)
     }
 
-    func ranked(_ rank: Int) -> BoardEntry { withRank(rank) }
+    func ranked(_ rank: Int, stage: ListStage? = nil) -> BoardEntry {
+        var entry = withRank(rank)
+        entry.listStage = stage ?? listStage
+        return entry
+    }
 }
