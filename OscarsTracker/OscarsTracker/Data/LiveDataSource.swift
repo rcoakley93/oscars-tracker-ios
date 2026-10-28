@@ -207,16 +207,23 @@ final class LiveDataSource: AppDataSource {
         let movie: Movie?
     }
 
+    /// The active ceremony's categories (the rehearsal for testers). Every
+    /// ceremony whose nominations are announced is visible, so on nominations
+    /// day the 98th's would otherwise come too (P9-05).
     func ballot() async throws -> [BallotCategory] {
         try await run {
-            let categories: [Category] = try await client.from("categories")
-                .select()
+            let facts: [SeasonFacts] = try await client.rpc("get_season_facts").execute().value
+            var categoryQuery = client.from("categories").select()
+            if let ceremonyID = facts.first?.id { categoryQuery = categoryQuery.eq("ceremony_id", value: ceremonyID) }
+            let categories: [Category] = try await categoryQuery
                 .order("points_value", ascending: false)
                 .order("name")
                 .execute()
                 .value
+            guard !categories.isEmpty else { return [] }
             let nominations: [NominationRow] = try await client.from("nominations")
                 .select("id, category_id, detail_text, is_winner, movie:movies(*)")
+                .in("category_id", values: categories.map(\.id))
                 .execute()
                 .value
             let byCategory = Dictionary(grouping: nominations, by: { $0.category_id ?? -1 })
@@ -228,7 +235,8 @@ final class LiveDataSource: AppDataSource {
                     nominations: (byCategory[category.id] ?? [])
                         .map { BallotNominee(id: $0.id, movie: $0.movie, personName: $0.detail_text, isWinner: $0.is_winner ?? false) }
                         .sorted { ($0.personName ?? $0.movie?.title ?? "") < ($1.personName ?? $1.movie?.title ?? "") },
-                    displayMode: category.displayMode
+                    displayMode: category.displayMode,
+                    ceremonyID: category.ceremonyId
                 )
             }
         }

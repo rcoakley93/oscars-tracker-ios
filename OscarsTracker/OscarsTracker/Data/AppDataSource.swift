@@ -8,6 +8,9 @@ nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     let nominations: [BallotNominee]
     /// `categories.display_mode`; nil from a copy cached before P6-05.
     var displayMode: DisplayMode? = nil
+    /// The ceremony it belongs to; nil from a copy cached before 2.1. Films
+    /// shows the nominees only once they're the contenders' ceremony's (P9-05).
+    var ceremonyID: Int? = nil
 
     nonisolated enum DisplayMode: String, Codable, Hashable, Sendable {
         case person, film
@@ -17,7 +20,7 @@ nonisolated struct BallotCategory: Codable, Identifiable, Hashable, Sendable {
     func withWinners(_ winners: Set<Int>) -> BallotCategory {
         BallotCategory(id: id, name: name, pointsValue: pointsValue, nominations: nominations.map {
             BallotNominee(id: $0.id, movie: $0.movie, personName: $0.personName, isWinner: winners.contains($0.id))
-        })
+        }, displayMode: displayMode, ceremonyID: ceremonyID)
     }
 
     var winnerIDs: Set<Int> { Set(nominations.filter(\.isWinner).map(\.id)) }

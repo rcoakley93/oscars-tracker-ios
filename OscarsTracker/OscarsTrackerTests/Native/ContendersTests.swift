@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import OscarsTracker
 
-/// The contender list (P9-05): the list for each `list_stage`, our odds, the
-/// odds sort, the credit, and the offline copy.
+/// The contender list (P9-05). The stage moves on the server alone: these
+/// tests change only the Sample source's flag and data, never the app.
 @MainActor
 @Suite("Contenders")
 struct ContendersTests {
@@ -17,43 +17,65 @@ struct ContendersTests {
         return (model, data)
     }
 
-    // MARK: - The stage switch
+    private var nominees: Set<Int> { Set(SampleData.categories.flatMap { $0.nominations.compactMap(\.movie?.id) }) }
 
-    @Test func predictedShowsTheContendersAndNotTheNominees() async {
-        let (model, _) = await model(.predicted)
-        let ids = Set(model.films.list.map(\.id))
+    // MARK: - Predicted → shortlisted → nominated, by the server alone
+
+    @Test func theListMovesThroughEveryStageWithOnlyTheFlagAndTheData() async {
+        let data = SampleDataSource()
+        data.config.listStage = .predicted
+        data.contenderList = SampleData.contenders(.predicted)
+        data.movieList += SampleData.contenderOnlyMovies
+        data.announceNominations(false)
+        let model = AppModel(data: data)
+        await model.start()
         #expect(model.films.listStage == .predicted)
-        #expect(ids == Set(SampleData.contenders(.predicted).map(\.movieId)))
-        #expect(ids.contains(11) && ids.contains(12))
-        // Before nominations: the season stays "before nominations".
+        #expect(Set(model.films.list.map(\.id)) == Set(SampleData.contenders(.predicted).map(\.movieId)))
         #expect(!model.films.hasNominees)
-        #expect(model.films.watchedCount == 3)
-    }
-
-    @Test func theSwitchKeepsWatchedFilmsAndCountsTheCurrentList() async {
-        let (model, data) = await model(.predicted)
         await model.films.toggleWatched(11, userID: user)
-        #expect(model.films.watchedCount == 4)
 
-        data.useListStage(.shortlisted)
+        // Dec 15: the shortlists load and the flag flips.
+        data.config.listStage = .shortlisted
+        data.contenderList = SampleData.contenders(.shortlisted)
         await model.refresh()
         #expect(model.films.listStage == .shortlisted)
         #expect(model.films.contending(8).first?.stage == .shortlisted)
-        #expect(model.films.watchedCount == 4)
+        #expect(model.films.isWatched(11))
 
-        data.useListStage(.nominated)
+        // Jan 21: the flag flips and the nominations are announced.
+        data.config.listStage = .nominated
+        data.announceNominations(true)
         await model.refresh()
         #expect(model.films.listStage == .nominated)
         #expect(model.films.hasNominees)
+        #expect(Set(model.films.list.map(\.id)) == nominees)
         // 11 was a contender, never a nominee: still watched, no longer counted.
         #expect(model.films.isWatched(11))
-        // The contenders that weren't nominated drop off: the list is the ballot's films.
-        let nominees = Set(SampleData.categories.flatMap { $0.nominations.compactMap(\.movie?.id) })
-        #expect(Set(model.films.list.map(\.id)) == nominees)
         #expect(model.films.watchedCount == 3)
         #expect(model.films.toWatch.count == nominees.count - 3)
         #expect(model.films.odds(for: 1) == nil)
-        #expect(model.films.credit == nil)
+    }
+
+    @Test func theFlagAloneDoesntShowNomineesBeforeTheyreAnnounced() async {
+        let (model, data) = await model(.shortlisted)
+        data.config.listStage = .nominated
+        await model.refresh()
+        // The 99th's categories are still hidden: the contenders stay, as they stand.
+        #expect(model.films.listStage == .shortlisted)
+        #expect(model.films.list.contains { $0.id == 11 })
+        #expect(!model.films.hasNominees)
+    }
+
+    @Test func anotherCeremonysNomineesNeverReplaceTheContenders() async {
+        // The 98th is still the active ceremony: its nominees are on the ballot.
+        let (model, data) = await model(.predicted)
+        data.ceremony = Ceremony(id: 1, number: 98, name: "98th Academy Awards", ceremonyAt: data.ceremony.ceremonyAt,
+                                 ballotLockAt: data.ceremony.ballotLockAt, isActive: true)
+        data.config.listStage = .nominated
+        data.announceNominations(true)
+        await model.refresh()
+        #expect(model.films.listStage != .nominated)
+        #expect(model.films.list.contains { $0.id == 11 })
     }
 
     @Test func aContenderFlagWithNoContendersKeepsTheNominees() async {
@@ -62,8 +84,33 @@ struct ContendersTests {
         let model = AppModel(data: data)
         await model.start()
         #expect(model.films.listStage == .nominated)
-        #expect(model.films.list.count == SampleData.movies.count)
+        #expect(Set(model.films.list.map(\.id)) == nominees)
         #expect(model.films.hasNominees)
+    }
+
+    @Test func aFailedBallotKeepsAValidList() async {
+        // Nominations are out, but the ballot hasn't loaded: the contenders
+        // stay, rather than every contender dropping off.
+        let data = SampleDataSource()
+        data.useListStage(.nominated)
+        let model = AppModel(data: data)
+        model.films.stage = .nominated
+        await model.films.load(userID: user)
+        #expect(model.ballot.categories.isEmpty)
+        #expect(model.films.listStage == .shortlisted)
+        #expect(Set(model.films.list.map(\.id)) == Set(SampleData.contenders(.shortlisted).map(\.movieId)))
+        // With no contenders either: every film, as 2.0 showed.
+        data.contenderList = []
+        await model.films.load(userID: user)
+        #expect(model.films.list.count == data.movieList.count)
+    }
+
+    @Test func aStageChangeWhileAwayReloadsTheListOnReturn() async {
+        let (model, data) = await model(.predicted)
+        data.useListStage(.nominated)
+        await model.foreground()
+        #expect(model.films.listStage == .nominated)
+        #expect(Set(model.films.list.map(\.id)) == nominees)
     }
 
     @Test func theCategoryFilterFollowsTheStage() async {
@@ -87,18 +134,18 @@ struct ContendersTests {
         #expect(model.films.contending(6).map(\.categoryId) == [10, 2, 1])
     }
 
-    @Test func percentsAreWholeAndNeverCertain() {
+    @Test func oddsAreABarePercentNeverCertain() {
         #expect(Contender.percent(0.724) == 72)
         #expect(Contender.percent(1) == 99)
         #expect(Contender.percent(0) == 1)
-        #expect(Copy.odds(72) == "72% to be nominated")
+        #expect(Copy.odds(72) == "72%")
+        #expect(Copy.oddsSpoken(72) == "72% to be nominated")
     }
 
     @Test func theOddsSortIsMostLikelyFirstAndKeepsTitleOrderOnTies() {
         let movies = SampleData.movies.sorted { $0.title < $1.title }
         let odds: [Int: Double] = [1: 0.5, 2: 0.9, 3: 0.5]
         let sorted = FilmsTab.Sort.odds.sorted(movies) { odds[$0] }
-        #expect(sorted.first?.id == 2)
         // Frankenstein, then Hamnet and KPop Demon Hunters by title, then the rest.
         #expect(Array(sorted.prefix(3).map(\.id)) == [2, 1, 3])
         #expect(sorted.count == movies.count)
@@ -113,28 +160,15 @@ struct ContendersTests {
 
     // MARK: - Copy
 
-    @Test func theCreditSaysPredictionsAndNamesTheSourceAndDateInBothVoices() async {
-        let (model, _) = await model(.predicted)
-        let credit = try! #require(model.films.credit)
-        #expect(credit.source == "Next Best Picture")
-        #expect(credit.updatedAt == SampleData.contendersUpdatedAt)
+    @Test func everyStageHasItsLinesInBothVoices() {
         for copy in [Copy.host, Copy.classic] {
-            let line = copy.contendersCredit(credit.source, "Oct 27")
-            #expect(line.contains("Next Best Picture's expert predictions"))
-            #expect(line.contains("Oct 27"))
-            #expect(copy.contendersCredit(nil, "Oct 27").contains("Our own odds"))
+            for stage in ListStage.allCases {
+                #expect(copy.tickerBeforeNominations("Jan 21", 12, stage).contains("12 contenders"))
+                #expect(copy.heroTeaser(1, "Jan 21", stage).contains("1 contender"))
+                #expect(copy.heroTeaser(5, "Jan 21", stage).contains("Jan 21"))
+            }
         }
-        #expect(Copy.classic.contendersCredit(nil, "Oct 27").contains("predictions"))
-    }
-
-    @Test func theTickerAndHeroCountContendersBeforeNominations() {
-        for copy in [Copy.host, Copy.classic] {
-            #expect(copy.tickerBeforeNominations("Jan 21", 12).contains("12 contenders"))
-            #expect(copy.tickerBeforeNominations("Jan 21", 12).contains("Jan 21"))
-            #expect(copy.heroTeaser(1, "Jan 21").contains("1 contender"))
-            #expect(copy.heroTeaser(5, "Jan 21").contains("Jan 21"))
-        }
-        #expect(Copy.classic.tickerBeforeNominations("Jan 21", nil) == "Nominations announced Jan 21.")
+        #expect(Copy.classic.tickerBeforeNominations("Jan 21", nil, .predicted) == "Nominations announced Jan 21.")
     }
 
     // MARK: - Config and offline
@@ -149,24 +183,29 @@ struct ContendersTests {
         #expect(round.listStage == .predicted)
     }
 
-    @Test func theOfflineCopyKeepsTheContenders() async {
+    @Test func theOfflineCopyFollowsTheStage() async {
         let cache = OfflineCache(directory: FileManager.default.temporaryDirectory.appending(path: "offline-\(UUID().uuidString)"))
         let (first, data) = await model(.predicted, cache: cache)
+        #expect(cache.snapshot(for: user)?.listStage == .predicted)
         #expect(cache.snapshot(for: user)?.contenders?.count == data.contenderList.count)
 
+        data.useListStage(.nominated)
+        await first.refresh()
+        #expect(cache.snapshot(for: user)?.listStage == .nominated)
+
+        // Offline relaunch with no season: the copy's stage, not the old one.
         data.failure = .offline
         let second = AppModel(data: data, cache: cache)
-        second.films.stage = .predicted
         await second.start()
-        #expect(second.films.contenders.count == first.films.contenders.count)
-        second.films.stage = .predicted
-        #expect(second.films.list.count == first.films.list.count)
+        #expect(second.films.listStage == .nominated)
+        #expect(Set(second.films.list.map(\.id)) == nominees)
     }
 
     @Test func aSnapshotSavedBefore21StillOpens() throws {
         let old = #"{"movies":[],"watchedIDs":[],"categories":[],"picks":{},"plan":[],"groups":[],"boards":{},"savedAt":0}"#
         let snapshot = try JSONDecoder().decode(OfflineSnapshot.self, from: Data(old.utf8))
         #expect(snapshot.contenders == nil)
+        #expect(snapshot.listStage == nil)
     }
 
     @Test func contendersDecodeFromTheRPC() throws {
@@ -174,10 +213,8 @@ struct ContendersTests {
         [{"id":1,"ceremony_id":2,"category_id":1,"category_name":"Best Picture","display_mode":"film","movie_id":7,
           "detail_text":null,"stage":"predicted","odds":0.724,"source":"Next Best Picture","source_updated_at":"2026-10-27T12:00:00Z"}]
         """#
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let rows = try decoder.decode([Contender].self, from: Data(json.utf8))
+        let rows = try JSONDecoder().decode([Contender].self, from: Data(json.utf8))
         #expect(rows.first?.percent == 72)
-        #expect(rows.first?.stage == .predicted)
+        #expect(rows.first?.ceremonyId == 2)
     }
 }

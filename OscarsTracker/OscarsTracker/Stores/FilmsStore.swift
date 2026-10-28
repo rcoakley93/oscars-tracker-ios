@@ -75,23 +75,47 @@ final class FilmsStore {
 
     // MARK: - The list (P9-05)
 
-    /// The stage the list really follows: the contender stages need contenders,
-    /// so a flag set before any are loaded keeps the nominees.
+    /// The stage the list really follows, from the server alone (P9-05): the
+    /// `list_stage` flag and whether the nominations are out. The nominees
+    /// replace the contenders only once the flag says `nominated` and the
+    /// ballot holds the contenders' ceremony's nominations, which the server
+    /// shows once `ceremonies.nominations_announced` is set. Until then, or
+    /// while the ballot can't load, the contenders stay. With no contenders
+    /// it's the nominees, as in 2.0.
     var listStage: ListStage {
-        stage.showsContenders && !contenders.isEmpty ? stage : .nominated
+        guard !contenders.isEmpty else { return .nominated }
+        if stage == .nominated, nomineesAnnounced { return .nominated }
+        if stage.showsContenders { return stage }
+        // Flag at nominated, nominations not out yet: the contenders as they stand.
+        return contenders.contains { $0.stage == .shortlisted } ? .shortlisted : .predicted
     }
 
-    /// The films Films shows, by title: the contenders; or, from nominations
-    /// day, every film but the contenders that weren't nominated, which with
-    /// no contenders is 2.0's list.
+    /// The ballot holds nominees for the ceremony the contenders are for (not
+    /// a past ceremony's, and not a copy from before 2.1). A reload keeps the
+    /// last categories, so the list doesn't flicker while it runs.
+    private var nomineesAnnounced: Bool {
+        guard let ballot, let ceremonyID = contenders.first?.ceremonyId else { return false }
+        return ballot.categories.contains { $0.ceremonyID == ceremonyID && !$0.nominations.isEmpty }
+    }
+
+    /// The nominees' film ids; nil until the ballot has some.
+    private var nomineeIDs: Set<Int>? {
+        let ids = Set(ballot?.categories.flatMap { $0.nominations.compactMap(\.movie?.id) } ?? [])
+        return ids.isEmpty ? nil : ids
+    }
+
+    /// The films Films shows, by title: the contenders, or the active
+    /// ceremony's nominees. Every film while there are neither (the ballot
+    /// failed, or between seasons), as before 2.1.
     var list: [Movie] {
-        let contenderIDs = Set(contenders.map(\.movieId))
+        let ids: Set<Int>?
         if listStage.showsContenders {
-            return movies.filter { contenderIDs.contains($0.id) }.sorted(by: Self.byTitle)
+            ids = Set(contenders.map(\.movieId))
+        } else {
+            ids = nomineeIDs
         }
-        let nominees = Set(ballot?.categories.flatMap { $0.nominations.compactMap(\.movie?.id) } ?? [])
-        let dropped = contenderIDs.subtracting(nominees)
-        return movies.filter { !dropped.contains($0.id) }.sorted(by: Self.byTitle)
+        guard let ids else { return movies.sorted(by: Self.byTitle) }
+        return movies.filter { ids.contains($0.id) }.sorted(by: Self.byTitle)
     }
 
     /// The list's categories, in order, for the category filter.
@@ -120,12 +144,6 @@ final class FilmsStore {
     /// A film's best odds, or its odds in `categoryID`; nil off the contender list.
     func odds(for movieID: Int, in categoryID: Int? = nil) -> Double? {
         contending(movieID).filter { categoryID == nil || $0.categoryId == categoryID }.map(\.odds).max()
-    }
-
-    /// Who informed the odds and when, for the credit line; nil from nominations day.
-    var credit: (source: String?, updatedAt: Date)? {
-        guard listStage.showsContenders, let latest = contenders.max(by: { $0.sourceUpdatedAt < $1.sourceUpdatedAt }) else { return nil }
-        return (contenders.lazy.compactMap(\.source).first, latest.sourceUpdatedAt)
     }
 
     /// Whether the nominees are in: before then the season is "before nominations".

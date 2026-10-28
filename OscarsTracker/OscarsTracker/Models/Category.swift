@@ -8,9 +8,11 @@ nonisolated struct Category: Codable, Identifiable {
     let createdAt: String?
     /// Whether the ballot leads with the person or the film (P2-08).
     let displayMode: BallotCategory.DisplayMode?
+    let ceremonyId: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, name, year
+        case ceremonyId = "ceremony_id"
         case displayMode = "display_mode"
         case pointsValue = "points_value"
         case createdAt = "created_at"
