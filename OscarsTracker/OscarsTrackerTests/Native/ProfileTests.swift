@@ -40,7 +40,7 @@ struct ProfileTests {
     @Test func loadsTheAccountAndPastSeasons() async {
         let store = ProfileStore(data: SampleDataSource())
         await store.load(userID: user)
-        await store.loadHistory()
+        await store.loadHistory(userID: user)
         #expect(store.account?.provider == .email)
         #expect(store.history.map(\.number) == [98])
     }
