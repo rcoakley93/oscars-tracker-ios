@@ -49,10 +49,6 @@ struct MovieDetail: View {
             .navigationTitle(layout == .column ? movie.title : "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    ShareLink("Share", item: movie.shareLine)
-                }
-                .visibilityPriority(.automatic)
                 if layout == .sheet {
                     ToolbarItemGroup(placement: .confirmationAction) {
                         Button("Done", systemImage: "checkmark") { dismiss() }
