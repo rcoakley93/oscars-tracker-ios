@@ -90,6 +90,10 @@ final class FilmsStore {
         return contenders.contains { $0.stage == .shortlisted } ? .shortlisted : .predicted
     }
 
+    /// The flag says `nominated` but the nominees aren't in yet (not announced,
+    /// or the ballot didn't load): worth reloading on every return until they are.
+    var awaitsNominees: Bool { stage == .nominated && listStage != .nominated }
+
     /// The ballot holds nominees for the ceremony the contenders are for (not
     /// a past ceremony's, and not a copy from before 2.1). A reload keeps the
     /// last categories, so the list doesn't flicker while it runs.
