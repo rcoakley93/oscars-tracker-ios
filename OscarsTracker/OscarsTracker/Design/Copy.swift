@@ -36,6 +36,9 @@ struct Copy {
     let noProviders: String
     /// Before nominations; the date ("Jan 21") once the season facts give it.
     let filmsPreseason: (_ date: String?) -> Empty
+    /// Under the contender list (P9-05): these are predictions, who informed
+    /// the odds (nil for our own) and when ("Oct 27").
+    let contendersCredit: (_ source: String?, _ date: String) -> String
     let searchEmpty: String
     /// "4 of 6 in Movies LLC have seen it."
     let groupSeen: (_ seen: Int, _ members: Int, _ group: String) -> String
@@ -94,7 +97,8 @@ struct Copy {
 
     // Hero (P6-06): the line under the number follows the season.
     /// Before nominations: the shortlist teaser; `date` ("Jan 21") when known.
-    let heroTeaser: (_ films: Int, _ date: String?) -> String
+    /// Before nominations: contenders left to watch, and the date when known.
+    let heroTeaser: (_ left: Int, _ date: String?) -> String
     /// "38 films, 33 days."
     let heroSeason: (_ days: Int, _ filmsLeft: Int) -> String
     /// The last seven days: a push to finish.
@@ -118,7 +122,8 @@ struct Copy {
     /// `left` is already formatted ("3 hours", "40 minutes").
     let tickerLockDay: (_ left: String) -> String
     /// Before nominations; the date ("Jan 21") when it's known.
-    let tickerBeforeNominations: (_ date: String?) -> String
+    /// Contenders left to watch; nil when there's no list yet.
+    let tickerBeforeNominations: (_ date: String?, _ left: Int?) -> String
     let tickerLive: String
     /// Live mode (P6-02): how many envelopes are open, of how many.
     let tickerLiveProgress: (_ done: Int, _ total: Int) -> String
@@ -148,6 +153,21 @@ extension Copy {
     /// "1 film", "2 films".
     nonisolated static func filmCount(_ films: Int) -> String {
         films == 1 ? "1 film" : "\(films) films"
+    }
+
+    /// "1 contender", "12 contenders".
+    nonisolated static func contenderCount(_ films: Int) -> String {
+        films == 1 ? "1 contender" : "\(films) contenders"
+    }
+
+    /// "72% to be nominated": our odds, a fact, the same in both voices.
+    nonisolated static func odds(_ percent: Int) -> String {
+        "\(percent)% to be nominated"
+    }
+
+    /// "Odds informed by Next Best Picture's expert predictions, updated Oct 27."
+    private nonisolated static func credit(_ source: String?, _ date: String) -> String {
+        source.map { "Odds informed by \($0)'s expert predictions, updated \(date)." } ?? "Our own odds, updated \(date)."
     }
 
     /// The invite's subject line: a fact, the same in both voices.
@@ -184,6 +204,7 @@ extension Copy {
             Empty(title: date.map { "The nominees arrive \($0)" } ?? "No nominees yet",
                   body: "The films appear here when nominations are announced.")
         },
+        contendersCredit: { source, date in "These are predictions, not nominations. " + credit(source, date) },
         searchEmpty: "Search films and nominees.",
         groupSeen: { seen, members, group in "\(seen) of \(members) in \(group) have seen it." },
         groupPicked: { percent, group, nominee in "\(percent)% of \(group) picked \(nominee)." },
@@ -218,8 +239,9 @@ extension Copy {
         boardEmpty: "No one is on the board yet.",
         boardPredictionsLocked: "Predictions open when the ballot locks.",
         scoreGap: { points, name in "You're \(pointCount(points)) behind \(name)." },
-        heroTeaser: { films, date in
-            "\(Copy.filmCount(films)) on the shortlist" + (date.map { " · Nominations announced \($0)." } ?? ".")
+        heroTeaser: { left, date in
+            (left == 0 ? "All contenders watched" : "\(Copy.contenderCount(left)) left to watch")
+                + (date.map { " · Nominations announced \($0)." } ?? ".")
         },
         heroSeason: { days, left in
             left == 0 ? "All films watched · \(Copy.days(days)) to the ceremony." : "\(Copy.filmCount(left)) left · \(Copy.days(days)) to the ceremony."
@@ -236,7 +258,10 @@ extension Copy {
         tickerSeason: classicCountdown,
         tickerFinalWeek: classicCountdown,
         tickerLockDay: { left in "Ballot locks in \(left)." },
-        tickerBeforeNominations: { date in date.map { "Nominations announced \($0)." } ?? "Nominations are coming." },
+        tickerBeforeNominations: { date, left in
+            (date.map { "Nominations announced \($0)" } ?? "Nominations are coming")
+                + (left.map { $0 == 0 ? " · All contenders watched" : " · \(Copy.contenderCount($0)) left" } ?? ".")
+        },
         tickerLive: "LIVE · Winners as they're announced",
         tickerLiveProgress: { done, total in "LIVE · \(done) of \(total) announced" },
         liveNoPick: "No pick",
@@ -287,6 +312,7 @@ extension Copy {
             Empty(title: date.map { "Nominations land \($0)" } ?? "The envelopes aren't printed yet",
                   body: "Until then, the shortlists. Check back on nominations day.")
         },
+        contendersCredit: { source, date in "Educated guesses, not envelopes. " + credit(source, date) },
         searchEmpty: "Search the nominees. All of them. Even the shorts.",
         groupSeen: { seen, members, group in
             switch seen {
@@ -343,8 +369,9 @@ extension Copy {
         boardEmpty: "The red carpet's empty. Be the first to arrive.",
         boardPredictionsLocked: "Ballots stay sealed until the lock. No peeking.",
         scoreGap: { points, name in "\(pointCount(points)) behind \(name). It's not over till the last envelope." },
-        heroTeaser: { films, date in
-            "\(Copy.filmCount(films)) on the shortlist. " + (date.map { "Nominations \($0). Get a head start." } ?? "Get a head start.")
+        heroTeaser: { left, date in
+            (left == 0 ? "Every contender, seen. " : "\(Copy.contenderCount(left)) to go. ")
+                + (date.map { "Nominations \($0). " } ?? "") + (left == 0 ? "The Academy has catching up to do." : "Get a head start.")
         },
         heroSeason: { days, left in
             left == 0 ? "Every film watched, \(Copy.days(days)) early. Smug is allowed."
@@ -374,7 +401,9 @@ extension Copy {
             }
         },
         tickerLockDay: { left in "Pens down in \(left)." },
-        tickerBeforeNominations: { date in "Shortlists are in. Nominations \(date ?? "soon")." },
+        tickerBeforeNominations: { date, left in
+            "Nominations \(date ?? "soon")" + (left.map { $0 == 0 ? " · Every contender seen" : " · \(Copy.contenderCount($0)) to go" } ?? ". Sharpen your pencils.")
+        },
         tickerLive: "LIVE · The envelopes are open. Breathe.",
         tickerLiveProgress: { done, total in
             done == 0 ? "LIVE · Envelopes sealed. Breathe." : "LIVE · \(done) of \(total) envelopes open"

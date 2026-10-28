@@ -143,6 +143,22 @@ final class SampleDataSource: AppDataSource {
         return movieList
     }
 
+    var contenderList: [Contender] = []
+
+    func contenders() async throws -> [Contender] {
+        try check()
+        return contenderList
+    }
+
+    /// The season at a list stage (P9-05): the stage flag, the contenders
+    /// for it, and the two contender films that aren't nominees.
+    func useListStage(_ stage: ListStage) {
+        config.listStage = stage
+        contenderList = SampleData.contenders(stage == .predicted ? .predicted : .shortlisted)
+        if stage.showsContenders { config.nominationsAt = try? Date("2027-01-21T13:30:00Z", strategy: .iso8601) }
+        for movie in SampleData.contenderOnlyMovies where !movieList.contains(movie) { movieList.append(movie) }
+    }
+
     func watchedMovieIDs(userID: String) async throws -> Set<Int> {
         _ = try requireUser()
         return watched
@@ -691,6 +707,43 @@ nonisolated enum SampleData {
     }
 
     static func film(_ id: Int) -> Movie? { movies.first { $0.id == id } }
+
+    /// Contenders that are never nominated in the sample season (no posters).
+    static let contenderOnlyMovies: [Movie] = [
+        movie(11, "Avatar: Fire and Ash", 2025, 197),
+        movie(12, "Wake Up Dead Man", 2025, 144),
+    ]
+
+    /// When the sample odds were last informed by the source.
+    static let contendersUpdatedAt = Date(timeIntervalSince1970: 1_793_100_000)
+
+    /// The sample contenders: Sound and International Feature are the
+    /// shortlisted categories once `stage` is `.shortlisted`.
+    static func contenders(_ stage: Contender.Stage) -> [Contender] {
+        let shortlists: Set<Int> = stage == .shortlisted ? [10, 19] : []
+        let rows: [(category: Int, name: String, mode: BallotCategory.DisplayMode, movie: Int, person: String?, odds: Double)] = [
+            (1, "Best Picture", .film, 1, nil, 0.92), (1, "Best Picture", .film, 4, nil, 0.88),
+            (1, "Best Picture", .film, 5, nil, 0.81), (1, "Best Picture", .film, 6, nil, 0.64),
+            (1, "Best Picture", .film, 9, nil, 0.55), (1, "Best Picture", .film, 2, nil, 0.41),
+            (1, "Best Picture", .film, 11, nil, 0.22),
+            (2, "Actress in a Leading Role", .person, 1, "Jessie Buckley", 0.95),
+            (2, "Actress in a Leading Role", .person, 6, "Renate Reinsve", 0.70),
+            (2, "Actress in a Leading Role", .person, 7, "Emma Stone", 0.62),
+            (3, "Animated Feature", .film, 3, nil, 0.97),
+            (9, "Adapted Screenplay", .film, 12, nil, 0.48), (9, "Adapted Screenplay", .film, 10, nil, 0.44),
+            (10, "International Feature", .film, 8, nil, 0.83), (10, "International Feature", .film, 6, nil, 0.79),
+            (19, "Sound", .film, 4, nil, 0.74), (19, "Sound", .film, 11, nil, 0.66),
+            (19, "Sound", .film, 2, nil, 0.58), (19, "Sound", .film, 5, nil, 0.52),
+        ]
+        return rows.enumerated().map { index, row in
+            let shortlisted = shortlists.contains(row.category)
+            return Contender(id: index + 1, ceremonyId: 2, categoryId: row.category, categoryName: row.name, displayMode: row.mode,
+                             movieId: row.movie, detailText: row.person, stage: shortlisted ? .shortlisted : .predicted,
+                             // A shortlist firms up the odds of the films on it.
+                             odds: shortlisted ? min(0.97, row.odds + 0.1) : row.odds,
+                             source: "Next Best Picture", sourceUpdatedAt: contendersUpdatedAt)
+        }
+    }
 
     static let categories: [BallotCategory] = [
         BallotCategory(id: 1, name: "Best Picture", pointsValue: 10, nominations: [

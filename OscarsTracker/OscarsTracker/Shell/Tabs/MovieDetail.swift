@@ -88,18 +88,36 @@ struct MovieDetail: View {
                 Text(verbatim: movie.facts)
                     .font(.subheadline)
                     .foregroundStyle(.inkMuted)
-                WrappingStack {
-                    ForEach(nominations, id: \.self) { name in
-                        Text(name)
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.goldText)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(.gold.opacity(0.14), in: Capsule())
+                let contending = model.films.contending(movie.id)
+                if contending.isEmpty {
+                    WrappingStack {
+                        ForEach(nominations, id: \.self) { name in
+                            Text(name)
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.goldText)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.gold.opacity(0.14), in: Capsule())
+                        }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Nominated for \(nominations.formatted())")
+                } else {
+                    // A contender isn't nominated yet, so its chips aren't gold (P9-05).
+                    WrappingStack {
+                        ForEach(contending) { contender in
+                            Text(Self.chip(contender))
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.ink)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(.surface, in: Capsule())
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Contending in " + contending.map { "\(Self.categoryLabel($0)), \(Copy.odds($0.percent))" }.formatted())
+                    ContendersCredit()
                 }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Nominated for \(nominations.formatted())")
             }
         }
     }
@@ -196,6 +214,17 @@ struct MovieDetail: View {
             .map(\.name)
     }
 
+    /// "Best Picture · 72%", "Sound · Shortlisted · 64%"; acting categories name the person.
+    static func chip(_ contender: Contender) -> String {
+        [categoryLabel(contender), contender.stage == .shortlisted ? "Shortlisted" : nil, "\(contender.percent)%"]
+            .compactMap { $0 }.joined(separator: " · ")
+    }
+
+    private static func categoryLabel(_ contender: Contender) -> String {
+        guard contender.displayMode == .person, let person = contender.detailText, !person.isEmpty else { return contender.categoryName }
+        return "\(contender.categoryName) (\(person))"
+    }
+
     private func toggleWatched() {
         guard let userID = model.session.userID else { return }
         if !model.films.isWatched(movie.id) { tears += 1 }
@@ -285,4 +314,11 @@ extension WatchOffer {
 #Preview("Column, watched") {
     MovieDetail(movie: SampleData.movies[0], layout: .column)
         .environment(AppModel.preview()).preferredColorScheme(.dark)
+}
+
+#Preview("Contender") {
+    Color.ground.sheet(isPresented: .constant(true)) {
+        MovieDetail(movie: SampleData.movies[5], layout: .sheet)
+    }
+    .environment(AppModel.preview { $0.useListStage(.shortlisted) }).preferredColorScheme(.dark)
 }

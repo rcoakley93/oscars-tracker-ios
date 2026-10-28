@@ -100,7 +100,7 @@ struct HeroCard: View {
         case .none:
             return watched == total && total > 0 ? copy.allWatched : copy.progressSummary(watched, total)
         case .beforeNominations(let date):
-            return copy.heroTeaser(total, date?.formatted(.dateTime.month(.abbreviated).day()))
+            return copy.heroTeaser(left, date?.formatted(.dateTime.month(.abbreviated).day()))
         case .season(let days):
             return copy.heroSeason(days, left)
         case .finalWeek(let days):
