@@ -187,17 +187,15 @@ extension Movie {
     }
 }
 
-/// "72% to be nominated", or "72%" where that doesn't fit.
+/// "72% to be nominated" under a poster, over two lines where one is too narrow.
 struct OddsText: View {
     let percent: Int
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            Text(Copy.odds(percent))
-            Text("\(percent)%")
-        }
-        .font(.caption)
-        .foregroundStyle(.inkMuted)
-        .lineLimit(1)
+        Text(Copy.odds(percent))
+            .font(.caption)
+            .foregroundStyle(.inkMuted)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }

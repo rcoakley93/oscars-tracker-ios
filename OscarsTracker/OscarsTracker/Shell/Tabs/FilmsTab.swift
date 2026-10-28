@@ -208,7 +208,7 @@ private struct FilmsGrid: View {
                 } else {
                     TimelineView(.everyMinute) { context in
                         let now = context.date.addingTimeInterval(model.season.clockOffset)
-                        HeroCard(watched: films.watchedCount, total: films.movies.count,
+                        HeroCard(watched: films.watchedCount, total: films.list.count,
                                  phase: model.season.phase(hasNominees: films.hasNominees, now: now),
                                  now: now, results: heroResults,
                                  onFollow: model.canFollowCeremony ? { Task { await model.followCeremony() } } : nil,
