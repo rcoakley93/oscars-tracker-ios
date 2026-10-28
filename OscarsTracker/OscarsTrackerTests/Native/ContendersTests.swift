@@ -113,6 +113,21 @@ struct ContendersTests {
         #expect(Set(model.films.list.map(\.id)) == nominees)
     }
 
+    @Test func nomineesAnnouncedAfterTheFlagArriveOnTheNextReturn() async {
+        let (model, data) = await model(.shortlisted)
+        data.config.listStage = .nominated
+        await model.foreground()
+        #expect(model.films.awaitsNominees)
+        #expect(model.films.listStage == .shortlisted)
+
+        // Later the nominations are announced; the flag doesn't change again.
+        data.announceNominations(true)
+        await model.foreground()
+        #expect(!model.films.awaitsNominees)
+        #expect(model.films.listStage == .nominated)
+        #expect(Set(model.films.list.map(\.id)) == nominees)
+    }
+
     @Test func theCategoryFilterFollowsTheStage() async {
         let (model, data) = await model(.predicted)
         #expect(model.films.listCategories.map(\.name).contains("Sound"))

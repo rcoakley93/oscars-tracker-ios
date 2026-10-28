@@ -226,7 +226,8 @@ final class AppModel {
         async let season: Void = loadSeasonAndBoards()
         async let push: Void = push.refresh()
         _ = await (season, push)
-        if films.stage != stage { await reloadList() }
+        // A new flag, or a flag at nominated whose nominees haven't arrived yet.
+        if films.stage != stage || films.awaitsNominees { await reloadList() }
         await loadPickShares()
         guard session.userID != nil, self.season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
         // Winners missed while the app was away, or announced before live mode came on.
