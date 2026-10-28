@@ -1,10 +1,11 @@
 import SwiftUI
 import WidgetKit
 
-/// Days to the ceremony and films left (P6-09, screens.md section 6): Home
-/// Screen small and medium, Lock Screen circular, rectangular and inline.
+/// The season on a film strip (P6-09, redrawn in P11-02; screens.md section 6):
+/// Home Screen small and medium, Lock Screen circular, rectangular and inline.
 /// The app writes the snapshot into the App Group when its stores refresh;
-/// the provider turns it into one entry per local midnight.
+/// the provider turns it into one entry per local midnight and one at each
+/// turn of the season.
 struct CeremonyProvider: TimelineProvider {
     func placeholder(in context: Context) -> WidgetEntry { .sample }
 
@@ -28,8 +29,10 @@ struct CeremonyCountdownWidget: Widget {
             CeremonyWidgetView(entry: entry)
         }
         .configurationDisplayName("Ceremony countdown")
-        .description("Days to the ceremony, films left, and tonight's film.")
+        .description("Films watched, days to go, your picks and tonight's film.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
+        // The strip runs edge to edge; the views pad their own text.
+        .contentMarginsDisabled()
     }
 }
 
@@ -48,8 +51,14 @@ private struct CeremonyWidgetView: View {
     }
 }
 
-#Preview("Small", as: .systemSmall) { CeremonyCountdownWidget() } timeline: { WidgetEntry.sample; WidgetEntry.empty }
-#Preview("Medium", as: .systemMedium) { CeremonyCountdownWidget() } timeline: { WidgetEntry.sample }
-#Preview("Circular", as: .accessoryCircular) { CeremonyCountdownWidget() } timeline: { WidgetEntry.sample }
-#Preview("Rectangular", as: .accessoryRectangular) { CeremonyCountdownWidget() } timeline: { WidgetEntry.sample }
-#Preview("Inline", as: .accessoryInline) { CeremonyCountdownWidget() } timeline: { WidgetEntry.sample }
+#Preview("Small", as: .systemSmall) { CeremonyCountdownWidget() } timeline: {
+    WidgetEntry.contenders; WidgetEntry.shortlists; WidgetEntry.sample; WidgetEntry.lockDay
+    WidgetEntry.showtime; WidgetEntry.results; WidgetEntry.offSeason; WidgetEntry.empty
+}
+#Preview("Medium", as: .systemMedium) { CeremonyCountdownWidget() } timeline: {
+    WidgetEntry.contenders; WidgetEntry.shortlists; WidgetEntry.sample; WidgetEntry.lockDay
+    WidgetEntry.showtime; WidgetEntry.results; WidgetEntry.offSeason; WidgetEntry.empty
+}
+#Preview("Circular", as: .accessoryCircular) { CeremonyCountdownWidget() } timeline: { WidgetEntry.contenders; WidgetEntry.lockDay; WidgetEntry.results }
+#Preview("Rectangular", as: .accessoryRectangular) { CeremonyCountdownWidget() } timeline: { WidgetEntry.contenders; WidgetEntry.lockDay; WidgetEntry.results }
+#Preview("Inline", as: .accessoryInline) { CeremonyCountdownWidget() } timeline: { WidgetEntry.contenders; WidgetEntry.sample; WidgetEntry.results }

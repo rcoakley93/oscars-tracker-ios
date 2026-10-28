@@ -10,19 +10,24 @@ import UIKit
 actor PosterPalette {
     static let shared = PosterPalette()
 
-    private var cache: [URL: Color] = [:]
+    private var cache: [URL: Cluster] = [:]
     private let context = CIContext(options: [.workingColorSpace: NSNull()])
 
     /// One colour per poster that loads, in order; posters that fail are skipped.
     func colors(for urls: [URL]) async -> [Color] {
-        var colors: [Color] = []
-        for url in urls {
-            if let color = await color(for: url) { colors.append(color) }
-        }
-        return colors
+        await clusters(for: urls).map { Color(red: $0.red, green: $0.green, blue: $0.blue) }
     }
 
-    private func color(for url: URL) async -> Color? {
+    /// The same colours as components, for the widgets' snapshot (P11-02).
+    func clusters(for urls: [URL]) async -> [Cluster] {
+        var clusters: [Cluster] = []
+        for url in urls {
+            if let cluster = await cluster(for: url) { clusters.append(cluster) }
+        }
+        return clusters
+    }
+
+    private func cluster(for url: URL) async -> Cluster? {
         if let cached = cache[url] { return cached }
         guard let (data, _) = try? await URLSession.posters.data(for: URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)),
               let image = UIImage(data: data)?.preparingThumbnail(of: CGSize(width: 64, height: 96)),
@@ -30,9 +35,8 @@ actor PosterPalette {
               let clusters = Self.clusters(in: CIImage(cgImage: cgImage), context: context),
               let vivid = clusters.max(by: { $0.vividness < $1.vividness })
         else { return nil }
-        let color = Color(red: vivid.red, green: vivid.green, blue: vivid.blue)
-        cache[url] = color
-        return color
+        cache[url] = vivid
+        return vivid
     }
 
     struct Cluster: Equatable {
