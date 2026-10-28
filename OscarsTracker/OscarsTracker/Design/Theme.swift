@@ -73,4 +73,15 @@ extension View {
         background(.surface, in: Theme.shape(radius))
             .overlay(Theme.shape(radius).strokeBorder(.hairline.opacity(0.6), lineWidth: 0.5))
     }
+
+    /// A text field's well: padded, on `raised` so it reads against `ground`
+    /// in both appearances. Replaces `.roundedBorder`, which is flat black in
+    /// dark mode with its text against the edge.
+    func fieldSurface() -> some View {
+        padding(.horizontal, Theme.Space.m)
+            .padding(.vertical, Theme.Space.s)
+            .frame(minHeight: 48)
+            .background(.raised, in: Theme.shape(Theme.Radius.tile))
+            .overlay(Theme.shape(Theme.Radius.tile).strokeBorder(.hairline, lineWidth: 0.5))
+    }
 }
