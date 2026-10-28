@@ -85,6 +85,8 @@ struct Copy {
     let locked: String
     /// No categories: before nominations, when the ballot opens.
     let ballotEmpty: Empty
+    /// A past season's archive with no picks at all (P12-06).
+    let archiveNoBallot: String
 
     // Results
     let correct: String
@@ -316,6 +318,7 @@ extension Copy {
         ballotEmpty: stage.showsContenders
             ? Empty(title: "The ballot opens on nominations day", body: "Watch the contenders until then.")
             : Empty(title: "No categories yet", body: "Check back when nominations are announced."),
+        archiveNoBallot: "You didn't fill a ballot that season.",
         correct: "Correct.",
         wrong: "Not this time.",
         planEmpty: Empty(title: "No films planned yet", body: "Tap + to add films to your watch plan."),
@@ -502,6 +505,7 @@ extension Copy {
             Empty(title: "The envelopes aren't printed yet", body: "The ballot opens on nominations day. Till then, the shortlists."),
             Empty(title: "The envelopes aren't printed yet", body: "Check back on nominations day. We'll save you a seat.")
         ),
+        archiveNoBallot: "No ballot this season. A spectator's year.",
         correct: "Called it.",
         wrong: "The Academy has spoken. Wrongly, obviously.",
         planEmpty: Empty(title: "No plans? Bold strategy for awards season.", body: "Tap + and pencil in a film or two."),

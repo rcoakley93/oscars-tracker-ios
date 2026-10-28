@@ -83,7 +83,13 @@ struct ProfileSheet: View {
 
                 if !pastSeasons.isEmpty {
                     Section("Past seasons") {
-                        ForEach(pastSeasons) { SeasonRow(season: $0) }
+                        ForEach(pastSeasons) { season in
+                            NavigationLink {
+                                SeasonArchiveView(ceremonyID: season.ceremonyId, title: season.name)
+                            } label: {
+                                SeasonRow(season: season)
+                            }
+                        }
                     }
                 }
 
@@ -136,7 +142,9 @@ struct ProfileSheet: View {
                     Button("Done", systemImage: "checkmark") { dismiss() }
                 }
             }
-            .task { await profile.loadHistory() }
+            .task {
+                if let userID = model.session.userID { await profile.loadHistory(userID: userID) }
+            }
             .onChange(of: voice) { Task { await model.push.setVoice(voice) } }
             .errorAlert("Couldn't save that", error: $push.actionError)
             .sheet(isPresented: $deleting) {
@@ -192,7 +200,8 @@ private struct ReminderToggle: View {
     }
 }
 
-/// "98th Academy Awards", then "3rd of 212 · 41 films · 15 correct".
+/// "98th Academy Awards", then "3rd of 212 · 41 films · 15 correct". Opens
+/// the season's archive (P12-06).
 private struct SeasonRow: View {
     let season: SeasonResult
 

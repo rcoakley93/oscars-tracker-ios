@@ -722,6 +722,16 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    private nonisolated struct ArchiveParams: Encodable {
+        let p_ceremony_id: Int
+    }
+
+    func seasonArchive(ceremonyID: Int) async throws -> SeasonArchive {
+        try await run {
+            try await client.rpc("get_season_archive", params: ArchiveParams(p_ceremony_id: ceremonyID)).execute().value
+        }
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         try await run {
             try await client.functions.invoke("revoke-apple", options: FunctionInvokeOptions(body: ["authorization_code": authorizationCode]))

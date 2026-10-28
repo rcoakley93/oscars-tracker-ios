@@ -459,6 +459,18 @@ final class SampleDataSource: AppDataSource {
         return history
     }
 
+    /// Past seasons' archives by ceremony id; a ceremony not here is unknown.
+    var archives: [Int: SeasonArchive] = [1: SampleData.archive98]
+    /// Holds each archive load this long, to test what lands after sign-out.
+    var archiveDelay: Duration?
+
+    func seasonArchive(ceremonyID: Int) async throws -> SeasonArchive {
+        if let archiveDelay { try? await Task.sleep(for: archiveDelay) }
+        _ = try requireUser()
+        guard let archive = archives[ceremonyID] else { throw AppError.server("Unknown ceremony \(ceremonyID)") }
+        return archive
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         _ = try requireUser()
         revokedAppleCodes.append(authorizationCode)

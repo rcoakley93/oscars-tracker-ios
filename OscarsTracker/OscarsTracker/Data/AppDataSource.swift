@@ -224,6 +224,8 @@ protocol AppDataSource: AnyObject, Sendable {
     func account() async -> Account?
     /// Past seasons you played, newest first.
     func seasonHistory() async throws -> [SeasonResult]
+    /// One past season, yours: ballot, watched films, boards and badges (P12-06).
+    func seasonArchive(ceremonyID: Int) async throws -> SeasonArchive
     /// Revokes your Sign in with Apple tokens (guideline 5.1.1(v)), with a
     /// fresh authorization code, before the account is deleted.
     func revokeApple(authorizationCode: String) async throws

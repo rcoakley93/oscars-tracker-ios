@@ -51,7 +51,7 @@ final class AppModel {
         plan = PlanStore(data: data)
         groups = GroupsStore(data: data)
         leaderboard = LeaderboardStore(data: data)
-        profile = ProfileStore(data: data)
+        profile = ProfileStore(data: data, cache: self.cache)
         push = PushStore(data: data)
         admin = AdminStore(data: data)
         live = LiveStore(data: data, ballot: ballot)

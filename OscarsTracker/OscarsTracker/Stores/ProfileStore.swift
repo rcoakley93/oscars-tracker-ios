@@ -8,14 +8,22 @@ final class ProfileStore {
     private(set) var profile: Profile?
     private(set) var account: Account?
     private(set) var history: [SeasonResult] = []
+    /// Past seasons opened from Profile (P12-06), by ceremony id.
+    private(set) var archives: [Int: SeasonArchive] = [:]
+    private(set) var archiveStates: [Int: LoadState] = [:]
+    /// Moves on at sign-out and account deletion, so a load still in flight
+    /// for the previous account is dropped when it lands.
+    private var generation = 0
     private(set) var state: LoadState = .idle
     private(set) var isWorking = false
     var actionError: AppError?
 
     private let data: any AppDataSource
+    private let cache: OfflineCache
 
-    init(data: any AppDataSource) {
+    init(data: any AppDataSource, cache: OfflineCache = .none) {
         self.data = data
+        self.cache = cache
     }
 
     /// A signed-in account without a username goes through onboarding first.
@@ -48,9 +56,43 @@ final class ProfileStore {
         }
     }
 
-    /// Past seasons, for the Profile. Nothing to show is fine: it's your first.
-    func loadHistory() async {
-        history = (try? await data.seasonHistory()) ?? history
+    /// Past seasons, for the Profile. Nothing to show is fine: it's your
+    /// first. The last good list is cached, so an archive opened before
+    /// stays reachable after an offline launch.
+    func loadHistory(userID: String) async {
+        if history.isEmpty, let cached = cache.history(for: userID) {
+            history = cached
+        }
+        let generation = self.generation
+        guard let fresh = try? await data.seasonHistory(), generation == self.generation else { return }
+        history = fresh
+        cache.save(fresh, for: userID)
+    }
+
+    /// A past season's archive: the cached copy at once, then the server's,
+    /// which is cached in turn. Offline with a cached copy is no error: a past
+    /// season doesn't change.
+    func loadArchive(ceremonyID: Int, userID: String) async {
+        if archives[ceremonyID] == nil, let cached = cache.archive(ceremonyID: ceremonyID, for: userID) {
+            archives[ceremonyID] = cached
+        }
+        archiveStates[ceremonyID] = .loading
+        let generation = self.generation
+        do {
+            let archive = try await data.seasonArchive(ceremonyID: ceremonyID)
+            // Signed out (or deleted) while it loaded: it isn't this account's.
+            guard generation == self.generation else { return }
+            archives[ceremonyID] = archive
+            cache.save(archive, for: userID)
+            archiveStates[ceremonyID] = .loaded
+        } catch {
+            guard generation == self.generation else { return }
+            archiveStates[ceremonyID] = archives[ceremonyID] == nil ? .failed(AppError(error)) : .loaded
+        }
+    }
+
+    func archiveState(_ ceremonyID: Int) -> LoadState {
+        archiveStates[ceremonyID] ?? .idle
     }
 
     /// For email accounts; the README's rules (8 characters, upper, lower, number).
@@ -75,6 +117,9 @@ final class ProfileStore {
             profile = nil
             account = nil
             history = []
+            archives = [:]
+            archiveStates = [:]
+            generation += 1
         }
     }
 
@@ -95,6 +140,9 @@ final class ProfileStore {
         profile = nil
         account = nil
         history = []
+        archives = [:]
+        archiveStates = [:]
+        generation += 1
         state = .idle
     }
 }
