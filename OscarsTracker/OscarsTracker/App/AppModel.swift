@@ -17,6 +17,8 @@ final class AppModel {
     let groups: GroupsStore
     let leaderboard: LeaderboardStore
     let profile: ProfileStore
+    /// Your badge case, people's badges and the earned moment (P12-04).
+    let badges: BadgeStore
     let push: PushStore
     /// Ceremony night, for the admin only (P6-01).
     let admin: AdminStore
@@ -52,6 +54,7 @@ final class AppModel {
         groups = GroupsStore(data: data)
         leaderboard = LeaderboardStore(data: data)
         profile = ProfileStore(data: data, cache: self.cache)
+        badges = BadgeStore(data: data, memory: BadgeMemory(defaults: data is LiveDataSource ? .standard : nil))
         push = PushStore(data: data)
         admin = AdminStore(data: data)
         live = LiveStore(data: data, ballot: ballot)
@@ -100,7 +103,8 @@ final class AppModel {
             async let push: Void = push.signedIn()
             async let reminders: Void = self.push.loadPreferences(userID: userID)
             async let blocked: Void = moderation.load()
-            _ = await (plan, groups, profile, push, reminders, blocked)
+            async let badges: Void = self.badges.load(userID: userID)
+            _ = await (plan, groups, profile, push, reminders, blocked, badges)
         }
         _ = await (season, films, ballot)
         await loadPickShares()
@@ -111,6 +115,17 @@ final class AppModel {
         await loadWidgetPosters()
         saveWidgetSnapshot()
         noteStage()
+        noteBadges()
+    }
+
+    // MARK: - Badge earned (P12-04)
+
+    /// Opens the reveal for badges this device hasn't shown, never over
+    /// another sheet (a stage moment included): then they wait, unseen, for
+    /// the next refresh.
+    private func noteBadges() {
+        guard let userID = session.userID, navigation.sheet == nil, !navigation.isFilmSheetOpen else { return }
+        if badges.noteNew(userID: userID) { navigation.sheet = .badgeEarned }
     }
 
     // MARK: - Stage moments (P10-03)
@@ -143,6 +158,7 @@ final class AppModel {
             plan.restore(items: snapshot.plan)
             groups.restore(groups: snapshot.groups)
             leaderboard.restore(boards: snapshot.boards, ceremonyID: season.ceremony?.id)
+            badges.restore(snapshot.badges ?? [])
         }
         applyPending()
     }
@@ -151,7 +167,8 @@ final class AppModel {
         guard let userID = session.userID, !films.movies.isEmpty else { return }
         cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, contenders: films.contenders, listStage: films.stage,
                                    categories: ballot.categories,
-                                   picks: ballot.picks, plan: plan.items, groups: groups.groups, boards: leaderboard.cachedBoards),
+                                   picks: ballot.picks, plan: plan.items, groups: groups.groups, boards: leaderboard.cachedBoards,
+                                   badges: badges.mine),
                    for: userID)
     }
 
@@ -392,6 +409,7 @@ final class AppModel {
         groups.reset()
         leaderboard.reset()
         profile.reset()
+        badges.reset()
         admin.reset()
         moderation.reset()
         live.stop()

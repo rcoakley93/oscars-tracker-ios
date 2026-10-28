@@ -15,6 +15,8 @@ nonisolated struct OfflineSnapshot: Codable, Sendable {
     var groups: [PoolGroup] = []
     /// Boards by group id; "global" for the global board.
     var boards: [String: [BoardEntry]] = [:]
+    /// Your badges, every season (P12-04); nil in a copy saved before 2.1.
+    var badges: [UserBadge]? = nil
     var savedAt = Date.now
 }
 

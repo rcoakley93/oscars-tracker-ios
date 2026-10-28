@@ -2,7 +2,7 @@ import AuthenticationServices
 import SwiftUI
 
 /// Profile (screens.md, 3.8): your account and the app's few settings.
-/// Account, Voice, Notifications (P4-09 and P6-04), Past seasons, Blocked
+/// Account, Voice, Badges (P12-04), Notifications (P4-09 and P6-04), Past seasons, Blocked
 /// people (P6-16), About with support and the terms, Sign out and Delete
 /// account. A large sheet on compact widths, a page on
 /// regular ones.
@@ -55,6 +55,10 @@ struct ProfileSheet: View {
                         .contentTransition(.opacity)
                         .animation(.default, value: voice)
                         .padding(.top, Theme.Space.xs)
+                }
+
+                Section("Badges") {
+                    ProfileBadgesRow()
                 }
 
                 if model.isAdmin {
@@ -416,6 +420,11 @@ extension Bundle {
             $0.blocked = [BlockedUser(userId: "u-chris", username: "Chris", avatarUrl: nil, blockedAt: nil)]
         })
         .preferredColorScheme(.light)
+}
+
+#Preview("No badges") {
+    Color.ground.sheet(isPresented: .constant(true)) { ProfileSheet() }
+        .environment(AppModel.preview { $0.badgeRows = [:] }).preferredColorScheme(.dark)
 }
 
 #Preview("Admin") {

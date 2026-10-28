@@ -32,6 +32,8 @@ final class AppNavigation {
         case report(ReportTarget)
         /// The list moved to a new stage (P10-03).
         case stageMoment
+        /// A badge arrived (P12-04): the one-time reveal.
+        case badgeEarned
 
         var id: String {
             switch self {
@@ -48,6 +50,7 @@ final class AppNavigation {
             case .recap: "recap"
             case .report(let target): "report-\(target.id)"
             case .stageMoment: "stage-moment"
+            case .badgeEarned: "badge-earned"
             }
         }
     }

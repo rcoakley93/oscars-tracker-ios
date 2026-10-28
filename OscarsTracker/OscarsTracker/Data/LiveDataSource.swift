@@ -732,6 +732,16 @@ final class LiveDataSource: AppDataSource {
         }
     }
 
+    private nonisolated struct BadgeParams: Encodable {
+        let p_user_id: String
+    }
+
+    func userBadges(userID: String) async throws -> [UserBadge] {
+        try await run {
+            try await client.rpc("get_user_badges", params: BadgeParams(p_user_id: userID)).execute().value
+        }
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         try await run {
             try await client.functions.invoke("revoke-apple", options: FunctionInvokeOptions(body: ["authorization_code": authorizationCode]))

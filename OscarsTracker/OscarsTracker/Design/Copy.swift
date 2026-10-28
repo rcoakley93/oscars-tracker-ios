@@ -168,6 +168,12 @@ struct Copy {
     /// Over the films added since the last stage.
     let stageMomentAdded: String
 
+    // Badges (P12-04)
+    /// Over a badge's reveal.
+    let badgeRevealTitle: String
+    /// Above the badge case when nothing's earned yet.
+    let badgeCaseEmpty: String
+
     // The setting itself
     let label: String
     let sample: String
@@ -405,6 +411,8 @@ extension Copy {
             }
         },
         stageMomentAdded: "New on the list",
+        badgeRevealTitle: "New badge",
+        badgeCaseEmpty: "You haven't earned a badge yet.",
         label: "Classic",
         sample: "12 of 50 films watched."
     ) }
@@ -622,6 +630,8 @@ extension Copy {
             }
         },
         stageMomentAdded: "New arrivals",
+        badgeRevealTitle: "And the badge goes to…",
+        badgeCaseEmpty: "No badges yet. The first one's the hardest.",
         label: "Host",
         sample: "12 down, 38 to go. The Academy watched all of these. Allegedly."
     ) }

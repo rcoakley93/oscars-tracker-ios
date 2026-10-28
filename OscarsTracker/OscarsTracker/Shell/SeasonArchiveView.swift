@@ -51,7 +51,7 @@ struct SeasonArchiveView: View {
 
             if !archive.badges.isEmpty {
                 Section("Badges") {
-                    ArchiveBadges(badges: archive.badges)
+                    ArchiveBadges(badges: archive.badges, seasonName: archive.ceremony.name)
                 }
             }
 
@@ -107,29 +107,18 @@ private struct ArchiveBoardRow: View {
     }
 }
 
-/// The season's badges. The slot for P12-04's badge art: until it lands,
-/// a medal in the tier's colour and the badge's key.
+/// The season's badges (P12-04): the art, name and tier of each, a group
+/// won twice as one tile. Tap one for its detail and Share.
 private struct ArchiveBadges: View {
     let badges: [UserBadge]
+    let seasonName: String
+    @State private var selected: BadgeTile?
 
     var body: some View {
-        WrappingStack(spacing: Theme.Space.xs) {
-            ForEach(badges, id: \.self) { badge in
-                HStack(spacing: Theme.Space.xxs) {
-                    Image(systemName: "medal.fill")
-                        .foregroundStyle(badge.tier == 3 ? .gold : .inkMuted)
-                    Text(badge.badgeKey.replacing("_", with: " ").capitalized)
-                        .foregroundStyle(.ink)
-                }
-                .font(.subheadline)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, Theme.Space.s)
-                .padding(.vertical, Theme.Space.xs)
-                .background(.ground, in: .capsule)
-                .accessibilityLabel("\(badge.badgeKey.replacing("_", with: " ")), \(badge.tierName)")
-            }
-        }
-        .padding(.vertical, Theme.Space.xxs)
+        let season = BadgeSeason.seasons(badges, current: nil).first
+        BadgeGrid(tiles: season?.tiles ?? []) { selected = $0 }
+            .padding(.vertical, Theme.Space.xxs)
+            .sheet(item: $selected) { BadgeDetailSheet(tile: $0, seasonName: seasonName) }
     }
 }
 

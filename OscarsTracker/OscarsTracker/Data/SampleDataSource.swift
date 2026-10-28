@@ -471,6 +471,22 @@ final class SampleDataSource: AppDataSource {
         return archive
     }
 
+    /// Badges by user id (P12-04): yours earn a partial case this season and
+    /// two from the 98th's archive; Sam has a few.
+    var badgeRows: [String: [UserBadge]] = [
+        SampleDataSource.userID: SampleData.myBadges,
+        "u-sam": SampleData.samBadges,
+    ]
+
+    func userBadges(userID: String) async throws -> [UserBadge] {
+        let me = try requireUser()
+        guard userID == me || board.contains(where: { $0.userId == userID }),
+              !blocked.contains(where: { $0.userId == userID }) else {
+            throw AppError.server("Not in a group with this person")
+        }
+        return (badgeRows[userID] ?? []).sorted { ($1.ceremonyNumber, $0.sortOrder) < ($0.ceremonyNumber, $1.sortOrder) }
+    }
+
     func revokeApple(authorizationCode: String) async throws {
         _ = try requireUser()
         revokedAppleCodes.append(authorizationCode)

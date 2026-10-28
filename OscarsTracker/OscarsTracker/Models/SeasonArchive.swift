@@ -128,9 +128,9 @@ nonisolated struct SeasonArchive: Codable, Equatable, Sendable {
     var correctPicks: Int { ballot.count { $0.isCorrect == true } }
 }
 
-/// A badge you earned, from `get_user_badges(p_user_id, p_ceremony_id)`
-/// (P12-03). The badge case (P12-04) names and draws them; the archive shows
-/// a season's.
+/// A badge someone earned, from `get_user_badges(p_user_id, p_ceremony_id)`
+/// (P12-03). The badge case (P12-04) names and draws them (`Badge`); the
+/// archive shows a season's.
 nonisolated struct UserBadge: Codable, Equatable, Hashable, Sendable {
     let badgeKey: String
     let shelf: String
@@ -141,6 +141,8 @@ nonisolated struct UserBadge: Codable, Equatable, Hashable, Sendable {
     let tier: Int
     let tierName: String
     let earnedAt: Date
+    /// What it names: the group won, the categories completed, the groups swept.
+    var detail: BadgeDetail? = nil
 
     enum CodingKeys: String, CodingKey {
         case badgeKey = "badge_key"
@@ -151,5 +153,6 @@ nonisolated struct UserBadge: Codable, Equatable, Hashable, Sendable {
         case tier
         case tierName = "tier_name"
         case earnedAt = "earned_at"
+        case detail
     }
 }
