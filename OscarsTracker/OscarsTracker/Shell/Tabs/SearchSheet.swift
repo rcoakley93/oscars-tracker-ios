@@ -13,7 +13,7 @@ struct SearchSheet: View {
 
     var body: some View {
         @Bindable var navigation = model.navigation
-        let results = SearchResults(query: navigation.searchText, films: model.films.movies, categories: model.ballot.categories)
+        let results = SearchResults(query: navigation.searchText, films: model.films.list, categories: model.ballot.categories)
 
         NavigationStack {
             List {

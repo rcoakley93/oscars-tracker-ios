@@ -114,6 +114,9 @@ protocol AppDataSource: AnyObject, Sendable {
 
     // Films and watched
     func movies() async throws -> [Movie]
+    /// The films we expect to be nominated, with our odds (P9-05), for the
+    /// latest ceremony that has any; by category, most likely first.
+    func contenders() async throws -> [Contender]
     func watchedMovieIDs(userID: String) async throws -> Set<Int>
     func setWatched(_ watched: Bool, movieID: Int, userID: String) async throws
     /// Where to watch a film in the US.

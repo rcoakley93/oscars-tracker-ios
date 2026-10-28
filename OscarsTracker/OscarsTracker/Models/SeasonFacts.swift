@@ -39,6 +39,9 @@ nonisolated struct AppConfig: Codable, Equatable, Sendable {
     var groupMemberLimit = 50
     /// Most groups a person creates or joins; `user_group_limit`.
     var userGroupLimit = 5
+    /// Which list Films shows; `feature_flags.list_stage` (2.1). Missing means
+    /// the nominees, as before 2.1.
+    var listStage = ListStage.nominated
 
     static let defaults = AppConfig()
 
@@ -64,5 +67,6 @@ extension AppConfig {
         nominationsAt = try c.decodeIfPresent(Date.self, forKey: .nominationsAt)
         groupMemberLimit = try c.decodeIfPresent(Int.self, forKey: .groupMemberLimit) ?? d.groupMemberLimit
         userGroupLimit = try c.decodeIfPresent(Int.self, forKey: .userGroupLimit) ?? d.userGroupLimit
+        listStage = (try? c.decodeIfPresent(ListStage.self, forKey: .listStage)) ?? d.listStage
     }
 }

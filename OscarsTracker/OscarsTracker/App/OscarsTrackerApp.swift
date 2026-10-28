@@ -49,6 +49,7 @@ struct OscarsTrackerApp: App {
     /// mode on the rehearsal, with Best Picture announced three seconds in;
     /// add `-live-activity` to start the Live Activity a second later).
     /// `-ballot-stage locked` or `winners` moves the season past the lock.
+    /// `-list-stage predicted`, `shortlisted` or `nominated` serves the contenders (P9-05).
     /// `-store-shots` is for App Store captures: posters that don't suit a 4+
     /// store image stay off screen, and share cards leave off the App Store badge.
     private static func dataSource() -> any AppDataSource {
@@ -62,6 +63,9 @@ struct OscarsTrackerApp: App {
             }
             let storeShots = arguments.contains("-store-shots")
             if storeShots { data.useStoreSafeSeason() }
+            if let stage = UserDefaults.standard.string(forKey: "list-stage").flatMap(ListStage.init(rawValue:)) {
+                data.useListStage(stage)
+            }
             switch UserDefaults.standard.string(forKey: "ballot-stage") {
             case "locked": data.passLock()
             case "winners": data.passLock(winners: true)

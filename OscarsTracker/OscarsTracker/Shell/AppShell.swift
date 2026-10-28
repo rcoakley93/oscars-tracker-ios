@@ -36,7 +36,7 @@ struct AppShell: View {
         .tabViewStyle(.sidebarAdaptable)
         // The tab bar stays full size; it never collapses on scroll.
         .tabBarMinimizeBehavior(.never)
-        .tabViewBottomAccessory(isEnabled: model.isOffline || model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: !model.films.movies.isEmpty) != .none) {
+        .tabViewBottomAccessory(isEnabled: model.isOffline || model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: model.films.hasNominees) != .none) {
             SeasonTicker()
         }
         // Notifications are asked about after the first saved pick or

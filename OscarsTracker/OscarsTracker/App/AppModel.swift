@@ -62,6 +62,8 @@ final class AppModel {
             }
         }
         films.onOffline = { [weak self] in self?.enqueue($0) }
+        films.ballot = ballot
+        films.stage = season.config.listStage
         ballot.onOffline = { [weak self] in self?.enqueue($0) }
     }
 
@@ -111,7 +113,7 @@ final class AppModel {
         guard let userID = session.userID else { return }
         pending = cache.queue(for: userID)
         if let snapshot = cache.snapshot(for: userID) {
-            films.restore(movies: snapshot.movies, watchedIDs: snapshot.watchedIDs)
+            films.restore(movies: snapshot.movies, watchedIDs: snapshot.watchedIDs, contenders: snapshot.contenders ?? [])
             ballot.restore(categories: snapshot.categories, picks: snapshot.picks)
             plan.restore(items: snapshot.plan)
             groups.restore(groups: snapshot.groups)
@@ -122,7 +124,7 @@ final class AppModel {
 
     private func saveSnapshot() {
         guard let userID = session.userID, !films.movies.isEmpty else { return }
-        cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, categories: ballot.categories,
+        cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, contenders: films.contenders, categories: ballot.categories,
                                    picks: ballot.picks, plan: plan.items, groups: groups.groups, boards: leaderboard.cachedBoards),
                    for: userID)
     }
@@ -131,9 +133,9 @@ final class AppModel {
     /// refresh; widgets reload only if it changed. Cleared at sign-out.
     func saveWidgetSnapshot() {
         // Before nominations there are no films, but the countdown still counts.
-        guard session.userID != nil, season.ceremony != nil || !films.movies.isEmpty else { return }
+        guard session.userID != nil, season.ceremony != nil || !films.list.isEmpty else { return }
         let titles = Dictionary(films.movies.map { ($0.id, $0.title) }, uniquingKeysWith: { first, _ in first })
-        let snapshot = WidgetSnapshot(ceremonyAt: season.ceremony?.ceremonyAt, filmsTotal: films.movies.count,
+        let snapshot = WidgetSnapshot(ceremonyAt: season.ceremony?.ceremonyAt, filmsTotal: films.list.count,
                                       filmsWatched: films.watchedCount,
                                       plan: WidgetSnapshot.upcoming(plan.items, watchedIDs: films.watchedIDs, titles: titles, today: .today()),
                                       savedAt: .now)
@@ -263,6 +265,7 @@ final class AppModel {
     /// The boards need the ceremony's id.
     private func loadSeasonAndBoards() async {
         await season.load()
+        films.stage = season.config.listStage
         guard session.userID != nil else { return }
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
     }

@@ -109,6 +109,10 @@ final class LiveDataSource: AppDataSource {
                     config.minSupportedBuild = Int(build)
                 case ("feature_flags", .object(let flags)):
                     config.featureFlags = flags.compactMapValues { if case .bool(let on) = $0 { on } else { nil } }
+                    // The one string flag (2.1); 2.0 drops it with the rest that aren't bools.
+                    if case .string(let stage) = flags["list_stage"], let stage = ListStage(rawValue: stage) {
+                        config.listStage = stage
+                    }
                 case ("runtime_buckets", .object(let buckets)):
                     let parsed = RuntimeBucket.parse(buckets.compactMapValues { value in
                         guard case .array(let bounds) = value else { return nil }
@@ -134,6 +138,13 @@ final class LiveDataSource: AppDataSource {
     func movies() async throws -> [Movie] {
         try await run {
             try await client.from("movies").select().order("title").execute().value
+        }
+    }
+
+    /// Named columns: clients can't read the source's own numbers (P9-01).
+    func contenders() async throws -> [Contender] {
+        try await run {
+            try await client.rpc("get_contenders").execute().value
         }
     }
 

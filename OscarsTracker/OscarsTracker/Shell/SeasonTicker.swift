@@ -14,7 +14,7 @@ struct SeasonTicker: View {
     var body: some View {
         TimelineView(.everyMinute) { context in
             let now = context.date.addingTimeInterval(model.season.clockOffset)
-            let ticker = model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: !model.films.movies.isEmpty, now: now)
+            let ticker = model.season.ticker(filmsLeft: model.films.toWatch.count, hasNominees: model.films.hasNominees, now: now)
             let earned = !model.isOffline && (ticker == .live || ticker == .after)
             if let line = model.isOffline ? copy.tickerOffline(model.pending.count) : line(for: ticker, now: now) {
                 HStack(spacing: Theme.Space.s) {
@@ -66,7 +66,8 @@ struct SeasonTicker: View {
         case .lockDay(let locksAt):
             copy.tickerLockDay(Self.timeLeft(until: locksAt, now: now))
         case .beforeNominations(let date):
-            copy.tickerBeforeNominations(date?.formatted(.dateTime.month(.abbreviated).day()))
+            copy.tickerBeforeNominations(date?.formatted(.dateTime.month(.abbreviated).day()),
+                                         model.films.list.isEmpty ? nil : model.films.toWatch.count)
         case .live:
             model.live.isOn && !model.ballot.categories.isEmpty
                 ? copy.tickerLiveProgress(model.live.decidedCount, model.ballot.categories.count)

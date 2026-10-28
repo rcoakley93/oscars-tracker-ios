@@ -30,11 +30,14 @@ struct PosterImage: View {
     }
 }
 
-/// A film in the Films grid: poster, title and runtime. Tapping opens the
-/// film; the circle on the corner marks it watched (a gold check once it is).
+/// A film in the Films grid: poster, title and runtime, and our odds for a
+/// contender (P9-05). Tapping opens the film; the circle on the corner marks
+/// it watched (a gold check once it is).
 struct PosterTile: View {
     @Environment(AppModel.self) private var model
     let movie: Movie
+    /// Our odds, 0 to 1, before nominations; never gold, as a guess isn't earned.
+    var odds: Double?
     var onOpen: () -> Void
     var onWatched: (String) -> Void
 
@@ -51,11 +54,15 @@ struct PosterTile: View {
                     Text(Runtime.format(minutes: movie.runtimeMinutes))
                         .font(.caption)
                         .foregroundStyle(.inkMuted)
+                    if let odds {
+                        OddsText(percent: Contender.percent(odds))
+                    }
                 }
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(movie.title), \(Runtime.format(minutes: movie.runtimeMinutes)), \(watched ? "watched" : "not watched")")
+            .accessibilityLabel([movie.title, Runtime.format(minutes: movie.runtimeMinutes), odds.map { Copy.odds(Contender.percent($0)) },
+                                 watched ? "watched" : "not watched"].compactMap { $0 }.joined(separator: ", "))
             .accessibilityHint("Opens the film")
         }
         .overlay(alignment: .topTrailing) {
@@ -96,9 +103,12 @@ struct FilmActions: View {
 }
 
 /// A film in a list (By category, Search, Plan): thumbnail, title, year and
-/// runtime, and the watched toggle.
+/// runtime, and the watched toggle. A contender in an acting category leads
+/// with the person, and a contender shows our odds.
 struct FilmListRow: View {
     let movie: Movie
+    var person: String?
+    var odds: Double?
     var onOpen: () -> Void
     var onWatched: (String) -> Void = { _ in }
 
@@ -109,8 +119,16 @@ struct FilmListRow: View {
                     PosterImage(movie: movie, radius: Theme.Radius.thumbnail, size: .thumbnail)
                         .frame(width: 44)
                     VStack(alignment: .leading) {
-                        Text(movie.title).font(.body).foregroundStyle(.ink)
-                        Text(movie.facts).font(.subheadline).foregroundStyle(.inkMuted)
+                        if let person, !person.isEmpty {
+                            Text(person).font(.body.weight(.semibold)).foregroundStyle(.ink)
+                            Text(movie.title).font(.subheadline).foregroundStyle(.inkMuted)
+                        } else {
+                            Text(movie.title).font(.body).foregroundStyle(.ink)
+                            Text(verbatim: movie.facts).font(.subheadline).foregroundStyle(.inkMuted)
+                        }
+                        if let odds {
+                            Text(Copy.odds(Contender.percent(odds))).font(.subheadline).foregroundStyle(.inkMuted)
+                        }
                     }
                     Spacer(minLength: 0)
                 }
@@ -166,5 +184,20 @@ extension Movie {
     var facts: String {
         [releaseYear.map { String($0) }, Runtime.format(minutes: runtimeMinutes)]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
+/// "72% to be nominated", or "72%" where that doesn't fit.
+struct OddsText: View {
+    let percent: Int
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            Text(Copy.odds(percent))
+            Text("\(percent)%")
+        }
+        .font(.caption)
+        .foregroundStyle(.inkMuted)
+        .lineLimit(1)
     }
 }
