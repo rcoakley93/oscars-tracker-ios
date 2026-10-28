@@ -234,3 +234,25 @@ Source of truth is `docs/app-store/screenshots/frames.json`; this table mirrors 
 Pipeline: `scripts/capture-store-screenshots.sh` (raw, `-sample-data -store-shots`, dedicated "Store shots" simulators) → `scripts/frame-store-images.py` (velvet gradient, Playfair Display headline, device bezel; exact App Store size, RGB, no alpha) → `docs/app-store/screenshots/draft/<set>/` for review → `final/<set>/` (promoted Oct 25 after the user's review; upload these). Set sizes: iPhone 6.9" 1320 × 2868, iPhone 6.3" 1206 × 2622 (Apple now labels this the required medium Dynamic Island set), iPad 13" 2064 × 2752. Duo sizes are skipped until April 2027.
 
 Store images must suit a 4+ rating even though the app is rated higher, and can't show another marketplace's logo (Apple's asset best practices). `-store-shots` handles both: the Sinners (a gun aimed), Bugonia (a face dripping like a wound) and Frankenstein (a skull) posters stay off screen through the sample data (left out of the sample season: films, ballot, plan and watched lists), and share cards leave off the App Store badge. The posters themselves are never edited. The iOS 27 creative asset (one universal image for the product page header and search results) is in `docs/app-store/creative/` (see its README).
+
+## 2.1 screenshots (Oct 28)
+
+2.1 replaces 2.0, so the store images lead with what's new: the contenders with their odds, badges, the ballot that opens on nominations day and past seasons. Then the 2.0 shots that still hold. Finals are in `docs/app-store/screenshots/final-2-1/<set>/` (`iphone-6.9`, `iphone-6.1`, `ipad-13`, `duo-outer`), with `contact-sheet.png` beside them; the 2.0 finals stay in `final/` for the record.
+
+| Shot | Screen | Headline | Gold word |
+|---|---|---|---|
+| 01 Films | Contenders, "Our picks for the 99th", odds under each poster, the hero's explainer | Get a head start on the race. | none |
+| 02 Badges | Board → Badges (iPad: the board beside your badge case) | Earn your spot on the mantel. | Earn |
+| 03 Badge case | Profile → Badges, 4 of 13 earned | 13 badges. Collect the set. | badges. |
+| 04 Ballot | Locked before nominations ("The envelopes aren't printed yet") | Picks open on nominations day. | none |
+| 05 Past seasons | Profile → 98th Academy Awards archive | Every season, on the record. | none |
+| 06 Groups | Your groups with size and rank | Bring the whole couch. | none |
+| 07 Board | Films watched podium | Bragging rights, ranked. | none |
+| 08 Live | The envelope on the night | Gloat in real time. | none |
+| 09 Plan | Watch plan by day | The couch has a schedule now. | none |
+
+Before nominations the films are "contenders", never "nominees" (voice.md, stage vocabulary), so no headline names them as nominees.
+
+Pipeline, the same as 2.0 with the 2.1 shot list: `scripts/capture-store-screenshots.sh` (writes `raw-2-1/`; adds `-list-stage predicted` and the new `-board badges` and `-profile-page badges|archive` routes) → `scripts/frame-store-images.py --raw docs/app-store/screenshots/raw-2-1 --frames docs/app-store/screenshots/frames-2-1.json --out docs/app-store/screenshots/final-2-1 --contact-sheet "Oscars Tracker 2.1 · App Store screenshots"`. The `duo-outer` set is captured by the script: a new iPhone Duo simulator boots folded, so `--display=1` is the outer display. The Duo's inner display needs the simulator unfolded in Device Hub, which can't be scripted.
+
+The redesigned widgets aren't in the set: the store screenshots show the app, and the sample-data mode can't put widgets on a home screen.

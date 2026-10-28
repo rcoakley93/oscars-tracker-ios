@@ -81,7 +81,8 @@ private struct GroupRow: View {
         }
         .padding(.vertical, Theme.Space.xxs)
         .accessibilityElement(children: .combine)
-        .task(id: group.id) {
+        // Again once the season arrives: a group listed before it can't load its board.
+        .task(id: [group.id, model.season.ceremony?.id]) {
             guard group.id > 0, model.leaderboard.boards[group.id] == nil else { return }
             await model.leaderboard.load(ceremonyID: model.season.ceremony?.id, groupID: group.id)
         }
@@ -206,7 +207,7 @@ private struct GroupDetail: View {
             Text("You can join again with the invite code.")
         }
         .errorAlert("Couldn't change the group", error: Bindable(model.groups).actionError)
-        .task { await model.leaderboard.load(ceremonyID: model.season.ceremony?.id, groupID: group.id) }
+        .task(id: model.season.ceremony?.id) { await model.leaderboard.load(ceremonyID: model.season.ceremony?.id, groupID: group.id) }
     }
 
     private func remove(_ userID: String) async {

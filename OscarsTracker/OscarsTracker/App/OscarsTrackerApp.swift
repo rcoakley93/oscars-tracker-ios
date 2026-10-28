@@ -62,10 +62,11 @@ struct OscarsTrackerApp: App {
                 data.blocked = [BlockedUser(userId: "u-chris", username: "Chris", avatarUrl: nil, blockedAt: nil)]
             }
             let storeShots = arguments.contains("-store-shots")
-            if storeShots { data.useStoreSafeSeason() }
             if let stage = UserDefaults.standard.string(forKey: "list-stage").flatMap(ListStage.init(rawValue:)) {
                 data.useListStage(stage)
             }
+            // After the list stage, which resets the ballot and the contenders.
+            if storeShots { data.useStoreSafeSeason() }
             switch UserDefaults.standard.string(forKey: "ballot-stage") {
             case "locked": data.passLock()
             case "winners": data.passLock(winners: true)
@@ -100,7 +101,9 @@ struct OscarsTrackerApp: App {
     /// Opens a tab, a film or a debug gallery from launch arguments, so
     /// screenshot runs need no taps: `-tab ballot`, `-movie 3`, `-category 2`,
     /// `-group 1`, `-sheet profile` (or `report`, `report-group`, `share-card`, the
-    /// results card with `-ballot-stage winners`), `-gallery tokens`.
+    /// results card with `-ballot-stage winners`), `-board badges` for the
+    /// Board's Badges tab, `-gallery tokens`. `-profile-page badges` or `archive`
+    /// opens the badge case or the last past season inside Profile.
     private static func openScreenshotRoute(in model: AppModel) {
         let defaults = UserDefaults.standard
         if let tab = defaults.string(forKey: "tab").flatMap(AppNavigation.Tab.init(rawValue:)) {
@@ -114,6 +117,9 @@ struct OscarsTrackerApp: App {
         }
         if defaults.object(forKey: "group") != nil {
             model.navigation.selectedGroupID = defaults.integer(forKey: "group")
+        }
+        if defaults.string(forKey: "board") == "badges" {
+            model.navigation.boardShowsBadges = true
         }
         switch defaults.string(forKey: "sheet") {
         case "profile": model.navigation.sheet = .profile

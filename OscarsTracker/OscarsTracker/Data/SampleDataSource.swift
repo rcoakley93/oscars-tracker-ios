@@ -241,6 +241,7 @@ final class SampleDataSource: AppDataSource {
                            displayMode: category.displayMode)
         }
         savedPicks[1] = 104  // Sentimental Value, not Sinners
+        contenderList.removeAll { unsafe.contains($0.movieId) }
         let swaps = [2: 8, 5: 9]  // Frankenstein and Sinners leave the plan for It Was Just an Accident and Marty Supreme
         planItems = planItems.map { item in
             guard let movieID = swaps[item.movieId], let day = PlanDay(item.plannedDate) else { return item }

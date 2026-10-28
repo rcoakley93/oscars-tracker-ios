@@ -1,0 +1,54 @@
+{
+  "note": "Headlines for the 2.1 framed App Store images (Oct 28). Host voice, sentence case, no Oscar marks, no jokes about people (voice.md). Before nominations the films are contenders, never nominees (voice.md, stage vocabulary). 'gold' is the one earned word, if any (brand.md: gold is earned). Edit here, then run scripts/frame-store-images.py --frames docs/app-store/screenshots/frames-2-1.json.",
+  "frames": [
+    {
+      "shot": "01-films",
+      "headline": "Get a head start on the race.",
+      "gold": []
+    },
+    {
+      "shot": "02-badges",
+      "headline": "Earn your spot on the mantel.",
+      "gold": [
+        "Earn"
+      ]
+    },
+    {
+      "shot": "03-badge-case",
+      "headline": "13 badges. Collect the set.",
+      "gold": [
+        "badges."
+      ]
+    },
+    {
+      "shot": "04-ballot-locked",
+      "headline": "Picks open on nominations day.",
+      "gold": []
+    },
+    {
+      "shot": "05-archive",
+      "headline": "Every season, on the record.",
+      "gold": []
+    },
+    {
+      "shot": "06-groups",
+      "headline": "Bring the whole couch.",
+      "gold": []
+    },
+    {
+      "shot": "07-board",
+      "headline": "Bragging rights, ranked.",
+      "gold": []
+    },
+    {
+      "shot": "08-live",
+      "headline": "Gloat in real time.",
+      "gold": []
+    },
+    {
+      "shot": "09-plan",
+      "headline": "The couch has a schedule now.",
+      "gold": []
+    }
+  ]
+}

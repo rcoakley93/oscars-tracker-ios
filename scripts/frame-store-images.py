@@ -191,11 +191,42 @@ def save(canvas, out_path):
     canvas.convert("RGB").save(out_path, "PNG")  # RGB, so no alpha channel
 
 
+CONTACT_LABELS = {"iphone-6.9": 'iPhone 6.9"  1320 × 2868', "iphone-6.1": 'iPhone 6.1"  1206 × 2622',
+                  "ipad-13": 'iPad 13"  2064 × 2752', "duo-outer": "iPhone Duo outer  1398 × 2034"}
+
+
+def contact_sheet(out_dir, title):
+    """Every framed set in out_dir as one row each, for review before upload."""
+    label_font = ImageFont.truetype("/System/Library/Fonts/SFNS.ttf", 26)
+    row_h, pad, label = 560, 24, 70
+    rows = []
+    for name, text in CONTACT_LABELS.items():
+        ims = [Image.open(f).convert("RGB") for f in sorted((out_dir / name).glob("*.png"))]
+        if ims:
+            rows.append((text, [im.resize((int(im.width * row_h / im.height), row_h), Image.LANCZOS) for im in ims]))
+    w = max(sum(i.width for i in ims) + pad * (len(ims) + 1) for _, ims in rows)
+    sheet = Image.new("RGB", (w, 110 + len(rows) * (row_h + label + pad)), INK)
+    draw = ImageDraw.Draw(sheet)
+    draw.text((pad, 30), title, font=playfair(44), fill=PARCHMENT)
+    y = 110
+    for text, ims in rows:
+        draw.text((pad, y + 20), text, font=label_font, fill=GOLD)
+        x, y = pad, y + label
+        for i, im in enumerate(ims):
+            sheet.paste(im, (x, y))
+            draw.text((x + 6, y + row_h - 34), f"{i + 1:02d}", font=label_font, fill=PARCHMENT)
+            x += im.width + pad
+        y += row_h + pad
+    save(sheet, out_dir / "contact-sheet.png")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default=str(ROOT / "docs/app-store/screenshots/raw"))
     ap.add_argument("--out", default=str(ROOT / "docs/app-store/screenshots/draft"))
     ap.add_argument("--only", nargs="*", help="set names, e.g. iphone-6.9")
+    ap.add_argument("--frames", default=str(ROOT / "docs/app-store/screenshots/frames.json"), help="headlines, e.g. frames-2-1.json")
+    ap.add_argument("--contact-sheet", metavar="TITLE", help="also write <out>/contact-sheet.png of every set there")
     ap.add_argument("--creative", action="store_true", help="also make the header and search results creative assets")
     a = ap.parse_args()
     if a.creative:
@@ -206,7 +237,7 @@ def main():
         search(raw, out / "search.png")
         search(raw, out / "search-wordmark.png", wordmark=True)
         print(f"made the creative assets in {out}")
-    frames = json.load(open(ROOT / "docs/app-store/screenshots/frames.json"))["frames"]
+    frames = json.load(open(a.frames))["frames"]
     made = 0
     for name, size in SIZES.items():
         if a.only and name not in a.only:
@@ -217,6 +248,8 @@ def main():
                 frame(raw, size, f["headline"], f["gold"], pathlib.Path(a.out) / name / f"{f['shot']}.png")
                 made += 1
     print(f"framed {made} images into {a.out}")
+    if a.contact_sheet:
+        contact_sheet(pathlib.Path(a.out), a.contact_sheet)
     if not made:
         sys.exit("nothing framed: capture first with scripts/capture-store-screenshots.sh")
 
