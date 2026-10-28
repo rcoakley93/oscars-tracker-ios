@@ -15,9 +15,9 @@ struct UsernameView: View {
                 .multilineTextAlignment(.center)
             HStack(spacing: Theme.Space.xs) {
                 TextField("Username", text: $username)
-                    .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    .fieldSurface()
                 Button("Suggest a username", systemImage: "dice") {
                     username = ValidationService.suggestedUsername()
                 }

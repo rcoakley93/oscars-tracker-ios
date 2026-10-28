@@ -13,6 +13,8 @@ struct SignInView: View {
     @State private var forgotPassword = false
     @State private var appleNonce = ""
     @FocusState private var focus: Field?
+    /// Grows with text like the Google button beside it.
+    @ScaledMetric(relativeTo: .headline) private var appleButtonHeight: CGFloat = 52
 
     private enum Field { case email, password }
 
@@ -40,7 +42,7 @@ struct SignInView: View {
                         Task { await finishApple(result) }
                     }
                     .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                    .frame(height: 52)
+                    .frame(height: appleButtonHeight)
                     .clipShape(Capsule())
 
                     Button {
@@ -73,11 +75,13 @@ struct SignInView: View {
                         .focused($focus, equals: .email)
                         .submitLabel(.next)
                         .onSubmit { focus = .password }
+                        .fieldSurface()
                     SecureField("Password", text: $password)
                         .textContentType(creatingAccount ? .newPassword : .password)
                         .focused($focus, equals: .password)
                         .submitLabel(.go)
                         .onSubmit { Task { await submit() } }
+                        .fieldSurface()
                     if creatingAccount {
                         Text("At least 8 characters, with a lowercase letter, an uppercase letter and a number.")
                             .font(.footnote)
@@ -89,7 +93,6 @@ struct SignInView: View {
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
                     }
                 }
-                .textFieldStyle(.roundedBorder)
 
                 if let error = session.error, !forgotPassword {
                     Text(error.message)
