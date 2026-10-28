@@ -11,14 +11,46 @@ nonisolated struct WidgetSnapshot: Codable, Equatable, Sendable {
         let day: PlanDay
     }
 
+    /// Which list the films are (P11-02): nil is the nominees, as 2.0 wrote it.
+    enum ListStage: String, Codable, Sendable {
+        case predicted, shortlisted, nominated
+    }
+
+    /// A watched film's poster colour, lighting its frame on the strip.
+    struct PosterColor: Codable, Equatable, Sendable {
+        let red: Double
+        let green: Double
+        let blue: Double
+    }
+
+    /// Your ballot once winners are in, and where it puts you on the global board.
+    struct Results: Codable, Equatable, Sendable {
+        let correct: Int
+        let total: Int
+        var rank: Int?
+        var ranked: Int?
+    }
+
     var ceremonyAt: Date?
     var filmsTotal: Int
     var filmsWatched: Int
     /// Unwatched films planned from today on, earliest first.
     var plan: [PlannedFilm]
     var savedAt: Date
+    // Added for 2.1 (P11-02); optional, so a 2.0 snapshot still decodes.
+    var ceremonyNumber: Int?
+    var ballotLockAt: Date?
+    var nominationsAt: Date?
+    var stage: ListStage?
+    /// Up to 16 watched films' poster colours.
+    var posters: [PosterColor]?
+    var categoriesPicked: Int?
+    var categoriesTotal: Int?
+    var results: Results?
 
     var filmsLeft: Int { max(filmsTotal - filmsWatched, 0) }
+    /// Whether the films are the nominees rather than contenders.
+    var hasNominees: Bool { (stage ?? .nominated) == .nominated && filmsTotal > 0 }
 
     static let empty = WidgetSnapshot(ceremonyAt: nil, filmsTotal: 0, filmsWatched: 0, plan: [], savedAt: .distantPast)
 }
