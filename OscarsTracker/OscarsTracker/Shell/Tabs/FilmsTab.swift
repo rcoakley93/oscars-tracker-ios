@@ -84,10 +84,12 @@ struct FilmsTab: View {
             } placeholder: {
                 FilmsGrid(sort: sort, hidesWatched: true, isPlaceholder: true, open: { _ in }, onWatched: { _ in })
             }
+            .accessibilityHint(copy.filmsListHint)
             .overlay(alignment: .bottom) {
                 TicketStub(title: stubTitle, trigger: tears).padding(.bottom, 120)
             }
-            .tabChrome("Films", posters: films.list.compactMap(\.posterUrl))
+            .tabChrome("Films", subtitle: model.season.ceremony.map { copy.filmsSubtitle(ceremony: $0.number, isRehearsal: model.season.isRehearsal) },
+                       posters: films.list.compactMap(\.posterUrl))
             .errorAlert("Couldn't save that", error: Bindable(films).actionError)
             .errorAlert("Couldn't follow the ceremony", error: Bindable(model.liveActivity).actionError)
             .safeAreaBar(edge: .top) {
@@ -394,6 +396,16 @@ extension Movie {
 
 #Preview("Shortlisted") {
     FilmsTab().environment(AppModel.preview { $0.useListStage(.shortlisted) }).preferredColorScheme(.dark)
+}
+
+#Preview("Predicted, rehearsal, Host") {
+    FilmsTab().environment(AppModel.preview { $0.useListStage(.predicted); $0.isRehearsal = true })
+        .environment(\.copy, Copy.for(.host, stage: .predicted)).preferredColorScheme(.dark)
+}
+
+#Preview("Shortlisted, Classic") {
+    FilmsTab().environment(AppModel.preview { $0.useListStage(.shortlisted) })
+        .environment(\.copy, Copy.for(.classic, stage: .shortlisted)).preferredColorScheme(.light)
 }
 
 #Preview("Nominated") {

@@ -117,6 +117,12 @@ struct Copy {
     /// You're `points` behind `name` on predictions.
     let scoreGap: (_ points: Int, _ name: String) -> String
 
+    // Films subtitle (P13): the one sign of what the list is. `ordinal` is the
+    // ceremony number spelled "99th". The hint is for VoiceOver on the list;
+    // empty once the films are nominees.
+    var filmsSubtitle: (_ ordinal: String) -> String
+    let filmsListHint: String
+
     // Hero (P6-06): the line under the number follows the season.
     /// Before nominations: films left to watch, and the date ("Jan 21") when known.
     var heroTeaser: (_ left: Int, _ date: String?) -> String
@@ -220,6 +226,19 @@ extension Copy {
         return "\(ordinal.string(from: rank as NSNumber) ?? "\(rank)") of \(size) in \(group)"
     }
 
+    /// "99th" for ceremony 99.
+    nonisolated static func ordinal(_ number: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
+        formatter.locale = Locale(identifier: "en_US")
+        return formatter.string(from: number as NSNumber) ?? "\(number)"
+    }
+
+    /// The Films subtitle for ceremony `number`, with "Rehearsal: " for testers.
+    func filmsSubtitle(ceremony number: Int, isRehearsal: Bool) -> String {
+        (isRehearsal ? "Rehearsal: " : "") + filmsSubtitle(Self.ordinal(number))
+    }
+
     /// The lines for a voice at a list stage, with the overrides that apply.
     static func `for`(_ voice: Voice, stage: ListStage = .nominated, overrides: CopyOverrides = [:]) -> Copy {
         (voice == .host ? hostLines(stage) : classicLines(stage)).applying(overrides, voice: voice)
@@ -237,6 +256,7 @@ extension Copy {
     static let overridableKeys: [String: [String]] = [
         "films.hero.teaser": ["left", "date"],
         "ticker.beforeNominations": ["left", "date"],
+        "films.subtitle": ["ordinal"],
         "stage.moment.title": [],
         "stage.moment.body": ["made", "watched", "total"],
     ]
@@ -258,6 +278,10 @@ extension Copy {
         if let line = template("ticker.beforeNominations") {
             let base = tickerBeforeNominations
             copy.tickerBeforeNominations = { date, left in Self.fill(line, ["left": left.map(String.init), "date": date]) ?? base(date, left) }
+        }
+        if let line = template("films.subtitle") {
+            let base = filmsSubtitle
+            copy.filmsSubtitle = { ordinal in Self.fill(line, ["ordinal": ordinal]) ?? base(ordinal) }
         }
         if let line = template("stage.moment.title"), let filled = Self.fill(line, [:]) {
             copy.stageMomentTitle = filled
@@ -344,6 +368,14 @@ extension Copy {
             ? "Predictions open on nominations day and show when the ballot locks."
             : "Predictions open when the ballot locks.",
         scoreGap: { points, name in "You're \(pointCount(points)) behind \(name)." },
+        filmsSubtitle: { ordinal in
+            switch stage {
+            case .predicted: "Predicted nominees · \(ordinal) Academy Awards"
+            case .shortlisted: "Shortlists and predictions · \(ordinal)"
+            case .nominated: "Nominees · \(ordinal) Academy Awards"
+            }
+        },
+        filmsListHint: stage.pick("Predicted nominees.", "The shortlists, plus our predictions.", ""),
         heroTeaser: { left, date in
             switch stage {
             case .predicted:
@@ -535,6 +567,14 @@ extension Copy {
             ? "No ballots yet. The envelopes get printed on nominations day."
             : "Ballots stay sealed until the lock. No peeking.",
         scoreGap: { points, name in "\(pointCount(points)) behind \(name). It's not over till the last envelope." },
+        filmsSubtitle: { ordinal in
+            switch stage {
+            case .predicted: "Our picks for the \(ordinal)"
+            case .shortlisted: "The shortlists, plus our hunches"
+            case .nominated: "The \(ordinal) nominees"
+            }
+        },
+        filmsListHint: stage.pick("Our predicted nominees.", "The shortlists, plus our predictions.", ""),
         heroTeaser: { left, date in
             switch stage {
             case .predicted:

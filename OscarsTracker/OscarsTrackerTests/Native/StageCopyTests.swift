@@ -224,4 +224,51 @@ struct StageCopyTests {
         await model.signOut()
         #expect(model.stageMoment == nil)
     }
+
+    // MARK: - Films subtitle
+
+    @Test(arguments: [
+        (Voice.classic, ListStage.predicted, "Predicted nominees · 99th Academy Awards"),
+        (.classic, .shortlisted, "Shortlists and predictions · 99th"),
+        (.classic, .nominated, "Nominees · 99th Academy Awards"),
+        (.host, .predicted, "Our picks for the 99th"),
+        (.host, .shortlisted, "The shortlists, plus our hunches"),
+        (.host, .nominated, "The 99th nominees"),
+    ])
+    func filmsSubtitleFollowsStageAndVoice(voice: Voice, stage: ListStage, line: String) {
+        let copy = Copy.for(voice, stage: stage)
+        #expect(copy.filmsSubtitle(ceremony: 99, isRehearsal: false) == line)
+        #expect(copy.filmsSubtitle(ceremony: 99, isRehearsal: true) == "Rehearsal: " + line)
+    }
+
+    @Test func ceremonyNumberComesFromData() {
+        #expect(Copy.ordinal(99) == "99th")
+        #expect(Copy.ordinal(101) == "101st")
+        #expect(Copy.classic.filmsSubtitle(ceremony: 100, isRehearsal: false) == "Nominees · 100th Academy Awards")
+    }
+
+    @Test(arguments: Voice.allCases, ListStage.allCases)
+    func filmsSubtitleOverrides(voice: Voice, stage: ListStage) {
+        let plain: CopyOverrides = ["films.subtitle": [voice.rawValue: "Plain {ordinal}"]]
+        #expect(Copy.for(voice, stage: stage, overrides: plain).filmsSubtitle("99th") == "Plain 99th")
+        let keyed: CopyOverrides = [
+            "films.subtitle": [voice.rawValue: "Plain {ordinal}"],
+            "films.subtitle.\(stage.rawValue)": [voice.rawValue: "Staged {ordinal}"],
+        ]
+        #expect(Copy.for(voice, stage: stage, overrides: keyed).filmsSubtitle("99th") == "Staged 99th")
+        // Another stage's key doesn't apply; a template with an unknown value falls back.
+        let other = ListStage.allCases.first { $0 != stage }!
+        let elsewhere: CopyOverrides = ["films.subtitle.\(other.rawValue)": [voice.rawValue: "Nope"]]
+        #expect(Copy.for(voice, stage: stage, overrides: elsewhere).filmsSubtitle("99th") == Copy.for(voice, stage: stage).filmsSubtitle("99th"))
+        let broken: CopyOverrides = ["films.subtitle": [voice.rawValue: "{nope}"]]
+        #expect(Copy.for(voice, stage: stage, overrides: broken).filmsSubtitle("99th") == Copy.for(voice, stage: stage).filmsSubtitle("99th"))
+    }
+
+    @Test(arguments: Voice.allCases)
+    func filmsListHintNamesWhatTheListIs(voice: Voice) {
+        #expect(Copy.for(voice, stage: .predicted).filmsListHint.lowercased().contains("predicted nominees"))
+        let shortlisted = Copy.for(voice, stage: .shortlisted).filmsListHint.lowercased()
+        #expect(shortlisted.contains("shortlists") && shortlisted.contains("predictions"))
+        #expect(Copy.for(voice, stage: .nominated).filmsListHint.isEmpty)
+    }
 }
