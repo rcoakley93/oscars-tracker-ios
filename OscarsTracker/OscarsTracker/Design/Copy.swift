@@ -128,6 +128,10 @@ struct Copy {
     // Hero (P6-06): the line under the number follows the season.
     /// Before nominations: films left to watch, and the date ("Jan 21") when known.
     var heroTeaser: (_ left: Int, _ date: String?) -> String
+    /// The footnote under the hero before nominations: the films are contenders,
+    /// the % is their odds, and when the next list lands. Nil once they're nominees.
+    /// Dates ("Dec 15", "Jan 21") are left out when the server gives none.
+    var heroExplainer: (_ shortlistsDate: String?, _ nominationsDate: String?) -> String?
     /// "38 films, 33 days."
     let heroSeason: (_ days: Int, _ filmsLeft: Int) -> String
     /// The last seven days: a push to finish.
@@ -262,6 +266,7 @@ extension Copy {
     /// their templates can use.
     static let overridableKeys: [String: [String]] = [
         "films.hero.teaser": ["left", "date"],
+        "films.hero.explainer": ["shortlistsDate", "nominationsDate"],
         "ticker.beforeNominations": ["left", "date"],
         "films.subtitle": ["ordinal"],
         "stage.moment.title": [],
@@ -281,6 +286,12 @@ extension Copy {
         if let line = template("films.hero.teaser") {
             let base = heroTeaser
             copy.heroTeaser = { left, date in Self.fill(line, ["left": "\(left)", "date": date]) ?? base(left, date) }
+        }
+        if let line = template("films.hero.explainer") {
+            let base = heroExplainer
+            copy.heroExplainer = { shortlists, nominations in
+                Self.fill(line, ["shortlistsDate": shortlists, "nominationsDate": nominations]) ?? base(shortlists, nominations)
+            }
         }
         if let line = template("ticker.beforeNominations") {
             let base = tickerBeforeNominations
@@ -394,6 +405,16 @@ extension Copy {
                     + (date.map { " · Nominations \($0)." } ?? ".")
             case .nominated:
                 "The nominees are on their way."
+            }
+        },
+        heroExplainer: { shortlists, nominations in
+            switch stage {
+            case .predicted:
+                "Contenders, with the odds each gets nominated." + (shortlists.map { " Shortlists announced \($0)." } ?? "")
+            case .shortlisted:
+                "The shortlists, plus our predicted contenders where there isn't one." + (nominations.map { " Nominations \($0)." } ?? "")
+            case .nominated:
+                nil
             }
         },
         heroSeason: { days, left in
@@ -595,6 +616,16 @@ extension Copy {
                     + (date.map { " before \($0)." } ?? ".")
             case .nominated:
                 "The nominees are in. Their films are on the red carpet."
+            }
+        },
+        heroExplainer: { shortlists, nominations in
+            switch stage {
+            case .predicted:
+                "Our contenders and their odds of a nomination." + (shortlists.map { " The shortlists land \($0)." } ?? "")
+            case .shortlisted:
+                "The shortlists, plus our hunches for the rest." + (nominations.map { " Nominations \($0)." } ?? "")
+            case .nominated:
+                nil
             }
         },
         heroSeason: { days, left in

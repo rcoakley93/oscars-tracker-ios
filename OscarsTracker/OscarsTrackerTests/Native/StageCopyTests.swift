@@ -131,6 +131,57 @@ struct StageCopyTests {
         #expect(host.heroTeaser(12, "Jan 21") == Copy.for(.host, stage: .predicted).heroTeaser(12, "Jan 21"))
     }
 
+    @Test func theHeroExplainerSaysWhatTheFilmsAreAndWhenTheNextListLands() {
+        let expected: [Voice: [ListStage: String?]] = [
+            .classic: [
+                .predicted: "Contenders, with the odds each gets nominated. Shortlists announced Dec 15.",
+                .shortlisted: "The shortlists, plus our predicted contenders where there isn't one. Nominations Jan 21.",
+                .nominated: nil,
+            ],
+            .host: [
+                .predicted: "Our contenders and their odds of a nomination. The shortlists land Dec 15.",
+                .shortlisted: "The shortlists, plus our hunches for the rest. Nominations Jan 21.",
+                .nominated: nil,
+            ],
+        ]
+        for voice in Voice.allCases {
+            for stage in ListStage.allCases {
+                #expect(Copy.for(voice, stage: stage).heroExplainer("Dec 15", "Jan 21") == expected[voice]![stage]!)
+            }
+        }
+    }
+
+    @Test(arguments: Voice.allCases)
+    func theHeroExplainerLeavesOutADateTheServerDoesNotGive(voice: Voice) throws {
+        let predicted = try #require(Copy.for(voice, stage: .predicted).heroExplainer(nil, "Jan 21"))
+        let shortlisted = try #require(Copy.for(voice, stage: .shortlisted).heroExplainer("Dec 15", nil))
+        #expect(!predicted.contains("Dec") && !predicted.contains("Jan") && predicted.hasSuffix("."))
+        #expect(!shortlisted.contains("Jan") && !shortlisted.contains("Nominations") && shortlisted.hasSuffix("."))
+    }
+
+    @Test func theHeroExplainerCanBeOverriddenPerStage() {
+        let overrides: CopyOverrides = [
+            "films.hero.explainer": ["classic": "Odds of a nomination. Shortlists {shortlistsDate}."],
+            "films.hero.explainer.shortlisted": ["classic": "Out now. Nominations {nominationsDate}."],
+        ]
+        #expect(Copy.for(.classic, stage: .predicted, overrides: overrides).heroExplainer("Dec 15", nil) == "Odds of a nomination. Shortlists Dec 15.")
+        #expect(Copy.for(.classic, stage: .shortlisted, overrides: overrides).heroExplainer(nil, "Jan 21") == "Out now. Nominations Jan 21.")
+        // A date the server didn't give: the built-in line stays.
+        #expect(Copy.for(.classic, stage: .predicted, overrides: overrides).heroExplainer(nil, nil)
+                == Copy.for(.classic, stage: .predicted).heroExplainer(nil, nil))
+        // The other voice and the nominated stage keep their own.
+        #expect(Copy.for(.host, stage: .predicted, overrides: overrides).heroExplainer("Dec 15", nil) == Copy.for(.host, stage: .predicted).heroExplainer("Dec 15", nil))
+        #expect(Copy.for(.classic, stage: .nominated).heroExplainer("Dec 15", "Jan 21") == nil)
+    }
+
+    @Test func shortlistsAtComesFromAppConfig() throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let json = #"{"shortlistsAt": "2026-12-15T16:00:00Z"}"#
+        #expect(try decoder.decode(AppConfig.self, from: Data(json.utf8)).shortlistsAt != nil)
+        #expect(try decoder.decode(AppConfig.self, from: Data("{}".utf8)).shortlistsAt == nil)
+    }
+
     @Test func overridesParseFromAppConfig() throws {
         let parsed = LiveDataSource.copyOverrides([
             "stage.moment.title": .object(["host": .string("Hi"), "classic": .integer(3)]),

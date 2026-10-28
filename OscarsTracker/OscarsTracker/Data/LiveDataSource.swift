@@ -135,6 +135,8 @@ final class LiveDataSource: AppDataSource {
                     config.userGroupLimit = limit
                 case ("nominations_at", .string(let date)):
                     config.nominationsAt = try? Date(date, strategy: .iso8601)
+                case ("shortlists_at", .string(let date)):
+                    config.shortlistsAt = try? Date(date, strategy: .iso8601)
                 case ("copy_overrides", .object(let lines)):
                     config.copyOverrides = Self.copyOverrides(lines)
                 default:
