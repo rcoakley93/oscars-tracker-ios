@@ -321,6 +321,8 @@ private struct PersonDetail: View {
             }
             .listRowBackground(Color.surface)
 
+            PersonBadgeRow(userID: entry.userId)
+
             switch loaded {
             case .some(.some(let person)):
                 if locked {

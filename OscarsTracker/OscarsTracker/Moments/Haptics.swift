@@ -2,13 +2,13 @@ import SwiftUI
 
 /// The haptic for each moment (P3-08), the same map the web app defined.
 enum Moment {
-    case pick, watched, unwatched, ballotComplete, allWatched, joinedGroup, envelopeOpen, correct, wrong, ballotLocked
+    case pick, watched, unwatched, ballotComplete, allWatched, joinedGroup, envelopeOpen, correct, wrong, ballotLocked, badgeEarned
 
     var feedback: SensoryFeedback {
         switch self {
         case .pick, .unwatched: .selection
         case .watched: .impact(weight: .light)
-        case .ballotComplete, .allWatched, .joinedGroup, .correct: .success
+        case .ballotComplete, .allWatched, .joinedGroup, .correct, .badgeEarned: .success
         case .envelopeOpen: .impact(weight: .medium)
         case .wrong: .warning
         case .ballotLocked: .impact(weight: .heavy)
