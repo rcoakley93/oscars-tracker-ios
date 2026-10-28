@@ -26,24 +26,21 @@ nonisolated struct Contender: Codable, Identifiable, Hashable, Sendable {
     /// The person, for acting categories.
     let detailText: String?
     let stage: Stage
+    /// Ours, 0 to 1: the only odds the app shows, as a bare percentage.
     let odds: Double
-    /// Who informed the odds, for the credit line; nil for our own.
-    let source: String?
-    let sourceUpdatedAt: Date
 
     nonisolated enum Stage: String, Codable, Hashable, Sendable {
         case predicted, shortlisted
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, stage, odds, source
+        case id, stage, odds
         case ceremonyId = "ceremony_id"
         case categoryId = "category_id"
         case categoryName = "category_name"
         case displayMode = "display_mode"
         case movieId = "movie_id"
         case detailText = "detail_text"
-        case sourceUpdatedAt = "source_updated_at"
     }
 
     /// Our odds as a whole percent, 1 to 99: a prediction is never certain.

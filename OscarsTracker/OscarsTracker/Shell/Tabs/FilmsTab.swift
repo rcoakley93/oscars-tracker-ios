@@ -210,7 +210,7 @@ private struct FilmsGrid: View {
                         let now = context.date.addingTimeInterval(model.season.clockOffset)
                         HeroCard(watched: films.watchedCount, total: films.list.count,
                                  phase: model.season.phase(hasNominees: films.hasNominees, now: now),
-                                 now: now, results: heroResults,
+                                 stage: films.listStage, now: now, results: heroResults,
                                  onFollow: model.canFollowCeremony ? { Task { await model.followCeremony() } } : nil,
                                  isFollowing: model.liveActivity.isFollowing)
                     }
@@ -228,7 +228,6 @@ private struct FilmsGrid: View {
                             .foregroundStyle(.ink)
                             .frame(maxWidth: .infinity)
                     }
-                    ContendersCredit()
                 }
             }
             .padding(.horizontal, Theme.Space.m)
@@ -307,10 +306,6 @@ private struct FilmsByCategory: View {
                     .accessibilityAddTraits(.isHeader)
                 }
             }
-            if films.credit != nil {
-                Section { ContendersCredit() }
-                    .listRowBackground(Color.clear)
-            }
         }
     }
 
@@ -350,22 +345,6 @@ private struct FilmsByCategory: View {
     static func films(in category: BallotCategory) -> [Movie] {
         var seen = Set<Int>()
         return category.nominations.compactMap(\.movie).filter { seen.insert($0.id).inserted }
-    }
-}
-
-/// Under the contender list: these are predictions, and who informed the
-/// odds when (P9-05). Nothing from nominations day.
-struct ContendersCredit: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.copy) private var copy
-
-    var body: some View {
-        if let credit = model.films.credit {
-            Text(copy.contendersCredit(credit.source, credit.updatedAt.formatted(.dateTime.month(.abbreviated).day())))
-                .font(.footnote)
-                .foregroundStyle(.inkMuted)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
     }
 }
 

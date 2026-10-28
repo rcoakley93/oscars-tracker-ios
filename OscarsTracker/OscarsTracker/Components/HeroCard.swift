@@ -17,6 +17,8 @@ struct HeroCard: View {
     let total: Int
     /// Where the season is (`SeasonPhase`); the hero's figures and line follow it.
     var phase: SeasonPhase = .none
+    /// The list's stage, for the line before nominations (P9-05).
+    var stage: ListStage = .predicted
     /// The clock the lock-day countdown reads.
     var now: Date = .now
     /// Your score and the winners announced, for the live and after phases.
@@ -100,7 +102,7 @@ struct HeroCard: View {
         case .none:
             return watched == total && total > 0 ? copy.allWatched : copy.progressSummary(watched, total)
         case .beforeNominations(let date):
-            return copy.heroTeaser(left, date?.formatted(.dateTime.month(.abbreviated).day()))
+            return copy.heroTeaser(left, date?.formatted(.dateTime.month(.abbreviated).day()), stage)
         case .season(let days):
             return copy.heroSeason(days, left)
         case .finalWeek(let days):

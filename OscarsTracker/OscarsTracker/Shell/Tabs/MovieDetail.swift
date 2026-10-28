@@ -115,8 +115,7 @@ struct MovieDetail: View {
                         }
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Contending in " + contending.map { "\(Self.categoryLabel($0)), \(Copy.odds($0.percent))" }.formatted())
-                    ContendersCredit()
+                    .accessibilityLabel("Contending in " + contending.map { "\(Self.categoryLabel($0)), \(Copy.oddsSpoken($0.percent))" }.formatted())
                 }
             }
         }

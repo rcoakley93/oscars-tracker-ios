@@ -150,13 +150,21 @@ final class SampleDataSource: AppDataSource {
         return contenderList
     }
 
-    /// The season at a list stage (P9-05): the stage flag, the contenders
-    /// for it, and the two contender films that aren't nominees.
+    /// The season at a list stage (P9-05), as the server serves it: the
+    /// `list_stage` flag, the contenders for it, the two contender films that
+    /// aren't nominees, and the ballot hidden until nominations are announced.
+    /// Only the flag and the data change, as on the live backend.
     func useListStage(_ stage: ListStage) {
         config.listStage = stage
         contenderList = SampleData.contenders(stage == .predicted ? .predicted : .shortlisted)
-        if stage.showsContenders { config.nominationsAt = try? Date("2027-01-21T13:30:00Z", strategy: .iso8601) }
+        config.nominationsAt = try? Date("2027-01-21T13:30:00Z", strategy: .iso8601)
+        announceNominations(stage == .nominated)
         for movie in SampleData.contenderOnlyMovies where !movieList.contains(movie) { movieList.append(movie) }
+    }
+
+    /// `ceremonies.nominations_announced`: the ballot's categories are visible once it's set.
+    func announceNominations(_ announced: Bool) {
+        categories = announced ? SampleData.categories : []
     }
 
     func watchedMovieIDs(userID: String) async throws -> Set<Int> {
@@ -185,7 +193,8 @@ final class SampleDataSource: AppDataSource {
 
     func ballot() async throws -> [BallotCategory] {
         try check()
-        return categories
+        // The active ceremony's, as the live ballot is.
+        return categories.map { var category = $0; category.ceremonyID = ceremony.id; return category }
     }
 
     func picks(userID: String) async throws -> [Int: Int] {
@@ -714,9 +723,6 @@ nonisolated enum SampleData {
         movie(12, "Wake Up Dead Man", 2025, 144),
     ]
 
-    /// When the sample odds were last informed by the source.
-    static let contendersUpdatedAt = Date(timeIntervalSince1970: 1_793_100_000)
-
     /// The sample contenders: Sound and International Feature are the
     /// shortlisted categories once `stage` is `.shortlisted`.
     static func contenders(_ stage: Contender.Stage) -> [Contender] {
@@ -740,8 +746,7 @@ nonisolated enum SampleData {
             return Contender(id: index + 1, ceremonyId: 2, categoryId: row.category, categoryName: row.name, displayMode: row.mode,
                              movieId: row.movie, detailText: row.person, stage: shortlisted ? .shortlisted : .predicted,
                              // A shortlist firms up the odds of the films on it.
-                             odds: shortlisted ? min(0.97, row.odds + 0.1) : row.odds,
-                             source: "Next Best Picture", sourceUpdatedAt: contendersUpdatedAt)
+                             odds: shortlisted ? min(0.97, row.odds + 0.1) : row.odds)
         }
     }
 

@@ -61,7 +61,7 @@ struct PosterTile: View {
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel([movie.title, Runtime.format(minutes: movie.runtimeMinutes), odds.map { Copy.odds(Contender.percent($0)) },
+            .accessibilityLabel([movie.title, Runtime.format(minutes: movie.runtimeMinutes), odds.map { Copy.oddsSpoken(Contender.percent($0)) },
                                  watched ? "watched" : "not watched"].compactMap { $0 }.joined(separator: ", "))
             .accessibilityHint("Opens the film")
         }
@@ -128,6 +128,7 @@ struct FilmListRow: View {
                         }
                         if let odds {
                             Text(Copy.odds(Contender.percent(odds))).font(.subheadline).foregroundStyle(.inkMuted)
+                                .accessibilityLabel(Copy.oddsSpoken(Contender.percent(odds)))
                         }
                     }
                     Spacer(minLength: 0)
@@ -187,15 +188,14 @@ extension Movie {
     }
 }
 
-/// "72% to be nominated" under a poster, over two lines where one is too narrow.
+/// "72%" under a poster: our odds and nothing around them.
 struct OddsText: View {
     let percent: Int
 
     var body: some View {
         Text(Copy.odds(percent))
-            .font(.caption)
+            .font(.caption.weight(.medium))
+            .monospacedDigit()
             .foregroundStyle(.inkMuted)
-            .lineLimit(2)
-            .fixedSize(horizontal: false, vertical: true)
     }
 }

@@ -7,6 +7,8 @@ nonisolated struct OfflineSnapshot: Codable, Sendable {
     var watchedIDs: Set<Int> = []
     /// The contender list (P9-05); nil in a copy saved before 2.1.
     var contenders: [Contender]? = nil
+    /// The `list_stage` it was saved at, for a launch with no season; nil before 2.1.
+    var listStage: ListStage? = nil
     var categories: [BallotCategory] = []
     var picks: [Int: Int] = [:]
     var plan: [WatchPlanItem] = []

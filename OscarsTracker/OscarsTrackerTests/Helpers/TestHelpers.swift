@@ -50,7 +50,8 @@ enum CategoryFactory {
             pointsValue: pointsValue,
             year: year,
             createdAt: createdAt,
-            displayMode: displayMode
+            displayMode: displayMode,
+            ceremonyId: nil
         )
     }
 }

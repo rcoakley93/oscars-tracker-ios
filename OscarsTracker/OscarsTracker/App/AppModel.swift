@@ -115,6 +115,8 @@ final class AppModel {
         pending = cache.queue(for: userID)
         if let snapshot = cache.snapshot(for: userID) {
             films.restore(movies: snapshot.movies, watchedIDs: snapshot.watchedIDs, contenders: snapshot.contenders ?? [])
+            // The stage the copy was saved at, unless the cached season knows one (it's never older).
+            if let stage = snapshot.listStage, season.state != .loaded { films.stage = stage }
             ballot.restore(categories: snapshot.categories, picks: snapshot.picks)
             plan.restore(items: snapshot.plan)
             groups.restore(groups: snapshot.groups)
@@ -125,7 +127,8 @@ final class AppModel {
 
     private func saveSnapshot() {
         guard let userID = session.userID, !films.movies.isEmpty else { return }
-        cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, contenders: films.contenders, categories: ballot.categories,
+        cache.save(OfflineSnapshot(movies: films.movies, watchedIDs: films.watchedIDs, contenders: films.contenders, listStage: films.stage,
+                                   categories: ballot.categories,
                                    picks: ballot.picks, plan: plan.items, groups: groups.groups, boards: leaderboard.cachedBoards),
                    for: userID)
     }
@@ -219,9 +222,11 @@ final class AppModel {
     /// Back from the background: the season may have moved on (the lock, the
     /// winners), and the push token may have changed.
     func foreground() async {
+        let stage = films.stage
         async let season: Void = loadSeasonAndBoards()
         async let push: Void = push.refresh()
         _ = await (season, push)
+        if films.stage != stage { await reloadList() }
         await loadPickShares()
         guard session.userID != nil, self.season.config.isEnabled(AppConfig.liveMode) else { return live.stop() }
         // Winners missed while the app was away, or announced before live mode came on.
@@ -294,9 +299,23 @@ final class AppModel {
     /// The boards need the ceremony's id.
     private func loadSeasonAndBoards() async {
         await season.load()
-        films.stage = season.config.listStage
+        // Only a season the server (or its cache) gave; else the offline copy's stage stays.
+        if season.state == .loaded { films.stage = season.config.listStage }
         guard session.userID != nil else { return }
         await leaderboard.reload(ceremonyID: season.ceremony?.id)
+    }
+
+    /// The server changed `list_stage` while the app was away (P9-05): the
+    /// list, the odds and the nominees for the new stage, and an offline copy
+    /// that no longer holds the old one.
+    private func reloadList() async {
+        let userID = session.userID
+        async let films: Void = films.load(userID: userID)
+        async let ballot: Void = ballot.load(userID: userID)
+        _ = await (films, ballot)
+        applyPending()
+        saveSnapshot()
+        saveWidgetSnapshot()
     }
 
     /// Blocks someone, then reloads the boards and your groups, which the
