@@ -182,7 +182,8 @@ struct Copy {
 
     // The setting itself
     let label: String
-    let sample: String
+    /// Under the voice picker: the progress line at this copy's stage, 12 of 50.
+    var sample: String { progressSummary(12, 50) }
 }
 
 extension Copy {
@@ -445,8 +446,7 @@ extension Copy {
         stageMomentAdded: "New on the list",
         badgeRevealTitle: "New badge",
         badgeCaseEmpty: "You haven't earned a badge yet.",
-        label: "Classic",
-        sample: "12 of 50 films watched."
+        label: "Classic"
     ) }
 
     /// "33 days to the ceremony · 38 films left", the same in the final week.
@@ -672,8 +672,7 @@ extension Copy {
         stageMomentAdded: "New arrivals",
         badgeRevealTitle: "And the badge goes to…",
         badgeCaseEmpty: "No badges yet. The first one's the hardest.",
-        label: "Host",
-        sample: "12 down, 38 to go. The Academy watched all of these. Allegedly."
+        label: "Host"
     ) }
 }
 
