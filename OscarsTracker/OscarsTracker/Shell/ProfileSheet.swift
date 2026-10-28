@@ -49,7 +49,7 @@ struct ProfileSheet: View {
                 } header: {
                     Text("Voice")
                 } footer: {
-                    Text(Copy.for(voice).sample)
+                    Text(Copy.for(voice, stage: model.films.listStage).sample)
                         .font(.subheadline)
                         .foregroundStyle(.ink)
                         .contentTransition(.opacity)
