@@ -147,10 +147,11 @@ protocol AppDataSource: AnyObject, Sendable {
     func leaveGroup(groupID: Int, userID: String) async throws
     func deleteGroup(groupID: Int) async throws
     func removeMember(userID: String, groupID: Int) async throws
-    /// The global board when `groupID` is nil.
+    /// The global board when `groupID` is nil. It counts the season's list,
+    /// the contenders before nominations, whatever ceremony is active.
     func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry]
-    /// Someone you share a group with (or yourself): their watched nominees
-    /// and, after the lock, their picks.
+    /// Someone you share a group with (or yourself): their watched films on
+    /// the board's list and, after the lock, their picks.
     func boardPerson(ceremonyID: Int, userID: String) async throws -> BoardPerson
 
     // Push (P4-09)

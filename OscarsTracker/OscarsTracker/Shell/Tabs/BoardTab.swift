@@ -97,7 +97,9 @@ private struct BoardList: View {
         let userID = model.session.userID
 
         List(selection: $navigation.selectedPersonID) {
-            if metric == .predictions, !model.season.isBallotLocked() {
+            // Before nominations the board counts contenders and nobody has
+            // picks, whatever last season's lock says.
+            if metric == .predictions, !model.leaderboard.countsPicks(groupID) || !model.season.isBallotLocked() {
                 Section {
                     Label(copy.boardPredictionsLocked, systemImage: "lock")
                         .foregroundStyle(.ink)
@@ -299,7 +301,8 @@ struct BoardRow: View {
 }
 
 /// One person's season: their numbers, then their picks after the lock or
-/// the nominees they've watched before it. Their films and picks show only
+/// the films on the list they've watched before it (contenders before
+/// nominations, with no picks). Their films and picks show only
 /// to people who share a group with them.
 private struct PersonDetail: View {
     @Environment(AppModel.self) private var model
@@ -309,7 +312,7 @@ private struct PersonDetail: View {
 
     var body: some View {
         let isYou = entry.userId == model.session.userID
-        let locked = model.season.isBallotLocked()
+        let locked = entry.countsPicks && model.season.isBallotLocked()
         let loaded = model.leaderboard.people[entry.userId]
         List {
             Section {
@@ -440,6 +443,14 @@ extension BoardEntry {
 
 #Preview("Predictions before the lock") {
     let model = AppModel.preview()
+    model.navigation.boardMetric = .predictions
+    return BoardTab().environment(model).preferredColorScheme(.dark)
+}
+
+#Preview("Before nominations") {
+    let model = AppModel.preview { data in
+        data.useListStage(.predicted)
+    }
     model.navigation.boardMetric = .predictions
     return BoardTab().environment(model).preferredColorScheme(.dark)
 }

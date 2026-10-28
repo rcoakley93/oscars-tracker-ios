@@ -2,8 +2,8 @@ import Foundation
 import Observation
 
 /// Every board you've opened, global and per group, from one RPC,
-/// `get_leaderboard(p_ceremony_id, p_group_id)` (P2-05), and the people
-/// you've opened on them. The ranks are the server's.
+/// `get_season_board(p_ceremony_id, p_group_id)` (P2-05, 2.1), and the people
+/// you've opened on them. The ranks, and the list they count, are the server's.
 @Observable
 final class LeaderboardStore {
     /// Films watched, or picks once the ballot locks.
@@ -32,6 +32,12 @@ final class LeaderboardStore {
 
     func state(_ groupID: Int?) -> LoadState {
         states[groupID] ?? .idle
+    }
+
+    /// Picks and scores count on this board: from nominations day, never while
+    /// it counts the contenders. True until it loads.
+    func countsPicks(_ groupID: Int?) -> Bool {
+        entries(groupID).first?.countsPicks ?? true
     }
 
     func load(ceremonyID: Int?, groupID: Int?) async {

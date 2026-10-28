@@ -1,8 +1,10 @@
 import Foundation
 
-/// One row of `get_leaderboard(p_ceremony_id, p_group_id)` (P2-05): the global
-/// board when the group is nil, a group's board otherwise. The server ranks
-/// by score, then films watched, then who got there first.
+/// One row of `get_season_board(p_ceremony_id, p_group_id)` (2.1; P2-05's
+/// `get_leaderboard` with the list stage): the global board when the group is
+/// nil, a group's board otherwise. The server ranks by score, then films
+/// watched, then who got there first. Before nominations it counts films
+/// watched on the contender list and every score is 0.
 nonisolated struct BoardEntry: Codable, Identifiable, Hashable, Sendable {
     enum Scoring: String, Codable, Sendable {
         /// One point per correct pick.
@@ -14,7 +16,8 @@ nonisolated struct BoardEntry: Codable, Identifiable, Hashable, Sendable {
     /// The same row at another place, when someone above leaves the board.
     func withRank(_ rank: Int) -> BoardEntry {
         BoardEntry(rank: rank, userId: userId, username: username, avatarUrl: avatarUrl, watchedCount: watchedCount,
-                   correctCount: correctCount, points: points, score: score, scoring: scoring, isCreator: isCreator)
+                   correctCount: correctCount, points: points, score: score, scoring: scoring, isCreator: isCreator,
+                   listStage: listStage)
     }
 
     var id: String { userId }
@@ -29,6 +32,13 @@ nonisolated struct BoardEntry: Codable, Identifiable, Hashable, Sendable {
     let score: Int
     let scoring: Scoring
     let isCreator: Bool
+    /// The list the board counts, decided by the server: the contenders at
+    /// `predicted` and `shortlisted`, the nominees from nominations day. Nil
+    /// in a copy cached before 2.1, which counted the nominees.
+    var listStage: ListStage? = nil
+
+    /// Picks and scores count on this board: only once it counts the nominees.
+    var countsPicks: Bool { (listStage ?? .nominated) == .nominated }
 
     enum CodingKeys: String, CodingKey {
         case rank
@@ -39,12 +49,13 @@ nonisolated struct BoardEntry: Codable, Identifiable, Hashable, Sendable {
         case correctCount = "correct_count"
         case points, score, scoring
         case isCreator = "is_creator"
+        case listStage = "list_stage"
     }
 }
 
-/// What `get_board_person(p_ceremony_id, p_user_id)` returns for someone you
-/// share a group with: the nominees they've watched and, after the lock,
-/// their picks.
+/// What `get_season_board_person(p_ceremony_id, p_user_id)` returns for
+/// someone you share a group with: the films they've watched on the board's
+/// list and, after the lock, their picks.
 nonisolated struct BoardPerson: Equatable, Sendable {
     var watchedMovieIDs: Set<Int>
     /// Nomination by category.

@@ -414,7 +414,7 @@ final class LiveDataSource: AppDataSource {
 
     func board(ceremonyID: Int, groupID: Int?) async throws -> [BoardEntry] {
         try await run {
-            try await client.rpc("get_leaderboard", params: BoardParams(p_ceremony_id: ceremonyID, p_group_id: groupID)).execute().value
+            try await client.rpc("get_season_board", params: BoardParams(p_ceremony_id: ceremonyID, p_group_id: groupID)).execute().value
         }
     }
 
@@ -426,7 +426,7 @@ final class LiveDataSource: AppDataSource {
     func boardPerson(ceremonyID: Int, userID: String) async throws -> BoardPerson {
         try await run {
             let rows: [BoardPerson.Row] = try await client
-                .rpc("get_board_person", params: PersonParams(p_ceremony_id: ceremonyID, p_user_id: userID))
+                .rpc("get_season_board_person", params: PersonParams(p_ceremony_id: ceremonyID, p_user_id: userID))
                 .execute()
                 .value
             return BoardPerson(rows: rows)
