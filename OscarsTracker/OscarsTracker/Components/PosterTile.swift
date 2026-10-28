@@ -87,9 +87,6 @@ struct FilmActions: View {
             }
         }
         Button("Open", systemImage: "film", action: onOpen)
-        ShareLink(item: movie.shareLine, subject: Text(movie.title)) {
-            Label("Share", systemImage: "square.and.arrow.up")
-        }
     }
 
     private func plan(_ day: PlanDay) {
@@ -165,11 +162,6 @@ struct WatchedButton: View {
 }
 
 extension Movie {
-    /// "Hamnet (2025)", for sharing.
-    var shareLine: String {
-        releaseYear.map { "\(title) (\(String($0)))" } ?? title
-    }
-
     /// "2025 · 2h 6m": the year and runtime, whichever are known.
     var facts: String {
         [releaseYear.map { String($0) }, Runtime.format(minutes: runtimeMinutes)]
