@@ -11,6 +11,10 @@ struct ProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(Voice.storageKey) private var voice: Voice = .host
     @State private var deleting = false
+    #if DEBUG
+    /// `-profile-page badges` or `archive`, for screenshot runs.
+    @State private var debugPage: String?
+    #endif
 
     var body: some View {
         let profile = model.profile
@@ -154,6 +158,20 @@ struct ProfileSheet: View {
             .sheet(isPresented: $deleting) {
                 DeleteAccountSheet { dismiss() }
             }
+            #if DEBUG
+            .navigationDestination(item: $debugPage) { page in
+                if page == "badges" {
+                    BadgeCaseView()
+                } else if let season = pastSeasons.first {
+                    SeasonArchiveView(ceremonyID: season.ceremonyId, title: season.name)
+                }
+            }
+            .task {
+                // After the sheet lands and the history loads.
+                try? await Task.sleep(for: .seconds(1))
+                debugPage = UserDefaults.standard.string(forKey: "profile-page")
+            }
+            #endif
         }
         .presentationDetents([.large])
         .presentationSizing(.page)
