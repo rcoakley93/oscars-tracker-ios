@@ -63,9 +63,9 @@ struct SeasonTests {
 
     @Test func bothVoicesHaveTheNewTickerLines() {
         for voice in Voice.allCases {
-            let copy = Copy.for(voice)
+            let copy = Copy.for(voice, stage: .predicted)
             #expect(copy.tickerAfter(2, 6, "Movies LLC").contains("2nd of 6 in Movies LLC"))
-            #expect(copy.tickerBeforeNominations("Jan 21", nil, .predicted).contains("Jan 21"))
+            #expect(copy.tickerBeforeNominations("Jan 21", nil).contains("Jan 21"))
             #expect(copy.tickerLive.hasPrefix("LIVE"))
         }
     }

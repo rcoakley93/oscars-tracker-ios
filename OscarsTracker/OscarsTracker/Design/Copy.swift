@@ -13,18 +13,38 @@ enum Voice: String, CaseIterable, Identifiable {
     static let storageKey = "voice"
 }
 
+extension ListStage {
+    /// This stage's value of three: how `Copy` keys a line by stage.
+    nonisolated func pick<T>(_ predicted: T, _ shortlisted: T, _ nominated: T) -> T {
+        switch self {
+        case .predicted: predicted
+        case .shortlisted: shortlisted
+        case .nominated: nominated
+        }
+    }
+}
+
+/// `app_config.copy_overrides`: `{"<key>": {"host": "…", "classic": "…"}}`.
+typealias CopyOverrides = [String: [String: String]]
+
 /// Every line that has two voices. Add a moment here first; both `host` and
-/// `classic` must then give it a line, or the app won't compile.
+/// `classic` must then give it a line, or the app won't compile. Lines that
+/// name the films are keyed by the list's stage too (P10-04, voice.md "Stage
+/// vocabulary"): before nominations the films are contenders, never nominees.
 struct Copy {
     struct Empty {
         let title: String
         let body: String
     }
 
+    /// The list stage these lines speak for.
+    let stage: ListStage
+
     // Progress
     let progressSummary: (_ watched: Int, _ total: Int) -> String
     let pace: (_ perDay: String, _ deadline: String) -> String
     let paceCaption: (_ deadline: String) -> String
+    /// Every film on the list watched.
     let allWatched: String
 
     // Films
@@ -34,9 +54,11 @@ struct Copy {
     let watched: String
     let watchHint: String
     let noProviders: String
-    /// Before nominations; the date ("Jan 21") once the season facts give it.
+    /// No list yet; the date ("Jan 21") once the season facts give it.
     let filmsPreseason: (_ date: String?) -> Empty
     let searchEmpty: String
+    /// The search field's prompt, the same in both voices.
+    let searchPrompt: String
     /// "4 of 6 in Movies LLC have seen it."
     let groupSeen: (_ seen: Int, _ members: Int, _ group: String) -> String
     /// After the lock: "62% of Movies LLC picked Hamnet."
@@ -61,6 +83,7 @@ struct Copy {
     let pickSaved: (_ seed: Int) -> String
     let lockLabel: String
     let locked: String
+    /// No categories: before nominations, when the ballot opens.
     let ballotEmpty: Empty
     /// A past season's archive with no picks at all (P12-06).
     let archiveNoBallot: String
@@ -95,11 +118,8 @@ struct Copy {
     let scoreGap: (_ points: Int, _ name: String) -> String
 
     // Hero (P6-06): the line under the number follows the season.
-    /// Before nominations: the shortlist teaser; `date` ("Jan 21") when known.
-    /// Before nominations: contenders left to watch, and the date when known.
-    /// `stage` is the hook for each stage's own line (P10-04); one line serves
-    /// `predicted` and `shortlisted` until then.
-    let heroTeaser: (_ left: Int, _ date: String?, _ stage: ListStage) -> String
+    /// Before nominations: films left to watch, and the date ("Jan 21") when known.
+    var heroTeaser: (_ left: Int, _ date: String?) -> String
     /// "38 films, 33 days."
     let heroSeason: (_ days: Int, _ filmsLeft: Int) -> String
     /// The last seven days: a push to finish.
@@ -122,9 +142,9 @@ struct Copy {
     let tickerFinalWeek: (_ days: Int, _ filmsLeft: Int) -> String
     /// `left` is already formatted ("3 hours", "40 minutes").
     let tickerLockDay: (_ left: String) -> String
-    /// Before nominations; the date ("Jan 21") when it's known.
-    /// Contenders left to watch; nil when there's no list yet. `stage` as in `heroTeaser`.
-    let tickerBeforeNominations: (_ date: String?, _ left: Int?, _ stage: ListStage) -> String
+    /// Before nominations: the date ("Jan 21") when it's known, and the films
+    /// left to watch, nil when there's no list yet.
+    var tickerBeforeNominations: (_ date: String?, _ left: Int?) -> String
     let tickerLive: String
     /// Live mode (P6-02): how many envelopes are open, of how many.
     let tickerLiveProgress: (_ done: Int, _ total: Int) -> String
@@ -139,6 +159,14 @@ struct Copy {
     let tickerOffline: (_ waiting: Int) -> String
     /// After the show: your final place on a board.
     let tickerAfter: (_ rank: Int, _ size: Int, _ board: String) -> String
+
+    // Stage moments (P10-03): the first launch after the list changes stage.
+    var stageMomentTitle: String
+    /// `made` of the `watched` films you'd watched on the old list are on the
+    /// new one, which holds `total`.
+    var stageMomentBody: (_ made: Int, _ watched: Int, _ total: Int) -> String
+    /// Over the films added since the last stage.
+    let stageMomentAdded: String
 
     // The setting itself
     let label: String
@@ -186,15 +214,76 @@ extension Copy {
         return "\(ordinal.string(from: rank as NSNumber) ?? "\(rank)") of \(size) in \(group)"
     }
 
-    static func `for`(_ voice: Voice) -> Copy {
-        voice == .host ? host : classic
+    /// The lines for a voice at a list stage, with the overrides that apply.
+    static func `for`(_ voice: Voice, stage: ListStage = .nominated, overrides: CopyOverrides = [:]) -> Copy {
+        (voice == .host ? hostLines(stage) : classicLines(stage)).applying(overrides, voice: voice)
     }
 
-    static let classic = Copy(
+    /// The nominated stage, as in 2.0.
+    static let classic = classicLines(.nominated)
+    static let host = hostLines(.nominated)
+
+    // MARK: - Overrides (app_config.copy_overrides)
+
+    /// The seasonal lines `app_config.copy_overrides` can replace without a
+    /// release (voice.md, "Overrides without a release"), and the values
+    /// their templates can use.
+    static let overridableKeys: [String: [String]] = [
+        "films.hero.teaser": ["left", "date"],
+        "ticker.beforeNominations": ["left", "date"],
+        "stage.moment.title": [],
+        "stage.moment.body": ["made", "watched", "total"],
+    ]
+
+    /// This copy with the overrides for its stage and `voice`: a key ending in
+    /// `.<stage>` wins over the plain key. A template that needs a value the
+    /// moment doesn't have falls back to the built-in line.
+    func applying(_ overrides: CopyOverrides, voice: Voice) -> Copy {
+        guard !overrides.isEmpty else { return self }
+        let stage = stage
+        func template(_ key: String) -> String? {
+            overrides["\(key).\(stage.rawValue)"]?[voice.rawValue] ?? overrides[key]?[voice.rawValue]
+        }
+        var copy = self
+        if let line = template("films.hero.teaser") {
+            let base = heroTeaser
+            copy.heroTeaser = { left, date in Self.fill(line, ["left": "\(left)", "date": date]) ?? base(left, date) }
+        }
+        if let line = template("ticker.beforeNominations") {
+            let base = tickerBeforeNominations
+            copy.tickerBeforeNominations = { date, left in Self.fill(line, ["left": left.map(String.init), "date": date]) ?? base(date, left) }
+        }
+        if let line = template("stage.moment.title"), let filled = Self.fill(line, [:]) {
+            copy.stageMomentTitle = filled
+        }
+        if let line = template("stage.moment.body") {
+            let base = stageMomentBody
+            copy.stageMomentBody = { made, watched, total in
+                Self.fill(line, ["made": "\(made)", "watched": "\(watched)", "total": "\(total)"]) ?? base(made, watched, total)
+            }
+        }
+        return copy
+    }
+
+    /// `{name}` placeholders filled in; nil if one is left without a value
+    /// (or the template is blank), so the caller keeps its own line.
+    nonisolated static func fill(_ template: String, _ values: [String: String?]) -> String? {
+        var line = template
+        for case let (name, value?) in values {
+            line = line.replacingOccurrences(of: "{\(name)}", with: value)
+        }
+        let blank = line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return blank || line.range(of: #"\{[A-Za-z]+\}"#, options: .regularExpression) != nil ? nil : line
+    }
+
+    // MARK: - Classic
+
+    private static func classicLines(_ stage: ListStage) -> Copy { Copy(
+        stage: stage,
         progressSummary: { watched, total in "\(watched) of \(total) films watched." },
         pace: { perDay, deadline in "Watch \(perDay) films a day to finish by \(deadline)." },
         paceCaption: { deadline in "to finish by \(deadline)" },
-        allWatched: "All nominated films watched.",
+        allWatched: stage.showsContenders ? "All contenders watched." : "All nominated films watched.",
         toWatchHeading: "Still to watch",
         watchedHeading: "Watched",
         markWatched: "Mark as watched",
@@ -202,10 +291,15 @@ extension Copy {
         watchHint: "Adds it to your watched films.",
         noProviders: "No streaming information yet. JustWatch may know more.",
         filmsPreseason: { date in
-            Empty(title: date.map { "The nominees arrive \($0)" } ?? "No nominees yet",
-                  body: "The films appear here when nominations are announced.")
+            switch stage {
+            case .predicted: Empty(title: "No contenders yet", body: "The films we expect to be nominated appear here soon.")
+            case .shortlisted: Empty(title: "No shortlisted films yet", body: "The shortlists and our predictions appear here soon.")
+            case .nominated: Empty(title: date.map { "The nominees arrive \($0)" } ?? "No nominees yet",
+                                   body: "The films appear here when nominations are announced.")
+            }
         },
-        searchEmpty: "Search films and nominees.",
+        searchEmpty: stage.showsContenders ? "Search films and contenders." : "Search films and nominees.",
+        searchPrompt: stage.showsContenders ? "Films and contenders" : "Films and nominees",
         groupSeen: { seen, members, group in "\(seen) of \(members) in \(group) have seen it." },
         groupPicked: { percent, group, nominee in "\(percent)% of \(group) picked \(nominee)." },
         compareRank: rankLine,
@@ -221,7 +315,9 @@ extension Copy {
         pickSaved: { _ in "Pick saved." },
         lockLabel: "Predictions lock at",
         locked: "The ballot is locked. Predictions are final.",
-        ballotEmpty: Empty(title: "No categories yet", body: "Check back when nominations are announced."),
+        ballotEmpty: stage.showsContenders
+            ? Empty(title: "The ballot opens on nominations day", body: "Watch the contenders until then.")
+            : Empty(title: "No categories yet", body: "Check back when nominations are announced."),
         archiveNoBallot: "You didn't fill a ballot that season.",
         correct: "Correct.",
         wrong: "Not this time.",
@@ -231,18 +327,28 @@ extension Copy {
         removed: "Removed from your plan.",
         planNothing: "Nothing planned",
         planFillDone: { films, days in "Planned \(filmCount(films)) over \(Copy.days(days))." },
-        planFillNothing: "Every unwatched film is already planned.",
+        planFillNothing: stage.showsContenders ? "Every unwatched contender is already planned." : "Every unwatched film is already planned.",
         planFit: { title, runtime in "\(title) (\(runtime)) fits your time." },
         planNoFit: "Nothing fits that time. Try a longer one.",
         groupsEmpty: Empty(title: "You're not in a group yet.", body: "Create a group, or join one with an invite code."),
         groupsJoined: { group in "Joined \(group)." },
         boardAlone: "No other members yet.",
         boardEmpty: "No one is on the board yet.",
-        boardPredictionsLocked: "Predictions open when the ballot locks.",
+        boardPredictionsLocked: stage.showsContenders
+            ? "Predictions open on nominations day and show when the ballot locks."
+            : "Predictions open when the ballot locks.",
         scoreGap: { points, name in "You're \(pointCount(points)) behind \(name)." },
-        heroTeaser: { left, date, _ in
-            (left == 0 ? "All contenders watched" : "\(Copy.contenderCount(left)) left to watch")
-                + (date.map { " · Nominations announced \($0)." } ?? ".")
+        heroTeaser: { left, date in
+            switch stage {
+            case .predicted:
+                (left == 0 ? "All contenders watched" : "\(Copy.contenderCount(left)) left to watch")
+                    + (date.map { " · Nominations announced \($0)." } ?? ".")
+            case .shortlisted:
+                "Shortlists announced · " + (left == 0 ? "All contenders watched" : "\(Copy.contenderCount(left)) left")
+                    + (date.map { " · Nominations \($0)." } ?? ".")
+            case .nominated:
+                "The nominees are on their way."
+            }
         },
         heroSeason: { days, left in
             left == 0 ? "All films watched · \(Copy.days(days)) to the ceremony." : "\(Copy.filmCount(left)) left · \(Copy.days(days)) to the ceremony."
@@ -259,9 +365,16 @@ extension Copy {
         tickerSeason: classicCountdown,
         tickerFinalWeek: classicCountdown,
         tickerLockDay: { left in "Ballot locks in \(left)." },
-        tickerBeforeNominations: { date, left, _ in
-            (date.map { "Nominations announced \($0)" } ?? "Nominations are coming")
-                + (left.map { $0 == 0 ? " · All contenders watched" : " · \(Copy.contenderCount($0)) left" } ?? ".")
+        tickerBeforeNominations: { date, left in
+            let count = left.map { $0 == 0 ? " · All contenders watched" : " · \(Copy.contenderCount($0)) left" }
+            return switch stage {
+            case .predicted:
+                (date.map { "Nominations announced \($0)" } ?? "Nominations are coming") + (count ?? ".")
+            case .shortlisted:
+                "Shortlists announced · " + (date.map { "Nominations \($0)" } ?? "Nominations are coming") + (count ?? ".")
+            case .nominated:
+                "Nominations are out · The films are on their way."
+            }
         },
         tickerLive: "LIVE · Winners as they're announced",
         tickerLiveProgress: { done, total in "LIVE · \(done) of \(total) announced" },
@@ -274,14 +387,34 @@ extension Copy {
             "Offline · showing your last copy" + (waiting > 0 ? " · \(waiting) to send" : "")
         },
         tickerAfter: { rank, size, board in "Final: \(rankLine(rank, size, board))" },
+        stageMomentTitle: stage.pick(
+            "The contenders are in",
+            "The shortlists are out",
+            "The nominees are in"
+        ),
+        stageMomentBody: { made, watched, total in
+            switch stage {
+            case .predicted:
+                "\(Copy.contenderCount(total)) to watch before nominations."
+            case .shortlisted:
+                watched == 0 ? "\(Copy.contenderCount(total)) to watch, shortlists included."
+                    : "\(made) of the \(Copy.filmCount(watched)) you've watched made it."
+            case .nominated:
+                watched == 0 ? "\(Copy.filmCount(total)) nominated. The ballot is open."
+                    : "\(made) of the \(Copy.filmCount(watched)) you've watched \(made == 1 ? "was" : "were") nominated. The ballot is open."
+            }
+        },
+        stageMomentAdded: "New on the list",
         label: "Classic",
         sample: "12 of 50 films watched."
-    )
+    ) }
 
     /// "33 days to the ceremony · 38 films left", the same in the final week.
     private nonisolated static func classicCountdown(_ days: Int, _ left: Int) -> String {
         "\(Copy.days(days)) to the ceremony · " + (left == 0 ? "All films watched" : "\(left) \(left == 1 ? "film" : "films") left")
     }
+
+    // MARK: - Host
 
     private static let hostPickLines = [
         "Noted. The envelope will decide.",
@@ -290,11 +423,16 @@ extension Copy {
         "The Host approves. Probably.",
     ]
 
-    static let host = Copy(
+    private static func hostLines(_ stage: ListStage) -> Copy { Copy(
+        stage: stage,
         progressSummary: { watched, total in
-            watched == 0
-                ? "0 of \(total). Every marathon starts on the couch."
-                : "\(watched) down, \(total - watched) to go. The Academy watched all of these. Allegedly."
+            if watched == 0 { return "0 of \(total). Every marathon starts on the couch." }
+            let aside = switch stage {
+            case .predicted: "A head start the Academy can't match."
+            case .shortlisted: "The Academy's still deciding. You're not."
+            case .nominated: "The Academy watched all of these. Allegedly."
+            }
+            return "\(watched) down, \(total - watched) to go. \(aside)"
         },
         pace: { perDay, deadline in
             (Double(perDay) ?? 2) <= 1
@@ -302,7 +440,11 @@ extension Copy {
                 : "\(perDay) films a day gets you there by \(deadline). Pace yourself."
         },
         paceCaption: { deadline in "to finish by \(deadline). Popcorn is a food group now." },
-        allWatched: "Every nominee, watched. You've out-watched the Academy.",
+        allWatched: stage.pick(
+            "Every contender, watched. You're ahead of the Academy.",
+            "Every contender, watched. The shortlists hold no secrets from you.",
+            "Every nominee, watched. You've out-watched the Academy."
+        ),
         toWatchHeading: "Still to watch",
         watchedHeading: "Your ticket stubs",
         markWatched: "Mark as watched",
@@ -310,10 +452,19 @@ extension Copy {
         watchHint: "Tear the ticket. You know you want to.",
         noProviders: "Not streaming anywhere we know of. JustWatch might have the scoop.",
         filmsPreseason: { date in
-            Empty(title: date.map { "Nominations land \($0)" } ?? "The envelopes aren't printed yet",
-                  body: "Until then, the shortlists. Check back on nominations day.")
+            switch stage {
+            case .predicted: Empty(title: "The race is warming up", body: "Our picks for the likely nominees land soon.")
+            case .shortlisted: Empty(title: "The shortlists are in the mail", body: "Check back soon.")
+            case .nominated: Empty(title: date.map { "Nominations land \($0)" } ?? "The envelopes aren't printed yet",
+                                   body: "Until then, the shortlists. Check back on nominations day.")
+            }
         },
-        searchEmpty: "Search the nominees. All of them. Even the shorts.",
+        searchEmpty: stage.pick(
+            "Search the contenders. All of them. Even the shorts.",
+            "Search the shortlists. All of them. Even the shorts.",
+            "Search the nominees. All of them. Even the shorts."
+        ),
+        searchPrompt: stage.showsContenders ? "Films and contenders" : "Films and nominees",
         groupSeen: { seen, members, group in
             switch seen {
             case 0: "0 of \(members) in \(group) have seen it. Be the trailblazer."
@@ -349,7 +500,11 @@ extension Copy {
         pickSaved: { seed in hostPickLines[abs(seed) % hostPickLines.count] },
         lockLabel: "Pens down at",
         locked: "Pens down. Your picks are final.",
-        ballotEmpty: Empty(title: "The envelopes aren't printed yet", body: "Check back on nominations day. We'll save you a seat."),
+        ballotEmpty: stage.pick(
+            Empty(title: "The envelopes aren't printed yet", body: "The ballot opens on nominations day. Till then, the contenders."),
+            Empty(title: "The envelopes aren't printed yet", body: "The ballot opens on nominations day. Till then, the shortlists."),
+            Empty(title: "The envelopes aren't printed yet", body: "Check back on nominations day. We'll save you a seat.")
+        ),
         archiveNoBallot: "No ballot this season. A spectator's year.",
         correct: "Called it.",
         wrong: "The Academy has spoken. Wrongly, obviously.",
@@ -361,18 +516,28 @@ extension Copy {
         planFillDone: { films, days in
             "Spread \(filmCount(films)) over \(days == 1 ? "1 night" : "\(days) nights"). You're welcome."
         },
-        planFillNothing: "Every film already has a date. Look at you.",
+        planFillNothing: stage.showsContenders ? "Every contender already has a date. Look at you." : "Every film already has a date. Look at you.",
         planFit: { title, runtime in "\(runtime) fits. \(title), then bed." },
         planNoFit: "Nothing that short is left. Try a longer slot.",
         groupsEmpty: Empty(title: "No group yet.", body: "Start one and lord over it, or join one with an invite code."),
         groupsJoined: { _ in "You're in. Seats are limited, apparently." },
         boardAlone: "Just you. Fill the seats: share the invite.",
         boardEmpty: "The red carpet's empty. Be the first to arrive.",
-        boardPredictionsLocked: "Ballots stay sealed until the lock. No peeking.",
+        boardPredictionsLocked: stage.showsContenders
+            ? "No ballots yet. The envelopes get printed on nominations day."
+            : "Ballots stay sealed until the lock. No peeking.",
         scoreGap: { points, name in "\(pointCount(points)) behind \(name). It's not over till the last envelope." },
-        heroTeaser: { left, date, _ in
-            (left == 0 ? "Every contender, seen. " : "\(Copy.contenderCount(left)) to go. ")
-                + (date.map { "Nominations \($0). " } ?? "") + (left == 0 ? "The Academy has catching up to do." : "Get a head start.")
+        heroTeaser: { left, date in
+            switch stage {
+            case .predicted:
+                (left == 0 ? "Every contender, seen. " : "\(Copy.contenderCount(left)) to go. ")
+                    + (date.map { "Nominations \($0). " } ?? "") + (left == 0 ? "The Academy has catching up to do." : "Get a head start.")
+            case .shortlisted:
+                "The shortlists are out. " + (left == 0 ? "Every contender, seen" : "\(Copy.contenderCount(left)) to go")
+                    + (date.map { " before \($0)." } ?? ".")
+            case .nominated:
+                "The nominees are in. Their films are on the red carpet."
+            }
         },
         heroSeason: { days, left in
             left == 0 ? "Every film watched, \(Copy.days(days)) early. Smug is allowed."
@@ -402,8 +567,17 @@ extension Copy {
             }
         },
         tickerLockDay: { left in "Pens down in \(left)." },
-        tickerBeforeNominations: { date, left, _ in
-            "Nominations \(date ?? "soon")" + (left.map { $0 == 0 ? " · Every contender seen" : " · \(Copy.contenderCount($0)) to go" } ?? ". Sharpen your pencils.")
+        tickerBeforeNominations: { date, left in
+            switch stage {
+            case .predicted:
+                "Nominations \(date ?? "soon")"
+                    + (left.map { $0 == 0 ? " · Every contender seen" : " · \(Copy.contenderCount($0)) to go" } ?? ". Sharpen your pencils.")
+            case .shortlisted:
+                "Shortlists are out · Nominations \(date ?? "soon")"
+                    + (left.map { $0 == 0 ? " · Every contender seen" : " · \(Copy.contenderCount($0)) to go" } ?? ". The plot thickens.")
+            case .nominated:
+                "And the nominees are… loading."
+            }
         },
         tickerLive: "LIVE · The envelopes are open. Breathe.",
         tickerLiveProgress: { done, total in
@@ -428,9 +602,29 @@ extension Copy {
         tickerAfter: { rank, size, board in
             "Final: \(rankLine(rank, size, board)). " + (rank == 1 ? "Take a bow." : "Gracious in defeat?")
         },
+        stageMomentTitle: stage.pick(
+            "The race is on",
+            "And the shortlists are…",
+            "And the nominees are…"
+        ),
+        stageMomentBody: { made, watched, total in
+            switch stage {
+            case .predicted:
+                "\(total) likely \(total == 1 ? "nominee" : "nominees") to watch. Get a head start."
+            case .shortlisted:
+                watched == 0 ? "\(Copy.contenderCount(total)) left standing. Start watching."
+                    : made == watched ? "All \(watched) of your films made it. Good taste."
+                    : made == 0 ? "None of your \(Copy.filmCount(watched)) made it. The Academy has its reasons."
+                    : "\(made) of your \(Copy.filmCount(watched)) made it."
+            case .nominated:
+                watched == 0 ? "\(Copy.filmCount(total)) got the call. The ballot is open."
+                    : "\(made) of your \(Copy.filmCount(watched)) got the call. The ballot is open."
+            }
+        },
+        stageMomentAdded: "New arrivals",
         label: "Host",
         sample: "12 down, 38 to go. The Academy watched all of these. Allegedly."
-    )
+    ) }
 }
 
 private struct CopyKey: EnvironmentKey {
@@ -438,8 +632,8 @@ private struct CopyKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    /// The copy for the viewer's voice. Set once at the root from the
-    /// `Voice.storageKey` setting; read with `@Environment(\.copy)`.
+    /// The copy for the viewer's voice and the list's stage. Set once at the
+    /// root from the `Voice.storageKey` setting; read with `@Environment(\.copy)`.
     var copy: Copy {
         get { self[CopyKey.self] }
         set { self[CopyKey.self] = newValue }
