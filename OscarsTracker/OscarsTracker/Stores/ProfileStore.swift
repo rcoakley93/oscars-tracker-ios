@@ -11,6 +11,9 @@ final class ProfileStore {
     /// Past seasons opened from Profile (P12-06), by ceremony id.
     private(set) var archives: [Int: SeasonArchive] = [:]
     private(set) var archiveStates: [Int: LoadState] = [:]
+    /// Moves on at sign-out and account deletion, so a load still in flight
+    /// for the previous account is dropped when it lands.
+    private var generation = 0
     private(set) var state: LoadState = .idle
     private(set) var isWorking = false
     var actionError: AppError?
@@ -53,9 +56,17 @@ final class ProfileStore {
         }
     }
 
-    /// Past seasons, for the Profile. Nothing to show is fine: it's your first.
-    func loadHistory() async {
-        history = (try? await data.seasonHistory()) ?? history
+    /// Past seasons, for the Profile. Nothing to show is fine: it's your
+    /// first. The last good list is cached, so an archive opened before
+    /// stays reachable after an offline launch.
+    func loadHistory(userID: String) async {
+        if history.isEmpty, let cached = cache.history(for: userID) {
+            history = cached
+        }
+        let generation = self.generation
+        guard let fresh = try? await data.seasonHistory(), generation == self.generation else { return }
+        history = fresh
+        cache.save(fresh, for: userID)
     }
 
     /// A past season's archive: the cached copy at once, then the server's,
@@ -66,12 +77,16 @@ final class ProfileStore {
             archives[ceremonyID] = cached
         }
         archiveStates[ceremonyID] = .loading
+        let generation = self.generation
         do {
             let archive = try await data.seasonArchive(ceremonyID: ceremonyID)
+            // Signed out (or deleted) while it loaded: it isn't this account's.
+            guard generation == self.generation else { return }
             archives[ceremonyID] = archive
             cache.save(archive, for: userID)
             archiveStates[ceremonyID] = .loaded
         } catch {
+            guard generation == self.generation else { return }
             archiveStates[ceremonyID] = archives[ceremonyID] == nil ? .failed(AppError(error)) : .loaded
         }
     }
@@ -104,6 +119,7 @@ final class ProfileStore {
             history = []
             archives = [:]
             archiveStates = [:]
+            generation += 1
         }
     }
 
@@ -126,6 +142,7 @@ final class ProfileStore {
         history = []
         archives = [:]
         archiveStates = [:]
+        generation += 1
         state = .idle
     }
 }

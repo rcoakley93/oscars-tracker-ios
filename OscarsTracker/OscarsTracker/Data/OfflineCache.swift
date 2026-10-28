@@ -58,6 +58,16 @@ nonisolated struct OfflineCache: Sendable {
         write(queue, "queue-\(userID).json")
     }
 
+    /// Your past seasons (P12-06), so Profile can still list them, and open
+    /// their cached archives, after an offline launch.
+    func history(for userID: String) -> [SeasonResult]? {
+        read([SeasonResult].self, "history-\(userID).json")
+    }
+
+    func save(_ history: [SeasonResult], for userID: String) {
+        write(history, "history-\(userID).json")
+    }
+
     /// A past season's archive (P12-06), kept once opened so it reads offline.
     func archive(ceremonyID: Int, for userID: String) -> SeasonArchive? {
         read(SeasonArchive.self, "archive-\(userID)-\(ceremonyID).json")
@@ -72,7 +82,7 @@ nonisolated struct OfflineCache: Sendable {
         guard let directory else { return }
         let archives = (try? FileManager.default.contentsOfDirectory(atPath: directory.path()))?
             .filter { $0.hasPrefix("archive-\(userID)-") } ?? []
-        for name in ["snapshot-\(userID).json", "queue-\(userID).json"] + archives {
+        for name in ["snapshot-\(userID).json", "queue-\(userID).json", "history-\(userID).json"] + archives {
             try? FileManager.default.removeItem(at: directory.appending(path: name))
         }
     }

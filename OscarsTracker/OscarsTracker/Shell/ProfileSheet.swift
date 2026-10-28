@@ -142,7 +142,9 @@ struct ProfileSheet: View {
                     Button("Done", systemImage: "checkmark") { dismiss() }
                 }
             }
-            .task { await profile.loadHistory() }
+            .task {
+                if let userID = model.session.userID { await profile.loadHistory(userID: userID) }
+            }
             .onChange(of: voice) { Task { await model.push.setVoice(voice) } }
             .errorAlert("Couldn't save that", error: $push.actionError)
             .sheet(isPresented: $deleting) {

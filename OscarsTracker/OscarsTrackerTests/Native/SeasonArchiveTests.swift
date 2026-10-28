@@ -78,6 +78,30 @@ struct SeasonArchiveTests {
         #expect(model.profile.archives.isEmpty)
     }
 
+    @Test func pastSeasonsListOfflineAfterARelaunch() async {
+        let cache = tempCache()
+        await ProfileStore(data: SampleDataSource(), cache: cache).loadHistory(userID: user)
+        let data = SampleDataSource()
+        data.failure = .offline
+        let relaunched = ProfileStore(data: data, cache: cache)
+        await relaunched.loadHistory(userID: user)
+        #expect(relaunched.history.map(\.ceremonyId) == [1])
+    }
+
+    @Test func anArchiveLandingAfterSignOutIsDropped() async {
+        let cache = tempCache()
+        let data = SampleDataSource()
+        data.archiveDelay = .milliseconds(200)
+        let store = ProfileStore(data: data, cache: cache)
+        let load = Task { await store.loadArchive(ceremonyID: 1, userID: user) }
+        try? await Task.sleep(for: .milliseconds(50))
+        store.reset()
+        await load.value
+        #expect(store.archives.isEmpty)
+        #expect(store.archiveState(1) == .idle)
+        #expect(cache.archive(ceremonyID: 1, for: user) == nil)
+    }
+
     @Test func noPicksAndNoGroup() {
         #expect(SampleData.archiveNoPicks.picksMade == 0)
         #expect(SampleData.archiveNoPicks.ballot.allSatisfy { $0.isCorrect == nil })
