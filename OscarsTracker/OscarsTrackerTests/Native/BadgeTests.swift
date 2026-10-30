@@ -131,6 +131,31 @@ struct BadgeTests {
         #expect(model.badges.queue.map(\.badgeKey) == ["full_ballot"])
     }
 
+    @Test func aBadgeEarnedByAWatchOpensTheReveal() async {
+        let data = SampleDataSource()
+        let model = AppModel(data: data)
+        await model.start()
+        #expect(model.navigation.sheet == nil)
+        // The server awards it with the watch.
+        data.badgeRows[user, default: []].append(SampleData.badge("films_watched", tier: 1, earnedAt: .now))
+        await model.checkBadges()
+        #expect(model.navigation.sheet == .badgeEarned)
+        #expect(model.badges.queue.map(\.badgeKey) == ["films_watched"])
+    }
+
+    @Test func aBadgeEarnedInTheFilmSheetWaitsForItToClose() async {
+        let data = SampleDataSource()
+        let model = AppModel(data: data)
+        await model.start()
+        model.navigation.isFilmSheetOpen = true
+        data.badgeRows[user, default: []].append(SampleData.badge("films_watched", tier: 1, earnedAt: .now))
+        await model.checkBadges()
+        #expect(model.navigation.sheet == nil)
+        model.navigation.isFilmSheetOpen = false
+        model.noteBadges()
+        #expect(model.navigation.sheet == .badgeEarned)
+    }
+
     @Test func oldSampleBadgesDontOpenTheReveal() async {
         let model = AppModel(data: SampleDataSource())
         await model.start()

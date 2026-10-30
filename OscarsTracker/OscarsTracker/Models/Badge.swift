@@ -99,10 +99,10 @@ nonisolated struct Badge: Identifiable, Hashable, Sendable {
                                  classic: "Finish first in a group of 3 or more people."),
               rule: "Finish first in a group of 3 or more", unit: nil),
         Badge(key: "full_house", shelf: .groups, thresholds: [5, 10, 20],
-              name: Lines(host: "Full House", classic: "Group host"),
-              description: Lines(host: "Fill the seats. Get 5, 10 or 20 people in a group you started.",
-                                 classic: "Start a group with 5, 10 or 20 people in it."),
-              rule: "Start a group of 5 people", unit: { $0 == 1 ? "1 person" : "\($0) people" }),
+              name: Lines(host: "Full House", classic: "Full group"),
+              description: Lines(host: "Fill the seats. Be in a group of 5, 10 or 20 people.",
+                                 classic: "Be in a group with 5, 10 or 20 people in it."),
+              rule: "Be in a group of 5 people", unit: { $0 == 1 ? "1 person" : "\($0) people" }),
     ]
 
     private static let byKey = Dictionary(uniqueKeysWithValues: catalogue.map { ($0.key, $0) })

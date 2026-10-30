@@ -85,7 +85,10 @@ struct FilmActions: View {
         Button(watched ? "Mark as not watched" : "Mark as watched", systemImage: watched ? "circle" : "checkmark.circle") {
             guard let userID = model.session.userID else { return }
             if !watched { onWatched(movie.title) }
-            Task { await model.films.toggleWatched(movie.id, userID: userID) }
+            Task {
+                await model.films.toggleWatched(movie.id, userID: userID)
+                await model.checkBadges()
+            }
         }
         if !watched {
             Menu("Add to plan", systemImage: "calendar.badge.plus") {
@@ -160,7 +163,10 @@ struct WatchedButton: View {
         Button {
             guard let userID = model.session.userID else { return }
             if !watched { onWatched(movie.title) }
-            Task { await model.films.toggleWatched(movie.id, userID: userID) }
+            Task {
+                await model.films.toggleWatched(movie.id, userID: userID)
+                await model.checkBadges()
+            }
         } label: {
             Image(systemName: watched ? "checkmark.circle.fill" : "circle")
                 .font(style == .badge ? .title3 : .title2)
