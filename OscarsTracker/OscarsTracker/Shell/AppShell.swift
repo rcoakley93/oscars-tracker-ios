@@ -12,6 +12,8 @@ import SwiftUI
 /// unfolding a Duo keeps it.
 struct AppShell: View {
     @Environment(AppModel.self) private var model
+    /// The sheet on screen, kept until its dismissal finishes.
+    @State private var presentedSheet: AppNavigation.Sheet?
 
     var body: some View {
         @Bindable var navigation = model.navigation
@@ -52,7 +54,15 @@ struct AppShell: View {
             navigation.tab = .groups
             navigation.sheet = .joinGroup(code: code)
         }
-        .sheet(item: $navigation.sheet) { sheet in
+        .onChange(of: navigation.sheet) { _, sheet in
+            if let sheet { presentedSheet = sheet }
+        }
+        .sheet(item: $navigation.sheet, onDismiss: {
+            // A join that filled the group earned Full House while the sheet
+            // was up; the reveal waited for it to close.
+            if case .joinGroup = presentedSheet { model.noteBadges() }
+            presentedSheet = nil
+        }) { sheet in
             switch sheet {
             case .profile:
                 ProfileSheet()
