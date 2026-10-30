@@ -501,6 +501,7 @@ final class LiveDataSource: AppDataSource {
         let p_results: Bool
         let p_voice: String
         let p_time_zone: String
+        let p_odds: Bool
     }
 
     func notificationPreferences(userID: String) async throws -> NotificationPreferences? {
@@ -516,7 +517,7 @@ final class LiveDataSource: AppDataSource {
             try await client.rpc("save_notification_preferences", params: PreferencesParams(
                 p_nominations: preferences.nominations, p_watch_plan: preferences.watchPlan,
                 p_ballot_lock: preferences.ballotLock, p_results: preferences.results,
-                p_voice: preferences.voice, p_time_zone: preferences.timeZone
+                p_voice: preferences.voice, p_time_zone: preferences.timeZone, p_odds: preferences.odds
             )).single().execute().value
         }
     }

@@ -35,6 +35,18 @@ struct ReminderTests {
         #expect(data.preferences?.nominations == true, "no row: the defaults are saved")
     }
 
+    @Test func theOddsSwitchSavesAndOldRowsReadAsOn() async throws {
+        let data = SampleDataSource()
+        let store = PushStore(data: data)
+        await store.loadPreferences(userID: SampleDataSource.userID, timeZone: tokyo)
+        #expect(store.preferences[.odds], "on by default")
+        await store.set(.odds, false)
+        #expect(data.preferences?.odds == false)
+        let old = #"{"nominations": true, "watch_plan": false, "ballot_lock": true, "results": true, "voice": "host", "time_zone": "UTC"}"#
+        let decoded = try JSONDecoder().decode(NotificationPreferences.self, from: Data(old.utf8))
+        #expect(decoded.odds, "a row from before the switch")
+    }
+
     @Test func aSwitchSaves() async {
         let data = SampleDataSource()
         let store = PushStore(data: data)
@@ -109,7 +121,7 @@ struct ReminderTests {
             #expect(!reminder.title.isEmpty && !reminder.detail.isEmpty)
             preferences[reminder].toggle()
         }
-        #expect(preferences == NotificationPreferences(nominations: false, watchPlan: true, ballotLock: false, results: false))
+        #expect(preferences == NotificationPreferences(nominations: false, watchPlan: true, ballotLock: false, results: false, odds: false))
     }
 
     @Test func decodesTheServersRow() throws {
