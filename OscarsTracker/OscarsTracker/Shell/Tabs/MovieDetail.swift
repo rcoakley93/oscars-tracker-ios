@@ -227,7 +227,10 @@ struct MovieDetail: View {
     private func toggleWatched() {
         guard let userID = model.session.userID else { return }
         if !model.films.isWatched(movie.id) { tears += 1 }
-        Task { await model.films.toggleWatched(movie.id, userID: userID) }
+        Task {
+            await model.films.toggleWatched(movie.id, userID: userID)
+            await model.checkBadges()
+        }
     }
 }
 

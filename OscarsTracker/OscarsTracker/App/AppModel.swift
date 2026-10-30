@@ -120,10 +120,18 @@ final class AppModel {
 
     // MARK: - Badge earned (P12-04)
 
+    /// After a watch, a pick or a join: the server awards a badge in the same
+    /// request, so the case reloads and the reveal opens for anything new.
+    func checkBadges() async {
+        guard let userID = session.userID else { return }
+        await badges.load(userID: userID)
+        noteBadges()
+    }
+
     /// Opens the reveal for badges this device hasn't shown, never over
     /// another sheet (a stage moment included): then they wait, unseen, for
-    /// the next refresh.
-    private func noteBadges() {
+    /// the film sheet to close or the next refresh.
+    func noteBadges() {
         guard let userID = session.userID, navigation.sheet == nil, !navigation.isFilmSheetOpen else { return }
         if badges.noteNew(userID: userID) { navigation.sheet = .badgeEarned }
     }

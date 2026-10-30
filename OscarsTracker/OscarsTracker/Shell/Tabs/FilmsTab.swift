@@ -140,6 +140,8 @@ struct FilmsTab: View {
         }
         .onChange(of: sizeClass == .compact && navigation.tab == .films && navigation.selectedMovieID != nil, initial: true) {
             navigation.isFilmSheetOpen = $1
+            // A badge earned in the sheet waited for it to close.
+            if !$1 { model.noteBadges() }
         }
     }
 

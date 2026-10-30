@@ -208,7 +208,10 @@ private struct PlanRow: View {
             .swipeActions(edge: .leading) {
                 Button(model.films.isWatched(movie.id) ? "Not watched" : "Watched", systemImage: "checkmark.circle") {
                     guard let userID = model.session.userID else { return }
-                    Task { await model.films.toggleWatched(movie.id, userID: userID) }
+                    Task {
+                        await model.films.toggleWatched(movie.id, userID: userID)
+                        await model.checkBadges()
+                    }
                 }
                 .tint(.gold)
             }

@@ -450,7 +450,10 @@ private struct NomineeRow: View {
         let wrong = picked && ballot.outcome(for: category) == .wrong
         Button {
             guard let userID = model.session.userID else { return }
-            Task { await ballot.choose(nominationID: nominee.id, in: category.id, userID: userID, locked: locked) }
+            Task {
+                await ballot.choose(nominationID: nominee.id, in: category.id, userID: userID, locked: locked)
+                await model.checkBadges()
+            }
         } label: {
             HStack(spacing: Theme.Space.s) {
                 if let movie = nominee.movie {

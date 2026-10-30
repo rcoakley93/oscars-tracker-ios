@@ -70,6 +70,8 @@ struct JoinGroupSheet: View {
             model.navigation.tab = .groups
             model.navigation.selectedGroupID = group.groupId
             AccessibilityNotification.Announcement(joined ?? "").post()
+            // A fifth person in the group earns everyone Full House.
+            await model.checkBadges()
         }
     }
 }
